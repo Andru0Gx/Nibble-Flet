@@ -11,6 +11,9 @@ Author: Andru0Gx
 Date: 26/10/2023
 '''
 
+# Disable the pylint warnings
+# pylint: disable=W0201
+
 # Libraries
 import time
 import flet as ft
@@ -21,7 +24,7 @@ import flet as ft
 def back(page: ft.Page, new_page: ft.Page):
     '''Return to the previous page'''
     page.remove(page.controls[0])
-    app = new_page(page)
+    new_page(page)
 
 def back_container(container: ft.Container, new_page: ft.Page):
     '''Create a container with a back button'''
@@ -33,11 +36,11 @@ def back_container(container: ft.Container, new_page: ft.Page):
         e.control.update()
 
     button = ft.Container(
-        content=ft.Image('assets/back.png', width=50, height=50, scale=0.5,color='#2c293d'), 
-        width=35, 
-        height=35, 
-        bgcolor='#F2F4FA', 
-        border_radius=25, 
+        content=ft.Image('assets/back.png', width=50, height=50, scale=0.5,color='#2c293d'),
+        width=35,
+        height=35,
+        bgcolor='#F2F4FA',
+        border_radius=25,
         on_click= lambda e: back(container, new_page), on_hover= hover)
 
     return button
@@ -172,7 +175,7 @@ class Login:
         time.sleep(0.25)
 
         self.page.remove(self.page.controls[0])
-        fg_credentials(self.page) # Create the layout to recover the credentials
+        FgCredentials(self.page) # Create the layout to recover the credentials
 
     def register(self):
         '''Register a new user'''
@@ -204,7 +207,7 @@ class Login:
 
 
 #^ ------------------ FG CREDENTIALS ------------------ ^#
-class fg_credentials:
+class FgCredentials:
     ''' Forgotten Credentials Layout
 
     Sections:
@@ -308,7 +311,7 @@ class Forget:
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         # Create the button to login
         self.button = ft.TextButton(text='Verificar', width=450, height=50, style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.validate_code(password))
 
@@ -317,7 +320,7 @@ class Forget:
         # Create the layout
         self.body_layout1 =ft.Column(controls=[
                         ft.Row(controls=[
-                            back_container(self.page, fg_credentials),
+                            back_container(self.page, FgCredentials),
                             ft.Container(height=35,width=400, content=
                                 ft.Text('Codigo De Verificacion', size=25, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center')),
                         ], alignment=ft.MainAxisAlignment.CENTER),
@@ -369,10 +372,10 @@ class Forget:
                 )
 
         #* ------------------ Layout2 ------------------ *#
-        
+
         self.body_layout2 = ft.Column(controls=[
                         ft.Row(controls=[
-                            back_container(self.page, fg_credentials),
+                            back_container(self.page, FgCredentials),
                             ft.Container(height=35,width=400, content=
                                 ft.Text('Preguntas de Seguridad', size=25, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center')),
                         ], alignment=ft.MainAxisAlignment.CENTER),
@@ -435,7 +438,7 @@ class Forget:
         else:
             print('No conectado a internet')
         return code
-    
+
     def validate_questions(self, next_page):
         '''Validate the questions'''
         if self.question1.value != '' and self.question2.value != '' and self.question3.value != '':
@@ -446,9 +449,9 @@ class Forget:
 
                 # Change the layout
                 if next_page:
-                    self.ChangePassword()
+                    self.change_password()
                 else:
-                    self.ShowUsername()
+                    self.show_username()
             else:
                 self.button.text = 'Respuestas Incorrectas'
                 self.button.style = ft.ButtonStyle(bgcolor='#ff6600', color='#FFFFFF')
@@ -465,7 +468,7 @@ class Forget:
             self.button.text = 'Verificar'
             self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
             self.page.update()
-    
+
     def validate_code(self, next_page):
         '''Validate the code'''
 
@@ -493,9 +496,9 @@ class Forget:
 
                     # Change the layout
                     if next_page:
-                        self.ChangePassword()
+                        self.change_password()
                     else:
-                        self.ShowUsername()
+                        self.show_username()
 
                 else: # Validate if the code is incorrect
                     self.button.text = 'Codigo Incorrecto'
@@ -513,8 +516,8 @@ class Forget:
                 self.button.text = 'Verificar'
                 self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
                 self.page.update()
-    
-    def ChangePassword(self):
+
+    def change_password(self):
         '''Change the password'''
         password_entry = ft.TextField(
                     width=450,
@@ -530,7 +533,7 @@ class Forget:
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         password_entry2 = ft.TextField(
                     width=450,
                     height=50,
@@ -545,13 +548,13 @@ class Forget:
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         self.button2 = ft.TextButton(text='Cambiar Contraseña', width=450, height=50, style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.validate_password(password_entry, password_entry2))
 
         #* ------------------ Layout ------------------ *#
         body = ft.Column(controls=[
                         ft.Row(controls=[
-                            back_container(self.page, fg_credentials),
+                            back_container(self.page, FgCredentials),
                             ft.Container(height=35,width=400, content=
                                 ft.Text('Cambiar Contraseña', size=25, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center')),
                         ], alignment=ft.MainAxisAlignment.CENTER),
@@ -562,7 +565,7 @@ class Forget:
 
         self.layout.content = body
         self.layout.update()
-    
+
     def validate_password(self, password_entry, password_entry2):
         '''Validate the password'''
 
@@ -595,10 +598,10 @@ class Forget:
             self.button2.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
             self.page.update()
 
-    def ShowUsername(self):
+    def show_username(self):
         '''Show the username'''
-        username = 'admin'
-        
+        username = 'admin' #TODO - ADD THE MODULE TO GET THE USERNAME
+
         def home():
             '''Return to the Login page'''
             self.page.remove(self.page.controls[0])
@@ -610,7 +613,7 @@ class Forget:
         #* ------------------ Layout ------------------ *#
         body = ft.Column(controls=[
                         ft.Row(controls=[
-                            back_container(self.page, fg_credentials),
+                            back_container(self.page, FgCredentials),
                             ft.Container(height=35,width=400, content=
                                 ft.Text('Mostrar Usuario', size=25, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center')),
                         ], alignment=ft.MainAxisAlignment.CENTER),
@@ -671,7 +674,7 @@ class Register:
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         # Create the Entry for the email
         self.email_entry = ft.TextField(
                     width=450,
@@ -685,7 +688,7 @@ class Register:
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         # Create the Entry for the security question1
         self.question1 = ft.TextField(
                     width=450,
@@ -699,7 +702,7 @@ class Register:
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         # Create the Entry for the security question2
         self.question2 = ft.TextField(
                     width=450,
@@ -709,11 +712,11 @@ class Register:
                     bgcolor='#f3f4fa',
                     hint_style=ft.TextStyle(color='#C0C1E3'),
                     label_style=ft.TextStyle(color='#4B4669'),
-                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14), 
+                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         # Create the Entry for the security question3
         self.question3 = ft.TextField(
                     width=450,
@@ -722,12 +725,12 @@ class Register:
                     hint_text='Ingresa tu respuesta',
                     bgcolor='#f3f4fa',
                     hint_style=ft.TextStyle(color='#C0C1E3'),
-                    label_style=ft.TextStyle(color='#4B4669'), 
+                    label_style=ft.TextStyle(color='#4B4669'),
                     text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
                 )
-        
+
         # Create the button to register
         self.button = ft.TextButton(text='Registrarse', width=450, height=41, style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.validate())
 
@@ -760,7 +763,7 @@ class Register:
                     ],alignment=ft.MainAxisAlignment.CENTER)
                 ],alignment=ft.MainAxisAlignment.CENTER)
             ])
-        
+
         # Add the background to the page
         self.page.add(background)
 
@@ -796,9 +799,8 @@ class Register:
         self.layout.opacity = 0 if self.layout.opacity == 1 else 1
         self.layout.update()
 
-    def save_data(self):
-        #TODO - ADD THE MODULE TO SAVE THE DATA IN THE DATABASE
-        pass
+    def save_data(self):    #TODO - ADD THE MODULE TO SAVE THE DATA IN THE DATABASE
+        '''Save the data to the database'''
 
 
 
