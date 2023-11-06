@@ -1,2 +1,7 @@
 # Carpeta cache de python
 /modules/__pycache__
+
+/Pages/App_Layout/__pycache__
+/Pages/App_Layout/Body_Sections/__pycache__
+
+/Pages/Login_Layout/__pycache__
