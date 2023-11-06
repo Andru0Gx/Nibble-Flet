@@ -18,6 +18,9 @@ Date: 26/10/2023
 import time
 import flet as ft
 
+# Modules
+from modules.cal import FletCalendar
+
 #* ---------------------------------------------------- Functions
 
 # return to the previous page
@@ -60,6 +63,7 @@ class Login:
     '''
 
     def __init__(self, page: ft.Page):
+        super().__init__()
         self.page = page
 
         #* ------------------ Variables ------------------ *#
@@ -191,10 +195,12 @@ class Login:
         '''Log in to the system'''
         self.button.text = 'Cargando...'
         self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
+        self.button.disabled = True
         self.page.update()
-        time.sleep(1)
+        time.sleep(0.5)
         self.button.text = 'Iniciar Sesion'
         self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
+        self.button.disabled = False
         self.page.update()
         self.page.remove(self.page.controls[0])
         AppLayout(self.page) # Create the layout to recover the credentials
@@ -215,6 +221,7 @@ class FgCredentials:
     - Button to recover the password
     '''
     def __init__(self, page:ft.Page):
+        super().__init__()
         self.page = page
         self.page.update()
 
@@ -286,6 +293,7 @@ class Forget:
     - Button to change the password
     '''
     def __init__(self, page: ft.Page, password: bool):
+        super().__init__()
         self.page = page
         self.page.update()
 
@@ -641,6 +649,7 @@ class Register:
     - Button to return to Login
     '''
     def __init__(self, page: ft.Page):
+        super().__init__()
         self.page = page
         self.page.update()
 
@@ -830,6 +839,7 @@ class AppLayout:
     '''
 
     def __init__(self, page: ft.Page):
+        super().__init__()
         self.page = page
         self.page.update()
 
@@ -841,7 +851,7 @@ class AppLayout:
         logo = ft.Container(height=80, width=150, content=ft.Image('assets/Nibble-Logo-2.png'), padding=ft.padding.all(20))
 
         # Create the name
-        name = ft.Text('Unidad Educativa Salvador Garmedia Grateron', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center')
+        name = ft.Text('Unidad Educativa "Salvador Garmendia Grateron"', size=40, color='#4B4669', font_family='Helvetica', text_align='center', italic=True)
 
         # Create the button to logout
         logout = ft.Container(height=80, width=150, content=ft.Icon(ft.icons.LOGOUT, color='#4B4669', size=30), padding=ft.padding.all(20), on_click= lambda e: self.logout())
@@ -899,8 +909,10 @@ class AppLayout:
             selected_index=0,
             destinations=[home, students, teachers, schedules, grades, settings],
             bgcolor='#e9ebf6',
-            min_width=150,
+            min_width=100,
+            width=200,
             label_type=ft.NavigationRailLabelType.SELECTED,
+            extended=True,
             on_change= lambda e: self.change_page(e.control.selected_index),
         )
 
@@ -932,7 +944,7 @@ class AppLayout:
         self.animate()
 
         if e == 0:
-            self.body.content = ft.Container(content=ft.Text('Home', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
+            self.body.content = Home(self.page)
         elif e == 1:
             self.body.content = ft.Container(content=ft.Text('Students', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
         elif e == 2:
@@ -948,9 +960,36 @@ class AppLayout:
 
     def logout(self):
         '''Logout from the system'''
-        self.page.remove(self.page.controls[0])
+        self.page.remove(self.page.controls[0], self.page.controls[1])
         Login(self.page)
 
+class Home(ft.UserControl):
+    def __init__(self, page):
+        super().__init__()
+        self.page = page
+
+        #* ------------------ Layout ------------------ *#
+        events = ft.TextButton(text='Eventos', width=100, height=30, style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.events(), top=55, left=500)
+
+        # Create the layout
+        layout = ft.Row(controls=[
+            ft.Column(controls=[
+                ft.Stack(controls=[
+                FletCalendar(self.page),
+                events
+
+                ]),
+                ft.Container(height=100, width=1100, bgcolor='red', border_radius=20, padding=ft.padding.all(20), content=ft.Text('EVENTOS', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center')),
+            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment='center')
+        ], alignment=ft.MainAxisAlignment.CENTER)
+
+
+
+        self.content = layout
+        self.update()
+
+    def build(self):
+        return self.content
 
 
 
@@ -960,6 +999,11 @@ class AppLayout:
 
 
 
+
+
+
+
+#TODO - Create Modules for the windows
 
 #^ ------------------ RUN APP ------------------ ^#
 def main(page: ft.Page):
@@ -972,5 +1016,6 @@ def main(page: ft.Page):
 
     page.update()
     Login(page)
+    # AppLayout(page)
 
 ft.app(target=main)
