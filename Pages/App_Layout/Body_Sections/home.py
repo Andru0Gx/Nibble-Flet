@@ -9,6 +9,7 @@ from modules.cal import FletCalendar
 
 #^ ------------------ HOME ------------------ ^#
 class Home(ft.UserControl):
+    '''Home Page Layout'''
     def __init__(self, page):
         super().__init__()
         self.page = page
