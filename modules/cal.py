@@ -16,15 +16,16 @@ locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 class FletCalendar(ft.UserControl):
     '''Flet Calendar'''
-    def __init__(self, page):
+    def __init__(self, page, events):
         super().__init__()
 
         self.page = page
         self.get_current_date()
         self.set_theme()
+        self.events = events
 
         # Init the container control.
-        self.calendar_container = ft.Container(width=1100, height=500,
+        self.calendar_container = ft.Container(width=1000, height=500,
                                           padding=ft.padding.all(2),
                                           border=ft.border.all(2, self.border_color),
                                           border_radius=ft.border_radius.all(10),
@@ -46,6 +47,8 @@ class FletCalendar(ft.UserControl):
         str_date = f'{e.control.data[0]} / {e.control.data[1]} / {e.control.data[2]}'
         # self.output.value = str_date
         print(str_date)
+        self.events.content = ft.Text(str_date, text_align='center', size=15, color=self.text_color)
+        self.events.update()
 
 
         # self.output.value = e.control.data
@@ -108,9 +111,17 @@ class FletCalendar(ft.UserControl):
             e.control.bgcolor = '#817aa7' if e.data == "true" else '#e9ebf6'
             e.control.update()
 
+    def event(self):
+        '''Show the events'''
+        import modules.section_manager as pm
+        ft.app(target=pm.def_events)
+
+
     def build(self):
         '''Build the calendar for flet.'''
         current_calendar = self.get_calendar()
+        actual_month = datetime.datetime.today().month
+        # print(actual_month)
 
         # Format the date example: January 1, 2021
         str_date = f'{self.current_day}, {calendar.month_name[self.current_month]} {self.current_year}'
@@ -121,21 +132,24 @@ class FletCalendar(ft.UserControl):
         div = ft.Divider(height=1, thickness=2.0, color=self.border_color)
 
         # create the week format (Lu, Ma, Mi, Ju, Vi, Sa, Do)
-        week_format = ft.Row(alignment=ft.MainAxisAlignment.CENTER, spacing=90)
+        week_format = ft.Row(alignment=ft.MainAxisAlignment.CENTER, spacing=80)
 
         for day in calendar.day_name:
             day = day[0:3]
             container_week = ft.Container(content=ft.Text(day, size=20, color=self.text_color, text_align='center'),width=60, height=40, border_radius=ft.border_radius.all(10))
             week_format.controls.append(container_week)
 
+        events = ft.TextButton(text='Eventos', width=80, height=30, style=ft.ButtonStyle(bgcolor='#2c293d', color='#FFFFFF'), on_click= lambda e: self.event(), top=7.5, left= 30)
 
 
-        calendar_column = ft.Column([ft.Row([prev_button, date_display, next_button], alignment=ft.MainAxisAlignment.SPACE_EVENLY,
-                                            vertical_alignment=ft.CrossAxisAlignment.CENTER, height=40, expand=False), div, week_format],
-                                    spacing=25, width=1100, height=700, alignment=ft.MainAxisAlignment.CENTER, expand=False)
+        calendar_column = ft.Column([ft.Stack([
+            events,
+            ft.Row([prev_button,date_display,next_button], alignment=ft.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=ft.CrossAxisAlignment.CENTER, height=40, expand= False)
+        ]), div, week_format],spacing=10, width=1100, height=500, alignment=ft.MainAxisAlignment.SPACE_EVENLY, expand=False)
+
         # Loop weeks and add row.
         for week in current_calendar:
-            week_row = ft.Row(alignment=ft.MainAxisAlignment.CENTER, spacing=90)
+            week_row = ft.Row(alignment=ft.MainAxisAlignment.CENTER, spacing=80)
             # Loop days and add days to row.
             for day in week:
                 if day > 0:
@@ -144,7 +158,7 @@ class FletCalendar(ft.UserControl):
                     display_day = str(day)
                     if len(str(display_day)) == 1:
                         display_day = str(display_day).zfill(2)
-                    if day == self.current_day:
+                    if day == self.current_day and self.current_month == actual_month:
                         is_current_day_font = ft.FontWeight.BOLD
                         is_current_day_bg = self.current_day_color
 
