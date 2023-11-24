@@ -4,8 +4,16 @@ import datetime
 import flet as ft
 
 
-class event:
-    '''Eventos'''
+class Event:
+    '''
+    Initializes the attributes and components of the event page.
+
+    Inputs:
+    - page (ft.Page): The page object on which the event components will be displayed.
+
+    Outputs:
+    - None
+    '''
     def __init__(self, page: ft.Page):
         self.page = page
 
@@ -163,13 +171,19 @@ class event:
         page.add(container, up_button)
 
     def change(self, e):
+        '''
+        Updates the value of the event date when the date picker is changed.
+
+        :param e: The new date value selected from the date picker.
+        :return: None
+        '''
         self.event_date.controls[0].read_only = False
         self.page.update()
 
         self.event_date.controls[0].value = e
         self.event_date.controls[0].read_only = True
         self.page.update()
-    
+
     def search(self):
         pass
 
@@ -179,6 +193,19 @@ class event:
 
 
 def maintwo(page: ft.Page):
+    '''
+    Sets various properties of a page/window, such as its size, title, theme mode, and focus.
+
+    Example Usage:
+    maintwo()
+
+    Inputs:
+    None
+
+    Outputs:
+    Events page/window with the specified properties.
+    '''
+
     page.window_center()
     page.window_width = 800
     page.window_height = 700
@@ -196,6 +223,6 @@ def maintwo(page: ft.Page):
 
     page.window_always_on_top = True
 
-    event(page)
+    Event(page)
 
 # ft.app(target=maintwo)
