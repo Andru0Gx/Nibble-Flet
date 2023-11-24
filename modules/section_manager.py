@@ -4,11 +4,29 @@
 import flet as ft
 
 def def_home(page: ft.Page):
-    '''Create the home page'''
+    '''
+    Create the home page
+
+    Args:
+    - page: An instance of the ft.Page class.
+
+    Returns:
+    - An instance of the Home class.
+    '''
     from Pages.App_Layout.Body_Sections.home import Home
     return Home(page)
 
 def def_events(page: ft.Page):
-    '''Create the events page'''
+    '''
+    Returns the result of calling the 'maintwo' function from the 'events' 
+    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
+    object as an argument.
+    
+    Args:
+        page (ft.Page): A 'ft.Page' object representing a page.
+    
+    Returns:
+        The result of calling the 'maintwo' function with the 'page' object as an argument.
+    '''
     from Pages.App_Layout.Body_Sections.events import maintwo
     return maintwo(page)

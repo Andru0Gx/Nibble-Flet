@@ -34,7 +34,7 @@ def main(page: ft.Page):
     page.window_maximizable = False
 
     page.update()
-    # pm.def_app_layout(page)
-    pm.def_login(page)
+    pm.def_app_layout(page)
+    # pm.def_login(page)
 
 ft.app(target=main)
