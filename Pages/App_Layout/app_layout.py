@@ -52,15 +52,22 @@ class AppLayout:
         # Create the name
         name = ft.Text('Unidad Educativa "Salvador Garmendia Grateron"', size=40, color='#4B4669', font_family='Helvetica', text_align='center', italic=True)
 
-        # Create the button to logout
-        logout = ft.Container(height=80, width=150, content=ft.Icon(ft.icons.LOGOUT, color='#4B4669', size=30), padding=ft.padding.all(20), on_click= lambda e: self.logout())
+        # Create the buru
+        burger_menu = ft.PopupMenuButton(
+            items=[
+                ft.PopupMenuItem(icon=ft.icons.IMPORT_EXPORT_OUTLINED, text='Importar/Exportar Base de Datos'),
+                ft.PopupMenuItem(icon= ft.icons.SETTINGS_OUTLINED,text='Configuracion', on_click= lambda e:self.change_page(5)),
+                ft.PopupMenuItem(icon=ft.icons.LOGOUT_OUTLINED, text='Cerrar Sesion', on_click=lambda e: self.logout())
+            ],
+            content=ft.Container(ft.Icon(ft.icons.MENU, color='#000000'), padding=ft.padding.all(10))
+            )
 
         header = ft.AppBar(
             title=name,
             center_title=True,
             leading=logo,
             leading_width=150,
-            actions=[logout],
+            actions=[burger_menu],
             bgcolor='#e9ebf6',
             toolbar_height=80,
         )
@@ -98,15 +105,9 @@ class AppLayout:
             label_content=ft.Text('Calificaciones', color='#4B4669'),
         )
 
-        settings = ft.NavigationRailDestination(
-            icon_content=ft.Icon(ft.icons.SETTINGS_OUTLINED, color='#4B4669', size=30),
-            selected_icon_content=ft.Icon(ft.icons.SETTINGS, size=40),
-            label_content=ft.Text('Configuracion', color='#4B4669'),
-        )
-
         sidebar = ft.NavigationRail(
             selected_index=0,
-            destinations=[home, students, teachers, schedules, grades, settings],
+            destinations=[home, students, teachers, schedules, grades],
             bgcolor='#e9ebf6',
             min_width=100,
             width=200,
@@ -116,14 +117,14 @@ class AppLayout:
         )
 
         #* ------------------ Body ------------------ *#
-        self.body = ft.Container(expand=True, bgcolor='#F2F4FA', border=ft.Border(top=ft.BorderSide(color='#c2c9db', width=2), left=ft.BorderSide(color='#c2c9db', width=1)))
+        self.body = ft.Container(expand=True, bgcolor='#F2F4FA', border=ft.Border(top=ft.BorderSide(color='#c2c9db', width=2), left=ft.BorderSide(color='#c2c9db', width=1)), padding=ft.padding.only(0,25,0,0))
 
         #* ------------------ Layout ------------------ *#
         # header
         layout = ft.Row(controls=[
             sidebar,
             self.body,
-        ],expand=True, spacing=0)
+        ],expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.START)
 
         # Add the layout to the page
         self.page.add(header, layout)

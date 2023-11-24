@@ -15,21 +15,43 @@ class Home(ft.UserControl):
         self.page = page
 
         #* ------------------ Layout ------------------ *#
-        events = ft.TextButton(text='Eventos', width=100, height=30, style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.events(), top=55, left=500)
+        text_event = ft.Text(
+            'INFORMACION EVENTOS',
+            color='#4B4669',
+            font_family='Helvetica',
+            width = 200,
+            text_align='center',
+            weight='bold'
+        )
+        events_title = ft.Container(
+            content=text_event,
+            bgcolor='#e9ebf6',
+            border_radius=50,
+            border=ft.border.all(2, '#6D62A1'),
+            height=30,
+            left= 145
+        )
+        self.events_container = ft.Container(
+            height=125,
+            width=500,
+            border_radius=20,
+            padding=ft.padding.all(20),
+            border=ft.border.all(2, '#6D62A1'),
+            top=10,
+        )
+
+        info_events = ft.Stack([
+            self.events_container,
+            events_title,
+        ], width=500, height=150)
 
         # Create the layout
-        layout = ft.Row(controls=[
+        layout = ft.Row([
             ft.Column(controls=[
-                ft.Stack(controls=[
-                FletCalendar(self.page),
-                events
-
-                ]),
-                ft.Container(height=100, width=1100, bgcolor='red', border_radius=20, padding=ft.padding.all(20), content=ft.Text('EVENTOS', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center')),
-            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment='center')
+                    FletCalendar(self.page, self.events_container),
+                    info_events,
+            ], alignment=ft.MainAxisAlignment.START, horizontal_alignment='center'),
         ], alignment=ft.MainAxisAlignment.CENTER)
-
-
 
         self.content = layout
         self.update()
