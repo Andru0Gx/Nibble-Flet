@@ -3,6 +3,9 @@
 # Libraries
 import flet as ft
 
+# Disable the pylint warnings
+# pylint: disable=C0415
+
 #* ------------------ Home Page ------------------ *#
 def def_home(page: ft.Page):
     '''
@@ -34,7 +37,7 @@ def def_events(page: ft.Page):
     return maintwo(page)
 
 #* ------------------ Students Page ------------------ *#
-def def_students(page: ft.Page):
+def def_students(page: ft.Page, section: str):
     '''
     Returns the result of calling the 'maintwo' function from the 'students' 
     module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
@@ -47,4 +50,4 @@ def def_students(page: ft.Page):
         The result of calling the 'maintwo' function with the 'page' object as an argument.
     '''
     from Pages.App_Layout.Body_Sections.students import Students
-    return Students(page)
+    return Students(page, section)

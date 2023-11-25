@@ -147,7 +147,7 @@ class AppLayout:
         if e == 0:
             self.body.content = Home(self.page)
         elif e == 1:
-            self.body.content = Students(self.page)
+            self.body.content = Students(self.page, self.body)
         elif e == 2:
             self.body.content = ft.Container(content=ft.Text('Teachers', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
         elif e == 3:
