@@ -128,21 +128,20 @@ class Event:
             column_spacing=0,
             horizontal_margin=0,
             checkbox_horizontal_margin=0,
-
-            vertical_lines=ft.BorderSide(1, '#6D62A1'),
             horizontal_lines= ft.BorderSide(1, '#6D62A1'),
-
-            border=ft.border.all(1, '#6D62A1'),
+            show_bottom_border=True,
 
             columns=[
-                ft.DataColumn(ft.Container(ft.Text('Nombre', color='#4B4669',text_align='center'), width=180)),
-                ft.DataColumn(ft.Container(ft.Text('Descripcion', color='#4B4669',text_align='center'), width=180)),
-                ft.DataColumn(ft.Container(ft.Text('Fecha', color='#4B4669',text_align='center'), width=180)),
-                ft.DataColumn(ft.Container(ft.Text('Acciones', color='#4B4669',text_align='center'), width=180)),
+                ft.DataColumn(ft.Container(ft.Text('Nombre', color='#4B4669',text_align='center', size=15), width=180)),
+                ft.DataColumn(ft.Container(ft.Text('Descripcion', color='#4B4669',text_align='center', size=15), width=180)),
+                ft.DataColumn(ft.Container(ft.Text('Fecha', color='#4B4669',text_align='center', size=15), width=180)),
+                ft.DataColumn(ft.Container(ft.Text('Acciones', color='#4B4669',text_align='center', size=15), width=180)),
             ],
         )
 
-        search_list = ft.Container(self.data_list, alignment=ft.alignment.center, margin=0)
+        data_scroll = ft.Column([self.data_list],scroll=True)
+
+        search_list = ft.Container(data_scroll, alignment=ft.alignment.top_center, margin=0, width=725,height=400, border=ft.border.all(1, '#6D62A1'), border_radius=10)
 
         self.layout = ft.Column([
             tittle,
@@ -162,11 +161,11 @@ class Event:
                 search_button,
             ], spacing= 20, alignment=ft.MainAxisAlignment.CENTER),
             search_list
-        ], scroll=ft.ScrollMode.ALWAYS)
+        ], horizontal_alignment='center')
 
         container = ft.Container(self.layout, bgcolor='#e9ebf6', expand=True, padding=ft.padding.only(20,10,20,20))
 
-        up_button = ft.FloatingActionButton(icon=ft.icons.ARROW_UPWARD, bgcolor='#6D62A1', on_click= lambda e: self.layout.scroll_to(offset=0,duration=100), width=50, height=50)
+        up_button = ft.FloatingActionButton(icon=ft.icons.ARROW_UPWARD, bgcolor='#6D62A1', on_click= lambda e: data_scroll.scroll_to(offset=0,duration=100), width=50, height=50)
 
         page.add(container, up_button)
 
@@ -185,10 +184,10 @@ class Event:
         self.page.update()
 
     def search(self):
-        pass
+        '''Searches for an event in the database.'''
 
     def save_event(self):
-        pass
+        '''Saves the event in the database.'''
 
 
 
