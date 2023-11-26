@@ -1,37 +1,49 @@
+'''Nibble-DB Commands'''
 
+# Libraries
 import sqlite3
 
-#$ ========== functions for create the tables ==========
-def teacher_table():
+
+#$ ================================ Tables ================================
+#* --------------------------- Teacher - Table ---------------------------
+def teacher_table(conexion):
+    '''Creates a table named 'profesor' in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE profesor(
-            cedula_p TEXT PRIMARY KEY,
+        """CREATE TABLE IF NOT EXISTS profesor(
+            cedula TEXT PRIMARY KEY,
             nombres TEXT NOT NULL,
             apellidos TEXT NOT NULL,
             f_nacimiento TEXT NOT NULL,
-            tlf TEXT NOT NULL,
-            tlfb TEXT,
+            telefono1 TEXT NOT NULL,
+            telefono2 TEXT,
             direccion TEXT NOT NULL,
             correo TEXT NOT NULL UNIQUE
         );""")
     conexion.commit()
-    conexion.close()
 
-def matter_table():
+
+#* --------------------------- Subject - Table ---------------------------
+def subject_table(conexion):
+    '''Creates a table named 'materia' in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE materia(
+        """CREATE TABLE IF NOT EXISTS materia(
             id_m INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT NOT NULL
         );""")
     conexion.commit()
-    conexion.close()
 
-def matter_teacher_table():
+
+#* --------------------------- Subject_Teacher - Table ---------------------------
+def subject_teacher_table(conexion):
+    '''Creates a table named "profesor_materias" in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE prof_mat(
+        """CREATE TABLE IF NOT EXISTS profesor_materias(
             profesor_ci TEXT,
             materia_id INTEGER,
             PRIMARY KEY(profesor_ci, materia_id),
@@ -39,54 +51,66 @@ def matter_teacher_table():
             CONSTRAINT fk_mat_id FOREIGN KEY(materia_id) REFERENCES materia(id_m)
         );""")
     conexion.commit()
-    conexion.close()
 
-def student_table():
+
+#* --------------------------- Student - Table ---------------------------
+def student_table(conexion):
+    '''Creates a table named "estudiante" in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE estudiante(
-            cedula_e TEXT PRIMARY KEY,
+        """CREATE TABLE IF NOT EXISTS estudiante(
+            cedula TEXT PRIMARY KEY,
             nombres TEXT NOT NULL,
             apellidos TEXT NOT NULL,
             f_nacimiento TEXT NOT NULL,
-            tlf TEXT NOT NULL,
-            tlfb TEXT,
+            telefono1 TEXT NOT NULL,
+            telefono2 TEXT,
             direccion TEXT NOT NULL,
             correo TEXT UNIQUE,
             etapa_id INTEGER NOT NULL,
             CONSTRAINT fk_etapa FOREIGN KEY(etapa_id) REFERENCES etapa(id_e)
         );""")
     conexion.commit()
-    conexion.close()
 
-def stage_table():
+
+#* --------------------------- Parent - Table ---------------------------
+def phase_table(conexion):
+    '''Creates a table named "etapa" in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE etapa(
+        """CREATE TABLE IF NOT EXISTS etapa(
             id_e INTEGER PRIMARY KEY AUTOINCREMENT,
             grado_anio TEXT,
             seccion TEXT
         );""")
     conexion.commit()
-    conexion.close()
 
-def representative_table():
+
+#* --------------------------- Parent - Table ---------------------------
+def parent_table(conexion):
+    '''Creates a table named "representante" in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE representante(
-            cedula_r TEXT PRIMARY KEY,
+        """CREATE TABLE IF NOT EXISTS representante(
+            cedula TEXT PRIMARY KEY,
             nombres TEXT NOT NULL,
             apellidos TEXT NOT NULL,
-            tlf TEXT NOT NULL,
-            tlfb TEXT
+            telefono1 TEXT NOT NULL,
+            telefono2 TEXT
         );""")
     conexion.commit()
-    conexion.close()
 
-def repre_student_table():
+
+#* --------------------------- Parent_Student - Table ---------------------------
+def parent_student_table(conexion):
+    '''Creates a table named "repre_estudiante" in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE repre_estudiante(
+        """CREATE TABLE IF NOT EXISTS repre_estudiante(
             representante_ci TEXT,
             estudiante_ci TEXT,
             PRIMARY KEY(representante_ci, estudiante_ci)
@@ -94,12 +118,15 @@ def repre_student_table():
             CONSTRAINT fk_estudiante_ci FOREIGN KEY(estudiante_ci) REFERENCES estudiante(cedula_e)
         );""")
     conexion.commit()
-    conexion.close()
 
-def grade_table():
+
+#* --------------------------- Grade - Table ---------------------------
+def grade_table(conexion):
+    '''Creates a table named 'nota' in a SQLite database'''
+
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE nota(
+        """CREATE TABLE IF NOT EXISTS nota(
             id_nota INTEGER PRIMARY KEY AUTOINCREMENT,
             estudiante_ci TEXT NOT NULL,
             materia_id INTEGER NOT NULL,
@@ -110,26 +137,35 @@ def grade_table():
             fecha TEXT NOT NULL
         );""")
     conexion.commit()
-    conexion.close()
 
-#$ ========== functions for insert records in the tables ==========
+#$ ================================ functions for insert records in the tables ================================
 
-#$ ========== functions for delete records of the tables ==========
+#$ ================================ functions for delete records of the tables ================================
 
-# Ejecutar
-try:
-    conexion = sqlite3.connect("database/escuela.db")
-    #todo: orden de creación de las tablas
-    #teacher_table()
-    #matter_table()
-    #matter_teacher_table()
-    #stage_table()
-    #student_table()
-    #representative_table()
-    #repre_student_table()
-    #grade_table()
-    
-    #todo: llamar funciones para probar
 
-except Exception as ex:
-    print(ex)
+
+
+#* --------------------------- Create The Tables ---------------------------
+def create_tables():
+    '''Creates all the tables in a SQLite database'''
+
+    try:
+        conexion = sqlite3.connect('DB/escuela.db')
+        #todo: orden de creación de las tablas
+        teacher_table(conexion)
+        subject_table(conexion)
+        subject_teacher_table(conexion)
+        phase_table(conexion)
+        student_table(conexion)
+        parent_table(conexion)
+        parent_student_table(conexion)
+        grade_table(conexion)
+
+        # Close the connection
+        conexion.close()
+
+    except Exception as ex:
+        print(ex) #TODO - Delete this line / Write a log file
+
+# Run the function
+create_tables()
