@@ -126,7 +126,7 @@ class AppLayout:
         layout = ft.Row(controls=[
             sidebar,
             self.body,
-        ],expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.START)
+        ],height=720 ,spacing=0, vertical_alignment=ft.CrossAxisAlignment.START)
 
         # Add the layout to the page
         self.page.add(header, layout)
@@ -150,7 +150,7 @@ class AppLayout:
         elif e == 1:
             self.body.content = Students(self.page, self.body)
         elif e == 2:
-            self.body.content = Teachers(self.page)
+            self.body.content = Teachers(self.page, self.body)
         elif e == 3:
             self.body.content = ft.Container(content=ft.Text('Schedules', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
         elif e == 4:

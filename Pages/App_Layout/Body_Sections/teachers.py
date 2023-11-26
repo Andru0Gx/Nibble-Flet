@@ -21,9 +21,10 @@ class Teachers(ft.UserControl):
     - Container to show the content
     '''
 
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, section: str):
         super().__init__()
         self.page = page
+        self.body = section
 
         #* ------------------ DatePicker ------------------ *#
         self.date_picker_birthdate = ft.DatePicker(
@@ -452,5 +453,124 @@ class Teachers(ft.UserControl):
         print('Print Teacher')
 
     def view(self):
-        '''View the teachers'''
-        print('View Teachers')
+        self.body.content = Teacherslist(self.page, self.body)
+        self.body.update()
+
+
+class Teacherslist(ft.UserControl):
+    '''
+    The `Studentslist` class is a user control class that represents a list of students.
+    It provides a search bar and a data table with the list of students.
+
+    The class includes methods for:
+    - Searching for a student in the database.
+    - Changing the view to display the student form.
+    
+    '''
+    def __init__(self, page: ft.Page, section: str):
+        super().__init__()
+        self.page = page
+        self.body = section
+
+        #* ------------------ Layout ------------------ *#
+        # Create the Title
+        self.title = ft.Text(
+            'Lista de Profesores',
+            color='#4B4669',
+            font_family='Arial',
+            width = 600,
+            text_align='center',
+            weight='bold',
+            size=20,
+        )
+
+        # Create the Search Bar
+        self.search_bar = ft.Row([
+            ft.TextField(
+            width=500,
+            height=35,
+            label='Buscar Profesor',
+            hint_text='Ingresa un dato del Profesor',
+            bgcolor='#f3f4fa',
+            hint_style=ft.TextStyle(color='#C0C1E3'),
+            label_style=ft.TextStyle(color='#4B4669'),
+            text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+            border_color='#6D62A1',
+            content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
+        ),
+            ft.Container(
+                width=35,
+                height=35,
+                bgcolor= '#6D62A1',
+                alignment=ft.alignment.center,
+                on_click= lambda e: self.search_teacher(),
+                border_radius=15,
+                content=ft.Icon(ft.icons.SEARCH, color='#f3f4fa', size=20),
+            )
+        ])
+
+        # Create the Data Table
+        self.data_table = ft.DataTable(
+            width=1100,
+            border_radius=10,
+            data_row_min_height=50,
+            data_row_max_height=100,
+            column_spacing=10,
+            horizontal_margin=0,
+            horizontal_lines= ft.BorderSide(1, '#6D62A1'),
+            show_bottom_border=True,
+
+
+            columns=[
+                ft.DataColumn(ft.Container(ft.Text('Nombre', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Apellido', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Cedula', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Materia', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+            ],
+        )
+
+        scrol = ft.Column([
+            self.data_table,
+        ], alignment=ft.MainAxisAlignment.START, spacing=20, scroll=ft.ScrollMode.ALWAYS, width=1100, height=490)
+
+        self.data_container = ft.Container(scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#6D62A1'), border_radius=10, width=1100, height=500)
+
+        up_button = ft.FloatingActionButton(icon=ft.icons.ARROW_UPWARD, bgcolor='#6D62A1', on_click= lambda e: scrol.scroll_to(offset=0,duration=100), width=50, height=35)
+
+
+        # Create the Button Change View
+        self.change_view = ft.Container(
+            ft.Icon(ft.icons.TABLE_ROWS_OUTLINED, color='#f3f4fa', size=20),
+            width=50,
+            height=35,
+            bgcolor='#6D62A1',
+            alignment=ft.alignment.center,
+            on_click= lambda e: self.view(),
+            border_radius=15,
+        )
+
+        # Create the Layout
+        layout = ft.Column([
+            self.title,
+            ft.Row([
+                    self.search_bar,
+                    self.change_view,
+                    up_button
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+            self.data_container,
+        ], alignment=ft.MainAxisAlignment.START, horizontal_alignment='center', spacing=20)
+
+        # add the layout to the page
+        self.content = layout
+
+    def build(self):
+        return self.content
+
+    #^ ------------------ Functions ------------------ *#
+    def search_teacher(self):
+        '''Search a student in the database'''
+
+    def view(self):
+        '''Change the view of the data table to the Students'''
+        self.body.content = Teachers(self.page, self.body)
+        self.body.update()

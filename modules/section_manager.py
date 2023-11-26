@@ -53,7 +53,7 @@ def def_students(page: ft.Page, section: str):
     return Students(page, section)
 
 #* ------------------ Teachers Page ------------------ *#
-def def_teachers(page: ft.Page):
+def def_teachers(page: ft.Page, section: str):
     '''
     Returns the result of calling the 'maintwo' function from the 'teachers' 
     module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
@@ -66,4 +66,4 @@ def def_teachers(page: ft.Page):
         The result of calling the 'maintwo' function with the 'page' object as an argument.
     '''
     from Pages.App_Layout.Body_Sections.teachers import Teachers
-    return Teachers(page)
+    return Teachers(page, section)
