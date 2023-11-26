@@ -33,3 +33,4 @@
 - [ ] Botones de los eventos
 - [ ] Correo de recuperacion de contraseña
 - [ ] exportar/importar datos 
+- [ ] Busqueda de datos (Listas de profesores, estudiantes) por cualquier campo
