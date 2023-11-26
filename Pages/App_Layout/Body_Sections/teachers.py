@@ -453,6 +453,15 @@ class Teachers(ft.UserControl):
         print('Print Teacher')
 
     def view(self):
+        '''
+        Updates the content of the body section of the Teachers page with a new instance of the Teacherslist class.
+
+        Inputs:
+        - self: The instance of the Teachers class.
+
+        Outputs:
+        - None
+        '''
         self.body.content = Teacherslist(self.page, self.body)
         self.body.update()
 
