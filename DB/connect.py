@@ -64,8 +64,6 @@ def student_table(conexion):
             nombres TEXT NOT NULL,
             apellidos TEXT NOT NULL,
             f_nacimiento TEXT NOT NULL,
-            telefono1 TEXT NOT NULL,
-            telefono2 TEXT,
             direccion TEXT NOT NULL,
             correo TEXT UNIQUE,
             etapa_id INTEGER NOT NULL,
@@ -138,6 +136,37 @@ def grade_table(conexion):
         );""")
     conexion.commit()
 
+#* --------------------------- Calendar - Table ---------------------------
+def calendar_table(conexion):
+    '''Creates a table named 'calendario' in a SQLite database'''
+
+    cursor = conexion.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS calendario(
+            id_evento INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            descripcion TEXT,
+            fecha TEXT NOT NULL
+        );""")
+    conexion.commit()
+
+#* --------------------------- User - Table ---------------------------
+def user_table(conexion):
+    '''Creates a table named 'usuario' in a SQLite database'''
+
+    cursor = conexion.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS usuario(
+            id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario TEXT NOT NULL UNIQUE,
+            correo TEXT NOT NULL UNIQUE,
+            contrasena TEXT NOT NULL,
+            respuesta_seguridad_1 TEXT NOT NULL,
+            respuesta_seguridad_2 TEXT NOT NULL,
+            respuesta_seguridad_3 TEXT NOT NULL
+        );""")
+    conexion.commit()
+
 #$ ================================ functions for insert records in the tables ================================
 
 #$ ================================ functions for delete records of the tables ================================
@@ -151,7 +180,8 @@ def create_tables():
 
     try:
         conexion = sqlite3.connect('DB/escuela.db')
-        #todo: orden de creación de las tablas
+        
+        # Create the main tables
         teacher_table(conexion)
         subject_table(conexion)
         subject_teacher_table(conexion)
@@ -160,6 +190,10 @@ def create_tables():
         parent_table(conexion)
         parent_student_table(conexion)
         grade_table(conexion)
+
+        # Create the secondary tables
+        calendar_table(conexion)
+        user_table(conexion)
 
         # Close the connection
         conexion.close()
