@@ -51,3 +51,19 @@ def def_students(page: ft.Page, section: str):
     '''
     from Pages.App_Layout.Body_Sections.students import Students
     return Students(page, section)
+
+#* ------------------ Teachers Page ------------------ *#
+def def_teachers(page: ft.Page):
+    '''
+    Returns the result of calling the 'maintwo' function from the 'teachers' 
+    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
+    object as an argument.
+    
+    Args:
+        page (ft.Page): A 'ft.Page' object representing a page.
+    
+    Returns:
+        The result of calling the 'maintwo' function with the 'page' object as an argument.
+    '''
+    from Pages.App_Layout.Body_Sections.teachers import Teachers
+    return Teachers(page)

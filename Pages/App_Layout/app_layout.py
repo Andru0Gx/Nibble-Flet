@@ -10,6 +10,7 @@ from modules.page_manager import def_login as Login
 # Body Sections
 from modules.section_manager import def_home as Home
 from modules.section_manager import def_students as Students
+from modules.section_manager import def_teachers as Teachers
 
 
 class AppLayout:
@@ -149,7 +150,7 @@ class AppLayout:
         elif e == 1:
             self.body.content = Students(self.page, self.body)
         elif e == 2:
-            self.body.content = ft.Container(content=ft.Text('Teachers', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
+            self.body.content = Teachers(self.page)
         elif e == 3:
             self.body.content = ft.Container(content=ft.Text('Schedules', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
         elif e == 4:
