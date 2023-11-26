@@ -522,6 +522,9 @@ class Students(ft.UserControl):
 
     def add_student(self):
         '''Add a student to the database'''
+        #TODO - buscar al representante en la base de datos (Cedula)
+        # En caso de que no este registrado, agregarlo y luego agregar al estudiante
+        # En caso de que si este registrado, agregar al estudiante
 
     def delete_student(self):
         '''Delete a student from the database'''
