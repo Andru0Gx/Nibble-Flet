@@ -88,28 +88,22 @@ class Login:
                 ],alignment=ft.MainAxisAlignment.CENTER)
         ],alignment=ft.MainAxisAlignment.CENTER)
 
-        # Create the container for the layout
-        self.layout = ft.Container(content=body,width=720, height=300, border_radius=20, animate_opacity=300, opacity=0)
-
         #['#22c1c3','#6c2dfd']
 
-
         #* ------------------ Background ------------------ *#
-        background = ft.Stack(expand=True, controls=[
+        self.background = ft.Stack(expand=True, controls=[
                 ft.Container(expand=True, bgcolor='#D7D9EE', gradient=ft.LinearGradient(colors=['#ae13ff','#5a40fc'], begin=ft.alignment.bottom_left, end=ft.alignment.bottom_right)),
                 ft.Row(controls=[
                     ft.Column([
                         # Add the Layout to the background
-                        ft.Container(content=self.layout,bgcolor='#F2F4FA', width=550, height=300, border_radius=25),
+                        ft.Container(content=body,bgcolor='#F2F4FA', width=550, height=300, border_radius=25),
                     ],alignment=ft.MainAxisAlignment.CENTER)
                 ],alignment=ft.MainAxisAlignment.CENTER)
             ])
 
+        self.layout = self.background.controls[1].controls[0].controls[0]
         # Add the background to the page
-        self.page.add(background)
-
-        # animacion de opacidad al entrar
-        self.animate()
+        self.page.add(self.background)
 
 
     #* ------------------ Class Functions ------------------ *#
@@ -136,40 +130,15 @@ class Login:
 
     def recover_credentials(self):
         '''Recover the credentials'''
-        self.layout.opacity = 0 if self.layout.opacity == 1 else 1
+        self.layout.content = FgCredentials(self.page, self.layout) # Create the layout to recover the credentials
         self.layout.update()
-
-        time.sleep(0.25)
-
-        self.page.remove(self.page.controls[0])
-        FgCredentials(self.page) # Create the layout to recover the credentials
 
     def register(self):
         '''Register a new user'''
-        self.layout.opacity = 0 if self.layout.opacity == 1 else 1
+        self.layout.content = Register(self.page, self.layout)
         self.layout.update()
-
-        time.sleep(0.25)
-
-        self.page.remove(self.page.controls[0])
-        Register(self.page)
 
     def log(self):
         '''Log in to the system'''
-        self.button.text = 'Cargando...'
-        self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
-        self.button.disabled = True
-        self.page.update()
-        time.sleep(0.5)
-        self.button.text = 'Iniciar Sesion'
-        self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
-        self.button.disabled = False
-        self.page.update()
         self.page.remove(self.page.controls[0])
         AppLayout(self.page) # Create the layout to recover the credentials
-
-    def animate(self):
-        '''Animate the layout'''
-        time.sleep(0.1)
-        self.layout.opacity = 0 if self.layout.opacity == 1 else 1
-        self.layout.update()

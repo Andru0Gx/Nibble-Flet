@@ -6,12 +6,16 @@ import flet as ft
 #* ---------------------------------------------------- Functions
 
 # return to the previous page
-def back(page: ft.Page, new_page: ft.Page):
+def back(page: ft.Page, new_page: ft.Page, parent = None):
     '''Return to the previous page'''
-    page.remove(page.controls[0])
-    new_page(page)
+    if parent != None:
+        parent.content = new_page(page, parent)
+        parent.update()
+    else:
+        page.remove(page.controls[0])
+        new_page(page)
 
-def back_container(container: ft.Container, new_page: ft.Page):
+def back_container(container: ft.Container, new_page: ft.Page, parent = None):
     '''Create a container with a back button'''
     button = container
 
@@ -26,6 +30,6 @@ def back_container(container: ft.Container, new_page: ft.Page):
         height=35,
         bgcolor='#F2F4FA',
         border_radius=25,
-        on_click= lambda e: back(container, new_page), on_hover= hover)
+        on_click= lambda e: back(container, new_page, parent), on_hover= hover)
 
     return button
