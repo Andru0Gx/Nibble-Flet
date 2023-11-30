@@ -11,6 +11,7 @@ from modules.page_manager import def_login as Login
 from modules.section_manager import def_home as Home
 from modules.section_manager import def_students as Students
 from modules.section_manager import def_teachers as Teachers
+from modules.section_manager import def_settings as Settings
 
 
 class AppLayout:
@@ -57,7 +58,6 @@ class AppLayout:
         # Create the buru
         burger_menu = ft.PopupMenuButton(
             items=[
-                ft.PopupMenuItem(icon=ft.icons.IMPORT_EXPORT_OUTLINED, text='Importar/Exportar Base de Datos'),
                 ft.PopupMenuItem(icon= ft.icons.SETTINGS_OUTLINED,text='Configuracion', on_click= lambda e:self.change_page(5)),
                 ft.PopupMenuItem(icon=ft.icons.LOGOUT_OUTLINED, text='Cerrar Sesion', on_click=lambda e: self.logout())
             ],
@@ -119,14 +119,14 @@ class AppLayout:
         )
 
         #* ------------------ Body ------------------ *#
-        self.body = ft.Container(expand=True, bgcolor='#F2F4FA', border=ft.Border(top=ft.BorderSide(color='#c2c9db', width=2), left=ft.BorderSide(color='#c2c9db', width=1)), padding=ft.padding.only(0,25,0,0))
+        self.body = ft.Container(width=1350, height=820, bgcolor='#F2F4FA', border=ft.Border(top=ft.BorderSide(color='#c2c9db', width=2), left=ft.BorderSide(color='#c2c9db', width=1)), padding=ft.padding.only(0,25,0,0))
 
         #* ------------------ Layout ------------------ *#
         # header
         layout = ft.Row(controls=[
             sidebar,
             self.body,
-        ],height=720 ,spacing=0, vertical_alignment=ft.CrossAxisAlignment.START)
+        ],height=820 ,spacing=0, vertical_alignment=ft.CrossAxisAlignment.START)
 
         # Add the layout to the page
         self.page.add(header, layout)
@@ -156,11 +156,11 @@ class AppLayout:
         elif e == 4:
             self.body.content = ft.Container(content=ft.Text('Grades', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
         elif e == 5:
-            self.body.content = ft.Container(content=ft.Text('Settings', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
+            self.body.content = Settings(self.page)
 
         self.animate()
 
     def logout(self):
         '''Logout from the system'''
-        self.page.remove(self.page.controls[0], self.page.controls[1])
+        self.page.clean()
         Login(self.page)
