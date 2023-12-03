@@ -119,4 +119,3 @@ class Grades(ft.UserControl):
     #* ------------------ Class Functions ------------------ *#
     def search_student(self):
         '''Search a student'''
-        pass
