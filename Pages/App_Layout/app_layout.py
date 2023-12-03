@@ -12,6 +12,7 @@ from modules.section_manager import def_home as Home
 from modules.section_manager import def_students as Students
 from modules.section_manager import def_teachers as Teachers
 from modules.section_manager import def_settings as Settings
+from modules.section_manager import def_grades as Grades
 
 
 class AppLayout:
@@ -154,7 +155,7 @@ class AppLayout:
         elif e == 3:
             self.body.content = ft.Container(content=ft.Text('Schedules', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
         elif e == 4:
-            self.body.content = ft.Container(content=ft.Text('Grades', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
+            self.body.content = Grades(self.page)
         elif e == 5:
             self.body.content = Settings(self.page)
 
