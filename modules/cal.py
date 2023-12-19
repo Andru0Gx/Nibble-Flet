@@ -25,11 +25,15 @@ class FletCalendar(ft.UserControl):
         self.events = events
 
         # Init the container control.
-        self.calendar_container = ft.Container(width=1000, height=500,
-                                          padding=ft.padding.all(2),
-                                          border=ft.border.all(2, self.border_color),
-                                          border_radius=ft.border_radius.all(10),
-                                          alignment=ft.alignment.bottom_center, bgcolor='#e9ebf6')
+        self.calendar_container = ft.Container(
+            width=1000,
+            height=600,
+            padding=ft.padding.all(2),
+            border=ft.border.all(2, self.border_color),
+            border_radius=ft.border_radius.all(10),
+            alignment=ft.alignment.bottom_center,
+            bgcolor='#e9ebf6'
+        )
 
         self.build() # Build the calendar.
         self.output = ft.Text() # Add output control.
@@ -93,8 +97,8 @@ class FletCalendar(ft.UserControl):
         return cal.monthdayscalendar(self.current_year, self.current_month)
 
     def set_theme(self, border_color='#6D62A1',
-                  text_color='#4B4669',
-                  current_day_color='#7e73b8', hover_color='#817aa7'):
+                text_color='#4B4669',
+                current_day_color='#7e73b8', hover_color='#817aa7'):
         '''Set the theme for the calendar.'''
         self.border_color = border_color
         self.text_color = text_color
@@ -139,13 +143,13 @@ class FletCalendar(ft.UserControl):
             container_week = ft.Container(content=ft.Text(day, size=20, color=self.text_color, text_align='center'),width=60, height=40, border_radius=ft.border_radius.all(10))
             week_format.controls.append(container_week)
 
-        events = ft.TextButton(text='Eventos', width=80, height=30, style=ft.ButtonStyle(bgcolor='#2c293d', color='#FFFFFF'), on_click= lambda e: self.event(), top=7.5, left= 30)
+        events = ft.ElevatedButton(text='Eventos', width=100, height=30, style=ft.ButtonStyle(bgcolor='#b6b9da', color='#454167',shape=ft.RoundedRectangleBorder(radius=10), side=ft.BorderSide(1,'#625a9b')), on_click= lambda e: self.event(), top=7.5, left= 30)
 
 
         calendar_column = ft.Column([ft.Stack([
             events,
             ft.Row([prev_button,date_display,next_button], alignment=ft.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=ft.CrossAxisAlignment.CENTER, height=40, expand= False)
-        ]), div, week_format],spacing=10, width=1100, height=500, alignment=ft.MainAxisAlignment.SPACE_EVENLY, expand=False)
+        ]), div, week_format],spacing=10, width=1100, height=600, alignment=ft.MainAxisAlignment.SPACE_EVENLY, expand=False)
 
         # Loop weeks and add row.
         for week in current_calendar:
@@ -162,11 +166,23 @@ class FletCalendar(ft.UserControl):
                         is_current_day_font = ft.FontWeight.BOLD
                         is_current_day_bg = self.current_day_color
 
-                    day_button = ft.Container(content=ft.Text(str(display_day), weight=is_current_day_font, color=self.text_color, size=20, text_align='center'),
-                                              on_click=self.selected_date, data=(day,self.current_month, self.current_year),
-                                              width=60, height=60, alignment=ft.alignment.center,
-                                              border_radius=ft.border_radius.all(50),
-                                              bgcolor=is_current_day_bg, on_hover=lambda e: self.hover(e))
+                    day_button = ft.Container(
+                        content=ft.Text(
+                            str(display_day),
+                            weight=is_current_day_font,
+                            color=self.text_color,
+                            size=20,
+                            text_align='center'
+                        ),
+                        on_click=self.selected_date,
+                        data=(day,self.current_month, self.current_year),
+                        width=60,
+                        height=60,
+                        alignment=ft.alignment.center,
+                        border_radius=ft.border_radius.all(50),
+                        bgcolor=is_current_day_bg,
+                        on_hover=lambda e: self.hover(e)
+                    )
                 else:
                     day_button = ft.Container(width=60, height=60, border_radius=ft.border_radius.all(10))
 
