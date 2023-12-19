@@ -39,11 +39,3 @@
 <a href="https://github.com/Jose-Urbano">
   <img src="https://avatars.githubusercontent.com/u/117106250?v=4" width=50 style="border-radius: 50%">
 </a>
-
-<h2>TO-DO LIST</h2>
-
-- [ ] Base de datos
-- [ ] Botones de los eventos
-- [ ] Correo de recuperacion de contraseña
-- [ ] exportar/importar datos 
-- [ ] Busqueda de datos (Listas de profesores, estudiantes) por cualquier campo
