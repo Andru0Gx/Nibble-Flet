@@ -64,7 +64,7 @@ class Students(ft.UserControl):
             'Registrar Estudiante',
             color='#4B4669',
             font_family='Arial',
-            width = 600,
+            width = 500,
             text_align='center',
             weight='bold',
             size=20,
@@ -115,13 +115,13 @@ class Students(ft.UserControl):
         # Create the student birthdate text field
         self.student_birthdate = ft.Row([
             ft.TextField(
-                width=195,
+                width=170,
                 height=35,
                 label='Fecha de Nacimiento',
                 hint_text='Selecciona la fecha',
                 bgcolor='#f3f4fa',
                 hint_style=ft.TextStyle(color='#C0C1E3'),
-                label_style=ft.TextStyle(color='#4B4669'),
+                label_style=ft.TextStyle(color='#4B4669', size=15),
                 text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                 border_color='#6D62A1',
                 content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
@@ -156,13 +156,13 @@ class Students(ft.UserControl):
         # Create the student date inscription text field
         self.student_date_inscription = ft.Row([
             ft.TextField(
-                width=195,
+                width=170,
                 height=35,
                 label='Fecha de Inscripcion',
                 hint_text='Selecciona la fecha',
                 bgcolor='#f3f4fa',
                 hint_style=ft.TextStyle(color='#C0C1E3'),
-                label_style=ft.TextStyle(color='#4B4669'),
+                label_style=ft.TextStyle(color='#4B4669', size=15),
                 text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                 border_color='#6D62A1',
                 content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
@@ -220,8 +220,8 @@ class Students(ft.UserControl):
             self.student_grade,
             self.change_student_button
         ], alignment=ft.MainAxisAlignment.START, spacing=20),
-        width=550,
-        height=500,
+        width=500,
+        height=480,
         border_radius=20,
         padding=ft.padding.all(20),
         border=ft.border.all(2, '#6D62A1'),
@@ -271,7 +271,7 @@ class Students(ft.UserControl):
         # Create the parent ci text field and a searh button
         self.parent_ci = ft.Row([
             ft.TextField(
-            width=450,
+            width=415,
             height=35,
             label='Cedula del Representante',
             hint_text='Ingresa la Cedula del Representante',
@@ -296,7 +296,7 @@ class Students(ft.UserControl):
         # Create the parent contact text field
         self.parent_contact = ft.Row([
             ft.TextField(
-                width=240,
+                width=220,
                 height=35,
                 label='Contacto 1',
                 hint_text='Ingresa el contacto',
@@ -309,7 +309,7 @@ class Students(ft.UserControl):
             ),
 
             ft.TextField(
-                width=240,
+                width=220,
                 height=35,
                 label='Contacto 2 (Opcional)',
                 hint_text='Ingresa el contacto',
@@ -356,8 +356,8 @@ class Students(ft.UserControl):
             self.parent_contact,
             self.buttons
         ],alignment=ft.MainAxisAlignment.START, spacing=20),
-        width=550,
-        height=500,
+        width=500,
+        height=480,
         border_radius=20,
         padding=ft.padding.all(20),
         border=ft.border.all(2, '#6D62A1'),
@@ -367,7 +367,7 @@ class Students(ft.UserControl):
         # Create the Search Bar
         self.search_bar = ft.Row([
             ft.TextField(
-            width=500,
+            width=450,
             height=35,
             label='Buscar Estudiante',
             hint_text='Ingresa la cedula del Estudiante',
@@ -447,7 +447,7 @@ class Students(ft.UserControl):
             self.search_bar,
             self.students_buttons
         ],alignment=ft.MainAxisAlignment.CENTER, spacing=10),
-        width=1110,
+        width=1025,
         height=100,
         border_radius=20,
         border=ft.border.all(2, '#6D62A1'),

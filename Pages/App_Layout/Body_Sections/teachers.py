@@ -42,7 +42,7 @@ class Teachers(ft.UserControl):
             'Registrar Profesor',
             color='#4B4669',
             font_family='Arial',
-            width = 600,
+            width = 500,
             text_align='center',
             weight='bold',
             size=20,
@@ -93,7 +93,7 @@ class Teachers(ft.UserControl):
         # Create the text field for the phone
         self.teacher_contact = ft.Row([
             ft.TextField(
-                width=240,
+                width=218,
                 height=35,
                 label='Contacto 1',
                 hint_text='Ingresa el contacto',
@@ -106,7 +106,7 @@ class Teachers(ft.UserControl):
             ),
 
             ft.TextField(
-                width=240,
+                width=218,
                 height=35,
                 label='Contacto 2 (Opcional)',
                 hint_text='Ingresa el contacto',
@@ -186,54 +186,14 @@ class Teachers(ft.UserControl):
                 self.teacher_email,
                 self.teacher_address,
         ],alignment=ft.MainAxisAlignment.START, spacing=20),
-        width=550,
-        height=500,
+        width=500,
+        height=480,
         border_radius=20,
         padding=ft.padding.all(20),
         border=ft.border.all(2, '#6D62A1'),
         )
 
-        #* ------------------ Layout - Documents / Subject ------------------ *#
-        # Create the title
-        title_documents = ft.Text(
-            'Copia Del Titulo',
-            color='#4B4669',
-            font_family='Arial',
-            width = 600,
-            text_align='center',
-            weight='bold',
-            size=20,
-        )
-
-        # Create the Buttons (ADD, DELETE, VIEW)
-        self.documents_buttons = ft.Row([
-            ft.Container(
-                ft.Icon(ft.icons.ADD, color='#f3f4fa', size=20),
-                width=80,
-                height=35,
-                bgcolor='#6D62A1',
-                alignment=ft.alignment.center,
-                border_radius=15,
-            ),
-
-            ft.Container(
-                ft.Icon(ft.icons.DELETE, color='#f3f4fa', size=20),
-                width=80,
-                height=35,
-                bgcolor='#6D62A1',
-                alignment=ft.alignment.center,
-                border_radius=15,
-            ),
-
-            ft.Container(
-                ft.Icon(ft.icons.VISIBILITY_OUTLINED, color='#f3f4fa', size=20),
-                width=80,
-                height=35,
-                bgcolor='#6D62A1',
-                alignment=ft.alignment.center,
-                border_radius=15,
-            )
-        ], spacing=20, alignment=ft.MainAxisAlignment.CENTER)
+        #* ------------------ Layout - Subject ------------------ *#
 
         # Create the title
         title_subject = ft.Text(
@@ -249,7 +209,7 @@ class Teachers(ft.UserControl):
         # Create the text field for the subject
         self.teacher_subject = ft.Row([
         ft.TextField(
-            width=400,
+            width=350,
             height=35,
             label='Materia',
             hint_text='Ingresa la Materia',
@@ -289,23 +249,20 @@ class Teachers(ft.UserControl):
 
         scrol = ft.Column([
             self.subject_list,
-        ], alignment=ft.MainAxisAlignment.START, spacing=20, scroll=ft.ScrollMode.ALWAYS, width=500, height=190)
+        ], alignment=ft.MainAxisAlignment.START, spacing=20, scroll=ft.ScrollMode.ALWAYS, width=500, height=300)
 
-        self.data_container = ft.Container(scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#bec0e3'), border_radius=10, width=500, height=200)
+        self.data_container = ft.Container(scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#bec0e3'), border_radius=10, width=500, height=310)
 
 
         # Layout for the documents / subject
-        layout_documents_subject = ft.Container(
+        layout_subject = ft.Container(
             content=ft.Column([
-            title_documents,
-            self.documents_buttons,
-            ft.Divider(),
             title_subject,
             self.teacher_subject,
             self.data_container
         ],alignment=ft.MainAxisAlignment.START, spacing=20),
-        width=550,
-        height=500,
+        width=500,
+        height=480,
         border_radius=20,
         padding=ft.padding.all(20),
         border=ft.border.all(2, '#6D62A1'),
@@ -319,7 +276,7 @@ class Teachers(ft.UserControl):
         # Create the Search Bar
         self.search_bar = ft.Row([
             ft.TextField(
-            width=500,
+            width=450,
             height=35,
             label='Buscar Profesor',
             hint_text='Ingresa la cedula del profesor',
@@ -399,7 +356,7 @@ class Teachers(ft.UserControl):
             self.search_bar,
             self.students_buttons
         ],alignment=ft.MainAxisAlignment.CENTER, spacing=10),
-        width=1110,
+        width=1025,
         height=100,
         border_radius=20,
         border=ft.border.all(2, '#6D62A1'),
@@ -410,7 +367,7 @@ class Teachers(ft.UserControl):
         layout = ft.Column([
             ft.Row([
                 self.teacher_layout,
-                layout_documents_subject
+                layout_subject
             ], alignment=ft.MainAxisAlignment.CENTER,spacing=20),
             footer
         ], alignment=ft.MainAxisAlignment.START, horizontal_alignment='center', spacing=20)
