@@ -13,6 +13,7 @@ from modules.section_manager import def_students as Students
 from modules.section_manager import def_teachers as Teachers
 from modules.section_manager import def_settings as Settings
 from modules.section_manager import def_grades as Grades
+from modules.section_manager import def_schedule as Schedule
 
 
 class AppLayout:
@@ -120,7 +121,7 @@ class AppLayout:
         )
 
         #* ------------------ Body ------------------ *#
-        self.body = ft.Container(width=1350, height=820, bgcolor='#F2F4FA', border=ft.Border(top=ft.BorderSide(color='#c2c9db', width=2), left=ft.BorderSide(color='#c2c9db', width=1)), padding=ft.padding.only(0,25,0,0))
+        self.body = ft.Container(width=1150, height=688, bgcolor='#F2F4FA', border=ft.Border(top=ft.BorderSide(color='#c2c9db', width=2), left=ft.BorderSide(color='#c2c9db', width=2)), padding=ft.padding.only(0,25,0,0))
 
         #* ------------------ Layout ------------------ *#
         # header
@@ -133,7 +134,7 @@ class AppLayout:
         self.page.add(header, layout)
 
         # Change the page
-        self.change_page(0)
+        self.change_page(3)
 
     #* ------------------ Class Functions ------------------ *#
     def animate(self):
@@ -153,7 +154,7 @@ class AppLayout:
         elif e == 2:
             self.body.content = Teachers(self.page, self.body)
         elif e == 3:
-            self.body.content = ft.Container(content=ft.Text('Schedules', size=40, color='#4B4669', font_family='Arial',weight='bold', text_align='center'), expand=True, bgcolor='#F2F4FA')
+            self.body.content = Schedule(self.page, self.body)
         elif e == 4:
             self.body.content = Grades(self.page)
         elif e == 5:

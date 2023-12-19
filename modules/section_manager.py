@@ -99,3 +99,19 @@ def def_grades(page: ft.Page):
     '''
     from Pages.App_Layout.Body_Sections.grades import Grades
     return Grades(page)
+
+#* ------------------ Schedule Page ------------------ *#
+def def_schedule(page: ft.Page, section: str):
+    '''
+    Returns the result of calling the 'maintwo' function from the 'schedule' 
+    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
+    object as an argument.
+    
+    Args:
+        page (ft.Page): A 'ft.Page' object representing a page.
+    
+    Returns:
+        The result of calling the 'maintwo' function with the 'page' object as an argument.
+    '''
+    from Pages.App_Layout.Body_Sections.schedule import Schedule
+    return Schedule(page, section)
