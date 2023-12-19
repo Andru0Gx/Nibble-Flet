@@ -25,7 +25,7 @@ def back_container(container: ft.Container, new_page: ft.Page, parent = None):
         e.control.update()
 
     button = ft.Container(
-        content=ft.Image('assets/back.png', width=50, height=50, scale=0.5,color='#2c293d'),
+        content=ft.Icon(ft.icons.ARROW_BACK, color='#4B4669', size=30),
         width=35,
         height=35,
         bgcolor='#F2F4FA',
