@@ -8,126 +8,115 @@ import flet as ft
 
 #* ------------------ Home Page ------------------ *#
 def def_home(page: ft.Page):
-    '''
-    Create the home page
+    """
+    Returns an instance of the Home class initialized with the page object.
 
     Args:
-    - page: An instance of the ft.Page class.
+        page (ft.Page): An object of the ft.Page class.
 
     Returns:
-    - An instance of the Home class.
-    '''
+        Home: An instance of the Home class initialized with the page object.
+    """
     from Pages.App_Layout.Body_Sections.home import Home
     return Home(page)
 
 #* ------------------ Events Page ------------------ *#
 def def_events(page: ft.Page):
-    '''
-    Returns the result of calling the 'maintwo' function from the 'events' 
-    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
-    object as an argument.
-    
+    """
+    Returns an instance of the `maintwo` class initialized with the `page` object.
+
     Args:
-        page (ft.Page): A 'ft.Page' object representing a page.
-    
+    - page (ft.Page): An object of the `ft.Page` class.
+
     Returns:
-        The result of calling the 'maintwo' function with the 'page' object as an argument.
-    '''
+    - maintwo: An instance of the `maintwo` class initialized with the `page` object.
+    """
     from Pages.App_Layout.Body_Sections.events import maintwo
     return maintwo(page)
 
 #* ------------------ Students Page ------------------ *#
 def def_students(page: ft.Page, section: str):
-    '''
-    Returns the result of calling the 'maintwo' function from the 'students' 
-    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
-    object as an argument.
-    
+    """
+    Returns an instance of the Students class initialized with the page and section objects.
+
     Args:
-        page (ft.Page): A 'ft.Page' object representing a page.
-    
+        page (ft.Page): An object of the ft.Page class.
+        section (str): A string representing the section of the students.
+
     Returns:
-        The result of calling the 'maintwo' function with the 'page' object as an argument.
-    '''
+        Students: An instance of the Students class initialized with the page and section objects.
+    """
     from Pages.App_Layout.Body_Sections.students import Students
     return Students(page, section)
 
 #* ------------------ Teachers Page ------------------ *#
 def def_teachers(page: ft.Page, section: str):
-    '''
-    Returns the result of calling the 'maintwo' function from the 'teachers' 
-    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
-    object as an argument.
-    
+    """
+    Returns an instance of the Teachers class initialized with the page and section objects.
+
     Args:
-        page (ft.Page): A 'ft.Page' object representing a page.
-    
+        page (ft.Page): An object of the ft.Page class.
+        section (str): A string representing the section of the teachers.
+
     Returns:
-        The result of calling the 'maintwo' function with the 'page' object as an argument.
-    '''
+        Teachers: An instance of the Teachers class initialized with the page and section objects.
+    """
     from Pages.App_Layout.Body_Sections.teachers import Teachers
     return Teachers(page, section)
 
 #* ------------------ Settings Page ------------------ *#
 def def_settings(page: ft.Page):
-    '''
-    Returns the result of calling the 'maintwo' function from the 'settings' 
-    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
-    object as an argument.
-    
+    """
+    Returns an instance of the Settings class initialized with the page object.
+
     Args:
-        page (ft.Page): A 'ft.Page' object representing a page.
-    
+        page (ft.Page): An object of the ft.Page class representing the current page.
+
     Returns:
-        The result of calling the 'maintwo' function with the 'page' object as an argument.
-    '''
+        settings: An instance of the Settings class initialized with the page object.
+    """
     from Pages.App_Layout.Body_Sections.settings import Settings
     return Settings(page)
 
 #* ------------------ Grades Page ------------------ *#
 def def_grades(page: ft.Page):
-    '''
-    Returns the result of calling the 'maintwo' function from the 'grades' 
-    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
-    object as an argument.
-    
+    """
+    Returns an instance of the Grades class initialized with the page object.
+
     Args:
-        page (ft.Page): A 'ft.Page' object representing a page.
-    
+    - page (ft.Page): An object of the ft.Page class representing the current page.
+
     Returns:
-        The result of calling the 'maintwo' function with the 'page' object as an argument.
-    '''
+    - grades: An instance of the Grades class initialized with the page object.
+    """
     from Pages.App_Layout.Body_Sections.grades import Grades
     return Grades(page)
 
 #* ------------------ Schedule Page ------------------ *#
 def def_schedule(page: ft.Page, section: str):
-    '''
-    Returns the result of calling the 'maintwo' function from the 'schedule' 
-    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
-    object as an argument.
-    
+    """
+    Returns an instance of the Schedule class initialized with the page and section objects.
+
     Args:
-        page (ft.Page): A 'ft.Page' object representing a page.
-    
+        page (ft.Page): An object of the ft.Page class representing the current page.
+        section (str): A string representing the section of the schedule.
+
     Returns:
-        The result of calling the 'maintwo' function with the 'page' object as an argument.
-    '''
+        schedule: An instance of the Schedule class initialized with the page and section objects.
+    """
     from Pages.App_Layout.Body_Sections.schedule import Schedule
     return Schedule(page, section)
 
 #* ------------------ Phase Page ------------------ *#
 def def_phase(page: ft.Page):
-    '''
-    Returns the result of calling the 'maintwo' function from the 'phase' 
-    module in the 'Pages.App_Layout.Body_Sections' package with the given 'page' 
-    object as an argument.
-    
+    """
+    Returns an instance of the Phases class initialized with the page object.
+
     Args:
-        page (ft.Page): A 'ft.Page' object representing a page.
-    
+        page (ft.Page): An object of the ft.Page class representing the current page.
+
     Returns:
-        The result of calling the 'maintwo' function with the 'page' object as an argument.
-    '''
+        Phases: An instance of the Phases class initialized with the page object.
+    """
     from Pages.App_Layout.Body_Sections.phase import Phases
     return Phases(page)
