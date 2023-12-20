@@ -14,6 +14,7 @@ from modules.section_manager import def_teachers as Teachers
 from modules.section_manager import def_settings as Settings
 from modules.section_manager import def_grades as Grades
 from modules.section_manager import def_schedule as Schedule
+from modules.section_manager import def_phase as Phase
 
 
 class AppLayout:
@@ -60,7 +61,7 @@ class AppLayout:
         # Create the buru
         burger_menu = ft.PopupMenuButton(
             items=[
-                ft.PopupMenuItem(icon= ft.icons.SETTINGS_OUTLINED,text='Configuracion', on_click= lambda e:self.change_page(5)),
+                ft.PopupMenuItem(icon= ft.icons.SETTINGS_OUTLINED,text='Configuracion', on_click= lambda e:self.change_page(6)),
                 ft.PopupMenuItem(icon=ft.icons.LOGOUT_OUTLINED, text='Cerrar Sesion', on_click=lambda e: self.logout())
             ],
             content=ft.Container(ft.Icon(ft.icons.MENU, color='#000000'), padding=ft.padding.all(10))
@@ -104,14 +105,20 @@ class AppLayout:
         )
 
         grades = ft.NavigationRailDestination(
-            icon_content=ft.Icon(ft.icons.BOOK, color='#4B4669', size=30),
+            icon_content=ft.Icon(ft.icons.BOOK_OUTLINED, color='#4B4669', size=30),
             selected_icon_content=ft.Icon(ft.icons.BOOK, size=40),
             label_content=ft.Text('Calificaciones', color='#4B4669'),
         )
 
+        phases = ft.NavigationRailDestination(
+            icon_content=ft.Icon(ft.icons.ROOM_PREFERENCES_OUTLINED, color='#4B4669', size=30),
+            selected_icon_content=ft.Icon(ft.icons.ROOM_PREFERENCES, size=40),
+            label_content=ft.Text('Etapas', color='#4B4669'),
+        )
+
         sidebar = ft.NavigationRail(
             selected_index=0,
-            destinations=[home, students, teachers, schedules, grades],
+            destinations=[home, students, teachers, schedules, grades, phases],
             bgcolor='#e9ebf6',
             min_width=100,
             width=200,
@@ -134,7 +141,7 @@ class AppLayout:
         self.page.add(header, layout)
 
         # Change the page
-        self.change_page(3)
+        self.change_page(0)
 
     #* ------------------ Class Functions ------------------ *#
     def animate(self):
@@ -158,6 +165,8 @@ class AppLayout:
         elif e == 4:
             self.body.content = Grades(self.page)
         elif e == 5:
+            self.body.content = Phase(self.page)
+        elif e == 6:
             self.body.content = Settings(self.page)
 
         self.animate()
