@@ -762,6 +762,9 @@ class Schedule(ft.UserControl):
         self.schedule_buttons.controls[5].visible = True
         self.schedule_buttons.controls[6].visible = True
 
+        # Clear the inputs
+        self.guide_teacher.value = ''
+
         # Disable the sidebar and the body
         self.layout.controls[0].disabled = True
 
@@ -799,6 +802,9 @@ class Schedule(ft.UserControl):
         self.schedule_buttons.controls[4].visible = True
         self.schedule_buttons.controls[5].visible = True
         self.schedule_buttons.controls[6].visible = True
+
+        # Clear the inputs
+        self.guide_teacher.value = ''
 
         # Disable the sidebar and the body
         self.layout.controls[0].disabled = True
