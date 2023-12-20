@@ -194,17 +194,6 @@ class Students(ft.UserControl):
             content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
         )
 
-        # Create the change student button
-        self.change_student_button = ft.Container(
-            ft.Text('Cambiar Etapa',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
-            width=150,
-            height=35,
-            bgcolor='#6D62A1',
-            alignment=ft.alignment.center,
-            on_click= lambda e: self.change_phase(),
-            border_radius=15,
-        )
-
         # Create the layout
         layout_student = ft.Container(
             ft.Column([
@@ -218,7 +207,6 @@ class Students(ft.UserControl):
             ], spacing=20),
             self.student_address,
             self.student_grade,
-            self.change_student_button
         ], alignment=ft.MainAxisAlignment.START, spacing=20),
         width=500,
         height=480,
