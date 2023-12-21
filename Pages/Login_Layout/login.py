@@ -12,6 +12,10 @@ from modules.page_manager import def_register as Register
 from modules.page_manager import def_forget_credentials as FgCredentials
 from modules.page_manager import def_app_layout as AppLayout
 
+# Database
+from DB.Functions.user_db import block_user as block
+from DB.Functions.user_db import get_user as get_credentials
+
 #^ ------------------ LOGIN ------------------ ^#
 
 class Login:
@@ -28,6 +32,8 @@ class Login:
     def __init__(self, page: ft.Page):
         super().__init__()
         self.page = page
+
+        self.credentials = get_credentials()
 
         #* ------------------ Variables ------------------ *#
 
@@ -70,17 +76,17 @@ class Login:
 
 
         #* ------------------ Layout ------------------ *#
-        body = ft.Row([
+        self.body = ft.Row([
                 ft.Column(controls=[
                     # Welcome text
-                    ft.Text('¡Bienvenido!',size=24, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center', width=450),
+                    ft.Text(f'¡Bienvenido {self.credentials["user"]}!',size=24, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center', width=450),
 
                     self.username_entry, # username entry
                     self.password_entry, # password entry
                     # forget credentials text button
                     ft.Row(controls=[
                         ft.Container(height=20, width=200,padding=ft.padding.only(left=0), content=fg_credentials, on_click= lambda e: self.recover_credentials()),
-                        ft.Container(height=20, width=200,padding=ft.padding.only(left=0), content=register, on_click= lambda e: self.register()),
+                        ft.Container(height=20, width=200,padding=ft.padding.only(left=0), content=register),
                     ], spacing=70, alignment=ft.MainAxisAlignment.CENTER),
 
                     self.button, # login button
@@ -96,7 +102,7 @@ class Login:
                 ft.Row(controls=[
                     ft.Column([
                         # Add the Layout to the background
-                        ft.Container(content=body,bgcolor='#F2F4FA', width=550, height=300, border_radius=25),
+                        ft.Container(content=self.body,bgcolor='#F2F4FA', width=550, height=300, border_radius=25),
                     ],alignment=ft.MainAxisAlignment.CENTER)
                 ],alignment=ft.MainAxisAlignment.CENTER)
             ])
@@ -105,11 +111,14 @@ class Login:
         # Add the background to the page
         self.page.add(self.background)
 
+        self.restrict()
+
 
     #* ------------------ Class Functions ------------------ *#
     def validate(self):
         '''Validate the credentials'''
-        if self.username_entry.value == 'admin' and self.password_entry.value == 'admin': # Validate the credentials
+
+        if self.username_entry.value == self.credentials['user'] and self.password_entry.value == self.credentials['password']: # Validate the credentials
             self.log()
         elif self.username_entry.value == '' or self.password_entry.value == '': # Validate if the fields are empty
             self.button.text = 'Rellene todos los campos'
@@ -142,3 +151,47 @@ class Login:
         '''Log in to the system'''
         self.page.remove(self.page.controls[0])
         AppLayout(self.page) # Create the layout to recover the credentials
+
+
+    def restrict(self):
+        '''Restrict the access to the register layout'''
+
+        if block():
+            dlg = ft.AlertDialog(
+                content=ft.Text('Ya existe un usuario registrado en el sistema'),
+                actions=[
+                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))
+                ]
+            )
+
+            self.body.controls[0].controls[3].controls[1].on_click = lambda e: self.open_dlg(dlg)
+            self.layout.update()
+        else:
+            self.body.controls[0].controls[3].controls[1].on_click = lambda e: self.register()
+            self.layout.update()
+
+
+
+    def open_dlg(self, dlg):
+        """
+        Open a dialog box in the user interface.
+
+        :param dlg: The dialog box object that needs to be opened.
+        :type dlg: object
+        """
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
+
+    def close(self, dlg):
+        """
+        Closes the dialog box by setting its 'open' attribute to False and updating the page.
+
+        Args:
+            dlg (Dialog): The dialog box to be closed.
+
+        Returns:
+            None
+        """
+        dlg.open = False
+        self.page.update()

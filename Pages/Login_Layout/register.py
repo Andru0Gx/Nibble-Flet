@@ -13,6 +13,9 @@ from modules.back_button import back_container
 # Pages
 from modules.page_manager import def_login as Login
 
+# Database
+from DB.Functions.user_db import save_user as save
+
 #^ ------------------ REGISTER ------------------ ^#
 
 class Register(ft.UserControl):
@@ -174,3 +177,11 @@ class Register(ft.UserControl):
 
     def save_data(self):    #TODO - ADD THE MODULE TO SAVE THE DATA IN THE DATABASE
         '''Save the data to the database'''
+        save(
+            self.username_entry.value,
+            self.password_entry.value,
+            self.email_entry.value,
+            self.question1.value,
+            self.question2.value,
+            self.question3.value
+            )

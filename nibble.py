@@ -41,8 +41,8 @@ def main(page: ft.Page):
     page.window_width = 1366
 
     page.update()
-    pm.def_app_layout(page)
-    # pm.def_login(page)
+    # pm.def_app_layout(page)
+    pm.def_login(page)
 
     db()
 

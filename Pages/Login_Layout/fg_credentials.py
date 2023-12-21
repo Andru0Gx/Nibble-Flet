@@ -4,14 +4,25 @@
 # pylint: disable=W0201
 
 # Libraries
+import random
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from smtplib import SMTP
+import socket
+
 import time
 import flet as ft
+
 
 # Modules
 from modules.back_button import back_container
 
 # pages
 from modules.page_manager import def_login as Login
+
+# Database
+from DB.Functions.user_db import get_user as get_credentials
+from DB.Functions.user_db import update_user as update_credentials
 
 #^ ------------------ FG CREDENTIALS ------------------ ^#
 
@@ -78,6 +89,8 @@ class Forget(ft.UserControl):
         self.page = page
         self.parent = parent
 
+        self.credentials = get_credentials()
+
         #* ------------------ Variables Layout1 ------------------ *#
         text = 'Se ha enviado un codigo a tu cuenta de correo electronico\npor favor ingresa el codigo de verificacion para continuar, \nrecuerda revisar tu bandeja de spam.'
 
@@ -85,7 +98,9 @@ class Forget(ft.UserControl):
         self.text = ft.Text(text, size=15, color='#4B4669', font_family='Arial', text_align='center')
 
         # Create the text content to change the layout
-        self.change_method = ft.Container(height=20, width=450,padding=ft.padding.only(left=0), content=ft.Text('No puedes acceder a tu correo?', size=15, color='#4B4669', font_family='Arial', text_align='start'), on_click= lambda e: self.change_layout(password))
+        self.change_method = ft.Container(height=20, width=225,padding=ft.padding.only(left=0), content=ft.Text('Preguntas de Seguridad', size=15, color='#4B4669', font_family='Arial', text_align='start'), on_click= lambda e: self.change_layout(password))
+
+        self.resend = ft.Container(height=20, width=225,padding=ft.padding.only(left=0), content=ft.Text('Reenviar codigo', size=15, color='#4B4669', font_family='Arial', text_align='start'), on_click= lambda e: self.send_mail())
 
         # Create the Entry for the validation code
         self.code = ft.TextField(
@@ -115,7 +130,10 @@ class Forget(ft.UserControl):
                         ], alignment=ft.MainAxisAlignment.CENTER),
                         self.text,
                         self.code,
-                        self.change_method,
+                        ft.Row(controls=[
+                            self.change_method,
+                            self.resend,
+                        ], spacing=10, alignment=ft.MainAxisAlignment.CENTER),
                         self.button,
 
                     ],horizontal_alignment='center', alignment=ft.MainAxisAlignment.SPACE_EVENLY)
@@ -178,15 +196,11 @@ class Forget(ft.UserControl):
         # Create the container for the layout
         self.layout = ft.Container(content=self.body_layout1,width=720, height=300, border_radius=20)
 
-
-
-        #send code
-        # self.send_code = self.email_code()
-        self.send_code = 1234
+        self.send_mail()
 
         # add the layout to the page
         self.content = self.layout
-        
+
     def build(self):
         return self.content
 
@@ -198,29 +212,120 @@ class Forget(ft.UserControl):
         if self.layout.content == self.body_layout1:
             self.layout.content = self.body_layout2
             self.change_method.content = ft.Text('Enviar codigo de verificacion', size=15, color='#4B4669', font_family='Arial', text_align='start')
+            self.change_method.width = 450
             self.button.on_click = lambda e: self.validate_questions(password)
         elif self.layout.content == self.body_layout2:
             self.layout.content = self.body_layout1
-            self.change_method.content = ft.Text('No puedes acceder a tu correo?', size=15, color='#4B4669', font_family='Arial', text_align='start')
+            self.change_method.content = ft.Text('Preguntas de Seguridad', size=15, color='#4B4669', font_family='Arial', text_align='start')
+            self.change_method.width = 225
             self.button.on_click = lambda e: self.validate_code(password)
 
         self.layout.update()
         self.parent.update()
 
-    def email_code(self): #TODO - ADD THE MODULE TO SEND THE CODE TO THE EMAIL
-        '''Function to send the code to the email'''
-        code = generate_code()
-        correo = get_email()
-        if send_mail(correo, code):
-            print('Correo enviado con éxito')
+    def wifi_verification(self):
+        '''Check if the user is connected to the internet.'''
+        try:
+            socket.create_connection(("www.google.com", 80))
+            return True
+        except:
+            pass
+        return False
+
+    def send_mail(self):
+        '''Send mail with code to verify the user's email address.'''
+        codigo = random.randint(100000, 999999)
+        self.send_code = codigo
+
+        correo = self.credentials['email']
+
+        if self.wifi_verification():
+            message = MIMEMultipart('plain')
+            message['From'] = 'SC.Nibble@outlook.com'
+            message['To'] = correo
+            message['Subject'] = 'Código de verificación para Nibble'
+
+            text = f" Estimado/a {correo},\n\nEspero que este correo te encuentre bien. En relación a tu solicitud de verificación en Nibble, nos complace proporcionarte el código de verificación necesario para completar el proceso de autenticación.\n\nCódigo de verificación: {codigo}\n\nPor favor, ten en cuenta que este código es confidencial y solo debe ser utilizado para el propósito de verificación en Nibble. No compartas este código con nadie, ya que podría comprometer la seguridad de tu cuenta.\n\nSi no has solicitado este código de verificación o tienes alguna pregunta o inquietud adicional, te recomendamos ponerse en contacto con nuestro equipo de soporte lo antes posible. Estaremos encantados de ayudarte en lo que necesites.\n\nGracias por confiar en Nibble. Esperamos brindarte una excelente experiencia.\n\nAtentamente,\n\nEl equipo de Nibble"
+
+            message.attach(MIMEText(text, 'plain'))
+            smtp = SMTP('smtp.office365.com', 587)
+            smtp.starttls()
+            smtp.login('SC.Nibble@outlook.com', 'Nibble.1234')
+            smtp.sendmail('SC.Nibble@outlook.com', correo, message.as_string())
+            smtp.quit()
+            return True
         else:
-            print('No conectado a internet')
-        return code
+            self.dlg = ft.AlertDialog(
+                content=ft.Text('No tienes conexion a internet o se encuentra inestable.\nNota: Puedes usar las preguntas de seguridad.', size=15, color='#4B4669', font_family='Arial', text_align='left'),
+                actions=[
+                    ft.Row([
+                        ft.ElevatedButton(text='Cancelar', style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.close(self.dlg)),
+                        ft.ElevatedButton(text='Reintentar', style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.again())
+                    ], alignment=ft.MainAxisAlignment.CENTER)
+                ]
+            )
+            self.open_dlg(self.dlg)
+            return False
+
+    def again(self):
+        """
+        Retry sending the email with the verification code.
+
+        This method updates the text and state of a dialog box to indicate the status of the email sending process.
+
+        Inputs:
+        - None
+
+        Outputs:
+        - None
+        """
+
+        self.dlg.actions[0].controls[1].text = 'Enviando...'
+        self.dlg.actions[0].controls[1].disabled = True
+        self.dlg.actions[0].controls[1].update()
+
+        if self.send_mail():
+            self.close(self.dlg)
+        else:
+            self.dlg.actions[0].controls[1].text = 'Envio Fallido'
+            self.dlg.actions[0].controls[1].disabled = True
+            self.dlg.actions[0].controls[1].update()
+
+            time.sleep(1)
+
+            self.dlg.actions[0].controls[1].text = 'Reintentar'
+            self.dlg.actions[0].controls[1].disabled = False
+            self.dlg.actions[0].controls[1].update()
+
+    def open_dlg(self, dlg):
+        """
+        Open a dialog box in the user interface.
+
+        :param dlg: The dialog box object that needs to be opened.
+        :type dlg: object
+        """
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
+
+    def close(self, dlg):
+        """
+        Closes the dialog box by setting its 'open' attribute to False and updating the page.
+
+        Args:
+            dlg (Dialog): The dialog box to be closed.
+
+        Returns:
+            None
+        """
+        dlg.open = False
+        self.page.update()
+
 
     def validate_questions(self, next_page):
         '''Validate the questions'''
         if self.question1.value != '' and self.question2.value != '' and self.question3.value != '':
-            if self.question1.value == 'rojo' and self.question2.value == 'pizza' and self.question3.value == 'perro':
+            if self.question1.value == self.credentials['question1'] and self.question2.value == self.credentials['question2'] and self.question3.value == self.credentials['question3']:
                 self.button.text = 'Cargando...'
                 self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
                 self.layout.update()
@@ -350,6 +455,7 @@ class Forget(ft.UserControl):
 
         if password_entry.value != '' and password_entry2.value != '':
             if password_entry.value == password_entry2.value:
+                update_credentials(self.credentials['user'], password_entry.value, self.credentials['email'], self.credentials['question1'], self.credentials['question2'], self.credentials['question3'])
                 self.button2.text = 'Cargando...'
                 self.button2.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
                 parent.update()
@@ -359,7 +465,6 @@ class Forget(ft.UserControl):
                 parent.update()
                 parent.remove(parent.controls[0])
                 Login(parent)
-                #TODO - ADD THE MODULE TO CHANGE THE PASSWORD
             else:
                 self.button2.text = 'Las contraseñas no coinciden'
                 self.button2.style = ft.ButtonStyle(bgcolor='#ff6600', color='#FFFFFF')
@@ -379,7 +484,7 @@ class Forget(ft.UserControl):
 
     def show_username(self):
         '''Show the username'''
-        username = 'admin' #TODO - ADD THE MODULE TO GET THE USERNAME
+        username = self.credentials['user']
         parent = self.page
 
         def home(page):
