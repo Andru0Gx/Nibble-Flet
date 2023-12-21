@@ -173,7 +173,7 @@ def create_tables():
     '''Creates all the tables in a SQLite database'''
 
     try:
-        conexion = sqlite3.connect('DB/escuela.db')
+        conexion = sqlite3.connect('DB/Nibble.db')
 
         # Create the main tables
         teacher_table(conexion)
