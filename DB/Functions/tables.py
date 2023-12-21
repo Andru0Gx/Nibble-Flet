@@ -1,8 +1,7 @@
-'''Nibble-DB Commands'''
+'''Nibble-DB - Tables'''
 
 # Libraries
 import sqlite3
-
 
 #$ ================================ Tables ================================
 #* --------------------------- Teacher - Table ---------------------------
@@ -150,6 +149,7 @@ def calendar_table(conexion):
         );""")
     conexion.commit()
 
+
 #* --------------------------- User - Table ---------------------------
 def user_table(conexion):
     '''Creates a table named 'usuario' in a SQLite database'''
@@ -167,12 +167,6 @@ def user_table(conexion):
         );""")
     conexion.commit()
 
-#$ ================================ functions for insert records in the tables ================================
-
-#$ ================================ functions for delete records of the tables ================================
-
-
-
 
 #* --------------------------- Create The Tables ---------------------------
 def create_tables():
@@ -180,7 +174,7 @@ def create_tables():
 
     try:
         conexion = sqlite3.connect('DB/escuela.db')
-        
+
         # Create the main tables
         teacher_table(conexion)
         subject_table(conexion)
@@ -200,6 +194,3 @@ def create_tables():
 
     except Exception as ex:
         print(ex) #TODO - Delete this line / Write a log file
-
-# Run the function
-create_tables()

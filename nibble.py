@@ -21,6 +21,9 @@ import flet as ft
 # from modules.page_manager import def_login as Login
 import modules.page_manager as pm
 
+# Database
+from DB.Functions.tables import create_tables as db
+
 
 #^ ------------------ RUN APP ------------------ ^#
 
@@ -40,5 +43,7 @@ def main(page: ft.Page):
     page.update()
     pm.def_app_layout(page)
     # pm.def_login(page)
+
+    db()
 
 ft.app(target=main)
