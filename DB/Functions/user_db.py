@@ -32,26 +32,28 @@ def get_user():
     conexion = sqlite3.connect('DB/nibble.db')
     cursor = conexion.cursor()
 
-    cursor.execute(
-        """SELECT usuario, contrasena, correo, respuesta_seguridad_1, respuesta_seguridad_2, respuesta_seguridad_3 FROM usuario;"""
-    )
+    try:
+        cursor.execute(
+            """SELECT usuario, contrasena, correo, respuesta_seguridad_1, respuesta_seguridad_2, respuesta_seguridad_3 FROM usuario;"""
+        )
+        user = cursor.fetchall()
 
-    user = cursor.fetchall()
+        # Format the data to a dictionary
+        user = {
+            'user': user[0][0],
+            'password': user[0][1],
+            'email': user[0][2],
+            'question1': user[0][3],
+            'question2': user[0][4],
+            'question3': user[0][5]
+        }
 
-    # Format the data to a dictionary
-    user = {
-        'user': user[0][0],
-        'password': user[0][1],
-        'email': user[0][2],
-        'question1': user[0][3],
-        'question2': user[0][4],
-        'question3': user[0][5]
-    }
+        conexion.commit()
+        conexion.close()
 
-    conexion.commit()
-    conexion.close()
-
-    return user
+        return user
+    except:
+        return False
 
 
 #* --------------------------- Update User ---------------------------
