@@ -74,13 +74,11 @@ class Login:
         # Create the button to login
         self.button = ft.TextButton(text='Iniciar Sesion', width=450, height=41, style=ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF'), on_click= lambda e: self.validate())
 
-
         #* ------------------ Layout ------------------ *#
         self.body = ft.Row([
                 ft.Column(controls=[
                     # Welcome text
-                    ft.Text(f'¡Bienvenido {self.credentials["user"]}!',size=24, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center', width=450),
-
+                    ft.Text('¡Bienvenido!',size=24, weight=ft.FontWeight.BOLD, color='#4B4669', font_family='Arial', text_align='center', width=450),
                     self.username_entry, # username entry
                     self.password_entry, # password entry
                     # forget credentials text button
@@ -163,10 +161,18 @@ class Login:
                     ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))
                 ]
             )
-
+            self.button.on_click = lambda e: self.validate()
             self.body.controls[0].controls[3].controls[1].on_click = lambda e: self.open_dlg(dlg)
             self.layout.update()
         else:
+
+            dlg = ft.AlertDialog(
+                content=ft.Text('No existe un usuario registrado en el sistema'),
+                actions=[
+                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))
+                ]
+            )
+            self.button.on_click = lambda e: self.open_dlg(dlg)
             self.body.controls[0].controls[3].controls[1].on_click = lambda e: self.register()
             self.layout.update()
 

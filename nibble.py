@@ -40,10 +40,10 @@ def main(page: ft.Page):
     page.window_height = 768
     page.window_width = 1366
 
+    db()
     page.update()
     # pm.def_app_layout(page)
     pm.def_login(page)
 
-    db()
 
 ft.app(target=main)

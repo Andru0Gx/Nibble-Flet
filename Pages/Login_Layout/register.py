@@ -160,7 +160,7 @@ class Register(ft.UserControl):
             self.button.text = 'Cargando...'
             self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
             self.body.update()
-            time.sleep(1)
+            time.sleep(0.5)
             self.button.text = 'Registrarse'
             self.button.style = ft.ButtonStyle(bgcolor='#4B4669', color='#FFFFFF')
             self.body.update()
