@@ -203,6 +203,7 @@ def create_tables():
         parent_table(conexion)
         parent_student_table(conexion)
         grade_table(conexion)
+        schedule_table(conexion)
 
         #Create the secondary tables
         calendar_table(conexion)
