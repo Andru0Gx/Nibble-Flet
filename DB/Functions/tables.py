@@ -23,7 +23,7 @@ def teacher_table(conexion):
     conexion.commit()
 
 
-#* --------------------------- Subject - Table ---------------------------
+#* --------------------------- Subject_Matter - Table ---------------------------
 def subject_table(conexion):
     '''Creates a table named 'materia' in a SQLite database'''
 
@@ -66,6 +66,7 @@ def student_table(conexion):
             direccion TEXT NOT NULL,
             correo TEXT UNIQUE,
             etapa_id INTEGER NOT NULL,
+            f_ingreso TEXT NOT NULL,
             CONSTRAINT fk_etapa FOREIGN KEY(etapa_id) REFERENCES etapa(id_e)
         );""")
     conexion.commit()
@@ -111,8 +112,8 @@ def parent_student_table(conexion):
             representante_ci TEXT,
             estudiante_ci TEXT,
             PRIMARY KEY(representante_ci, estudiante_ci)
-            CONSTRAINT fk_repre_ci FOREIGN KEY(representante_ci) REFERENCES representante(cedula_r),
-            CONSTRAINT fk_estudiante_ci FOREIGN KEY(estudiante_ci) REFERENCES estudiante(cedula_e)
+            CONSTRAINT fk_repre_ci FOREIGN KEY(representante_ci) REFERENCES representante(cedula),
+            CONSTRAINT fk_estudiante_ci FOREIGN KEY(estudiante_ci) REFERENCES estudiante(cedula)
         );""")
     conexion.commit()
 
@@ -132,6 +133,24 @@ def grade_table(conexion):
             descrip_actividad TEXT,
             calificacion DECIMAL(4,2) NOT NULL,
             fecha TEXT NOT NULL
+        );""")
+    conexion.commit()
+
+#* --------------------------- schedule - Table ---------------------------
+def schedule_table(conexion):
+    '''Creates a table named 'horario' in a SQLite database'''
+
+    cursor = conexion.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS horario(
+            id_horario INTEGER PRIMARY KEY AUTOINCREMENT,
+            anio_en_curso TEXT NOT NULL,
+            dia TEXT NOT NULL,
+            profesor_ci TEXT NOT NULL,
+            materia_id INTEGER NOT NULL,
+            bloque_hora,
+            CONSTRAINT fk_prof_ci_schedule FOREIGN KEY(profesor_ci) REFERENCES representante(cedula),
+            CONSTRAINT fk_mat__id_schedule FOREIGN KEY(materia_id) REFERENCES estudiante(id_m)
         );""")
     conexion.commit()
 
@@ -174,8 +193,8 @@ def create_tables():
 
     try:
         conexion = sqlite3.connect('DB/Nibble.db')
-
-        # Create the main tables
+        
+        #Create the main tables
         teacher_table(conexion)
         subject_table(conexion)
         subject_teacher_table(conexion)
@@ -185,7 +204,7 @@ def create_tables():
         parent_student_table(conexion)
         grade_table(conexion)
 
-        # Create the secondary tables
+        #Create the secondary tables
         calendar_table(conexion)
         user_table(conexion)
 
