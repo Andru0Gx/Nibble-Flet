@@ -9,8 +9,8 @@
 2. time
 3. datetime
 4. calendar
-5. locale
-6. dateutil
+5. locales
+6. python-dateutil
 7. sqlite3
 
 ```
