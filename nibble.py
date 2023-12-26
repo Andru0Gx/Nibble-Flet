@@ -40,6 +40,21 @@ def main(page: ft.Page):
     page.window_height = 768
     page.window_width = 1366
 
+    # Theme for the scrollbar
+    page.theme = ft.Theme(
+            scrollbar_theme=ft.ScrollbarTheme(
+                thickness=10,
+                thumb_visibility=True,
+                thumb_color={
+                    ft.MaterialState.DEFAULT: '#9a96bc',
+                    ft.MaterialState.HOVERED: '#817aa7',
+                },
+            ),
+        )
+
+    # page.window_min_height = 768
+    # page.window_min_width = 1366
+
     db()
     page.update()
     # pm.def_app_layout(page)
