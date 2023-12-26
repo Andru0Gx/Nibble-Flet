@@ -19,6 +19,12 @@ from DB.Functions.calendar_db import filter_event_db
 
 #* --------------------------- Class for Infinity scroll ---------------------------
 class State:
+    """
+    A class that represents the state of an object.
+    
+    Attributes:
+        i (int): The value of the state.
+    """
     i = 0
 
 s = State()
@@ -42,6 +48,14 @@ class Event:
         # Variables
         self.scrol_pos = 10
 
+        self.page.theme = ft.Theme(
+            scrollbar_theme=ft.ScrollbarTheme(
+                thickness=10,
+                thumb_visibility=True,
+                thumb_color='#817aa7',
+            )
+        )
+
         # header
         tittle = ft.Text('Agregar Eventos', size= 25, width=800, text_align='center', color='#4B4669', height=50)
 
@@ -51,7 +65,14 @@ class Event:
             on_change= lambda e: self.change(date_picker.value.strftime("%d / %m / %Y")),
         )
 
+        search_date_picker = ft.DatePicker(
+            first_date= datetime.datetime(1800,1,1),
+            last_date= datetime.datetime(3000,1,1),
+            on_change= lambda e: self.search_date(search_date_picker.value.strftime("%d / %m / %Y")),
+        )
+
         self.page.overlay.append(date_picker)
+        self.page.overlay.append(search_date_picker)
 
         # body
         self.event_name = ft.TextField(
@@ -141,7 +162,7 @@ class Event:
         # Search bar
 
         self.search_bar = ft.TextField(
-            width=565,
+            width=530,
             height=35,
             label='Buscar Evento',
             hint_text='Ingresa el titulo o fecha del Evento',
@@ -173,6 +194,16 @@ class Event:
             border_radius=15,
             tooltip='Limpiar Filtro'
         )
+
+        self.search_date_button = ft.Container(
+                width=35,
+                height=35,
+                bgcolor= '#6D62A1',
+                alignment=ft.alignment.center,
+                on_click= lambda e: search_date_picker.pick_date(),
+                border_radius=15,
+                content=ft.Icon(ft.icons.CALENDAR_TODAY, color='#f3f4fa', size=20),
+            )
 
         # Search List
         self.data_list = ft.DataTable(
@@ -216,9 +247,10 @@ class Event:
 
             ft.Row([
                 self.search_bar,
+                self.search_date_button,
                 self.search_button,
                 self.clear_filter_button
-            ], spacing= 20, alignment=ft.MainAxisAlignment.CENTER),
+            ], spacing= 10, alignment=ft.MainAxisAlignment.CENTER),
 
             ft.Row([
                 ft.Container(
@@ -301,6 +333,27 @@ class Event:
 
             self.page.update()
             self.data_scroll.scroll_to(offset=0,duration=100)
+
+    def search_date(self, date):
+        """
+        Search for events based on a specific date.
+
+        Args:
+            date (str): The date to search for events in the format 'YYYY-MM-DD'.
+
+        Returns:
+            None
+
+        Example:
+            event = Event(page)
+            event.search_date('2022-12-31')
+        """
+        self.search_bar.value = ''
+        self.page.update()
+
+        self.search_bar.value = date
+        self.page.update()
+
 
     def clear_filter(self):
         '''Clears the search bar and shows all the events in the database.'''

@@ -116,14 +116,19 @@ def delete_event_db(id_event):
 
 
 #* --------------------------- filter list by any event info ---------------------------
-def filter_event_db(filter):
+def filter_event_db(filter, date = False):
     '''Filter the events from the database'''
     conexion = sqlite3.connect('DB/nibble.db')
     cursor = conexion.cursor()
 
-    cursor.execute(
-        f"""SELECT titulo, descripcion, fecha, id_evento FROM calendario WHERE titulo LIKE '%{filter}%' OR descripcion LIKE '%{filter}%' OR fecha LIKE '%{filter}%';"""
-    )
+    if date:
+        cursor.execute(
+            f"""SELECT titulo, descripcion, fecha, id_evento FROM calendario WHERE fecha = '{filter}';"""
+        )
+    else:
+        cursor.execute(
+            f"""SELECT titulo, descripcion, fecha, id_evento FROM calendario WHERE titulo LIKE '%{filter}%' OR descripcion LIKE '%{filter}%' OR fecha LIKE '%{filter}%';"""
+        )
 
     events = cursor.fetchall()
 
