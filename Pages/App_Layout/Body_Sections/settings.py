@@ -3,6 +3,8 @@
 # Libraries
 import flet as ft
 
+#TODO - Add an option to change the email and the security questions
+
 class Settings(ft.UserControl):
     '''
     
