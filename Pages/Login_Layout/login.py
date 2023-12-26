@@ -83,7 +83,7 @@ class Login:
                     self.password_entry, # password entry
                     # forget credentials text button
                     ft.Row(controls=[
-                        ft.Container(height=20, width=200,padding=ft.padding.only(left=0), content=fg_credentials, on_click= lambda e: self.recover_credentials()),
+                        ft.Container(height=20, width=200,padding=ft.padding.only(left=0), content=fg_credentials),
                         ft.Container(height=20, width=200,padding=ft.padding.only(left=0), content=register),
                     ], spacing=70, alignment=ft.MainAxisAlignment.CENTER),
 
@@ -163,6 +163,7 @@ class Login:
             )
             self.button.on_click = lambda e: self.validate()
             self.body.controls[0].controls[3].controls[1].on_click = lambda e: self.open_dlg(dlg)
+            self.body.controls[0].controls[3].controls[0].on_click = lambda e: self.recover_credentials()
             self.layout.update()
         else:
 
@@ -174,6 +175,7 @@ class Login:
             )
             self.button.on_click = lambda e: self.open_dlg(dlg)
             self.body.controls[0].controls[3].controls[1].on_click = lambda e: self.register()
+            self.body.controls[0].controls[3].controls[0].on_click = lambda e: self.open_dlg(dlg)
             self.layout.update()
 
 
