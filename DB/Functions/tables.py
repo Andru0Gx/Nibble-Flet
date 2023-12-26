@@ -64,7 +64,6 @@ def student_table(conexion):
             apellidos TEXT NOT NULL,
             f_nacimiento TEXT NOT NULL,
             direccion TEXT NOT NULL,
-            correo TEXT UNIQUE,
             etapa_id INTEGER NOT NULL,
             f_ingreso TEXT NOT NULL,
             CONSTRAINT fk_etapa FOREIGN KEY(etapa_id) REFERENCES etapa(id_e)
