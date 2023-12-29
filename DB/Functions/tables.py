@@ -11,7 +11,8 @@ def teacher_table(conexion):
     cursor = conexion.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS profesor(
-            cedula TEXT PRIMARY KEY,
+            id_p INTEGER PRIMARY KEY AUTOINCREMENT,
+            cedula TEXT NOT NULL UNIQUE,
             nombres TEXT NOT NULL,
             apellidos TEXT NOT NULL,
             f_nacimiento TEXT NOT NULL,
@@ -46,8 +47,8 @@ def subject_teacher_table(conexion):
             profesor_ci TEXT,
             materia_id INTEGER,
             PRIMARY KEY(profesor_ci, materia_id),
-            CONSTRAINT fk_prof_ci FOREIGN KEY(profesor_ci) REFERENCES profesor(cedula_p),
-            CONSTRAINT fk_mat_id FOREIGN KEY(materia_id) REFERENCES materia(id_m)
+            CONSTRAINT fk_prof_ci FOREIGN KEY(profesor_ci) REFERENCES profesor(cedula_p) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT fk_mat_id FOREIGN KEY(materia_id) REFERENCES materia(id_m) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()
 
@@ -59,14 +60,15 @@ def student_table(conexion):
     cursor = conexion.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS estudiante(
-            cedula TEXT PRIMARY KEY,
+            id_s INTEGER PRIMARY KEY AUTOINCREMENT,
+            cedula TEXT NOT NULL UNIQUE,
             nombres TEXT NOT NULL,
             apellidos TEXT NOT NULL,
             f_nacimiento TEXT NOT NULL,
             direccion TEXT NOT NULL,
             etapa_id INTEGER NOT NULL,
             f_ingreso TEXT NOT NULL,
-            CONSTRAINT fk_etapa FOREIGN KEY(etapa_id) REFERENCES etapa(id_e)
+            CONSTRAINT fk_etapa FOREIGN KEY(etapa_id) REFERENCES etapa(id_e) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()
 
@@ -92,7 +94,8 @@ def parent_table(conexion):
     cursor = conexion.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS representante(
-            cedula TEXT PRIMARY KEY,
+            id_r INTEGER PRIMARY KEY AUTOINCREMENT,
+            cedula TEXT NOT NULL UNIQUE,
             nombres TEXT NOT NULL,
             apellidos TEXT NOT NULL,
             telefono1 TEXT NOT NULL,
@@ -108,11 +111,11 @@ def parent_student_table(conexion):
     cursor = conexion.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS repre_estudiante(
-            representante_ci TEXT,
-            estudiante_ci TEXT,
-            PRIMARY KEY(representante_ci, estudiante_ci)
-            CONSTRAINT fk_repre_ci FOREIGN KEY(representante_ci) REFERENCES representante(cedula),
-            CONSTRAINT fk_estudiante_ci FOREIGN KEY(estudiante_ci) REFERENCES estudiante(cedula)
+            representante_id INTEGER,
+            estudiante_id INTEGER,
+            PRIMARY KEY(representante_id, estudiante_id),
+            CONSTRAINT fk_rep_id FOREIGN KEY(representante_id) REFERENCES representante(id_r) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT fk_est_id FOREIGN KEY(estudiante_id) REFERENCES estudiante(id_s) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()
 
@@ -148,8 +151,8 @@ def schedule_table(conexion):
             profesor_ci TEXT NOT NULL,
             materia_id INTEGER NOT NULL,
             bloque_hora,
-            CONSTRAINT fk_prof_ci_schedule FOREIGN KEY(profesor_ci) REFERENCES representante(cedula),
-            CONSTRAINT fk_mat__id_schedule FOREIGN KEY(materia_id) REFERENCES estudiante(id_m)
+            CONSTRAINT fk_prof_ci_schedule FOREIGN KEY(profesor_ci) REFERENCES profesor(cedula_p) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT fk_mat__id_schedule FOREIGN KEY(materia_id) REFERENCES materia(id_m) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()
 
@@ -186,13 +189,26 @@ def user_table(conexion):
     conexion.commit()
 
 
+#* --------------------------- TEMP DATA - Table ---------------------------
+def temp_data_table(conexion):
+    '''Creates a table named 'temp_data' in a SQLite database'''
+
+    cursor = conexion.cursor()
+    cursor.execute(
+        """CREATE TABLE IF NOT EXISTS temp_data(
+            data TEXT PRIMARY KEY
+        );""")
+    conexion.commit()
+
+
+
 #* --------------------------- Create The Tables ---------------------------
 def create_tables():
     '''Creates all the tables in a SQLite database'''
 
     try:
         conexion = sqlite3.connect('DB/Nibble.db')
-        
+
         #Create the main tables
         teacher_table(conexion)
         subject_table(conexion)
@@ -203,6 +219,8 @@ def create_tables():
         parent_student_table(conexion)
         grade_table(conexion)
         schedule_table(conexion)
+
+        temp_data_table(conexion)
 
         #Create the secondary tables
         calendar_table(conexion)
