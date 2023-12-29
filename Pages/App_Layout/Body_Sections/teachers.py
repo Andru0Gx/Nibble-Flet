@@ -331,18 +331,19 @@ class Teachers(ft.UserControl):
             ),
 
             ft.Container(
-                ft.Text('Imprimir',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
-                width=80,
+                ft.Icon(ft.icons.PRINT, color='#f3f4fa', size=20),
+                width=50,
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
                 on_click= lambda e: self.print_teacher(),
                 border_radius=15,
+                tooltip='Imprimir Profesor',
             ),
 
             ft.Container(
                 ft.Icon(ft.icons.TABLE_ROWS_OUTLINED, color='#f3f4fa', size=20),
-                width=80,
+                width=50,
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
@@ -501,7 +502,7 @@ class Teacherslist(ft.UserControl):
 
         self.data_container = ft.Container(scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#6D62A1'), border_radius=10, width=1100, height=500)
 
-        up_button = ft.FloatingActionButton(icon=ft.icons.ARROW_UPWARD, bgcolor='#6D62A1', on_click= lambda e: scrol.scroll_to(offset=0,duration=100), width=50, height=35)
+        up_button = ft.FloatingActionButton(content=ft.Icon(ft.icons.ARROW_UPWARD, color='#f3f4fa', size=20), bgcolor='#6D62A1', on_click= lambda e: scrol.scroll_to(offset=0,duration=100), width=50, height=35)
 
 
         # Create the Button Change View
@@ -515,11 +516,36 @@ class Teacherslist(ft.UserControl):
             border_radius=15,
         )
 
+        self.print_teacher_button = ft.Container(
+                ft.Icon(ft.icons.PRINT, color='#f3f4fa', size=20),
+                width=50,
+                height=35,
+                bgcolor='#6D62A1',
+                alignment=ft.alignment.center,
+                on_click= lambda e: self.print_teacher_list(),
+                border_radius=15,
+                tooltip='Imprimir Lista',
+            )
+
+        self.clear_filter_button = ft.Container(
+                ft.Icon(ft.icons.CLEAR_ALL, color='#f3f4fa', size=20),
+                width=50,
+                height=35,
+                bgcolor='#6D62A1',
+                alignment=ft.alignment.center,
+                on_click= lambda e: self.clear_filter(),
+                border_radius=15,
+                tooltip='Limpiar Filtro',
+                visible=False,
+            )
+
         # Create the Layout
         layout = ft.Column([
             self.title,
             ft.Row([
                     self.search_bar,
+                    self.clear_filter_button,
+                    self.print_teacher_button,
                     self.change_view,
                     up_button
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
@@ -540,3 +566,10 @@ class Teacherslist(ft.UserControl):
         '''Change the view of the data table to the Students'''
         self.body.content = Teachers(self.page, self.body)
         self.body.update()
+
+    def print_teacher_list(self):
+        '''Print the list of teachers'''
+
+
+    def clear_filter(self):
+        '''Clear the filter of the data table'''
