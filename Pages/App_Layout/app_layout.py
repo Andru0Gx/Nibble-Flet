@@ -1,7 +1,6 @@
 '''App Layout'''
 
 # Libraries
-import time
 import flet as ft
 
 # Pages
@@ -144,15 +143,8 @@ class AppLayout:
         self.change_page(0)
 
     #* ------------------ Class Functions ------------------ *#
-    def animate(self):
-        '''Animate the layout'''
-        time.sleep(0.1)
-        self.body.opacity = 0 if self.body.opacity == 1 else 1
-        self.body.update()
-
-    def change_page(self, e): #TODO - ADD THE MODULE TO CHANGE THE PAGE (CLASS)
+    def change_page(self, e):
         '''Change the page'''
-        self.animate()
 
         if e == 0:
             self.body.content = Home(self.page)
@@ -169,7 +161,7 @@ class AppLayout:
         elif e == 6:
             self.body.content = Settings(self.page)
 
-        self.animate()
+        self.body.update()
 
     def logout(self):
         '''Logout from the system'''
