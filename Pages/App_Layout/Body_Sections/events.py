@@ -192,7 +192,8 @@ class Event:
             alignment=ft.alignment.center,
             on_click= lambda e: self.clear_filter(),
             border_radius=15,
-            tooltip='Limpiar Filtro'
+            tooltip='Limpiar Filtro',
+            visible=False,
         )
 
         self.search_date_button = ft.Container(
@@ -285,7 +286,7 @@ class Event:
 
         container = ft.Container(self.layout, bgcolor='#e9ebf6', expand=True, padding=ft.padding.only(20,10,20,20))
 
-        up_button = ft.FloatingActionButton(icon=ft.icons.ARROW_UPWARD, bgcolor='#6D62A1', on_click= lambda e: self.data_scroll.scroll_to(offset=0,duration=100), width=50, height=50)
+        up_button = ft.FloatingActionButton(content=ft.Icon(ft.icons.ARROW_UPWARD, color='#f3f4fa', size=20), bgcolor='#6D62A1', on_click= lambda e: self.data_scroll.scroll_to(offset=0,duration=100), width=50, height=50)
 
         page.add(container, up_button)
 
@@ -331,6 +332,7 @@ class Event:
                 ], data=event['id'])
                 self.data_list.rows.append(row)
 
+            self.clear_filter_button.visible = True
             self.page.update()
             self.data_scroll.scroll_to(offset=0,duration=100)
 
@@ -355,12 +357,15 @@ class Event:
         self.page.update()
 
 
-    def clear_filter(self):
+    def clear_filter(self): #! No funciona correctamente Verificar la posicion del scroll
         '''Clears the search bar and shows all the events in the database.'''
-        self.search_bar.value = ''
-        self.data_list.rows.clear()
-        self.show_events()
         self.data_scroll.scroll_to(offset=0,duration=100)
+        self.scrol_pos = 10
+        self.search_bar.value = ''
+        del self.data_list.rows[:]
+        self.clear_filter_button.visible = False
+        self.page.update()
+        self.show_events()
 
     def add_event(self):
         '''Saves the event in the database.'''
