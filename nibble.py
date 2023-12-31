@@ -67,6 +67,8 @@ def main(page: ft.Page):
     page.window_prevent_close = True
     page.on_window_event = lambda e: onclose(e)
 
+    #TODO - ADD STATUS TO THE STUDENTS TABLE
+
     db()
     page.update()
     # pm.def_app_layout(page)
