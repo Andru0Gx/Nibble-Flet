@@ -9,11 +9,12 @@ import flet as ft
 # Database
 from DB.Functions.student_parent_db import student_add, parent_add, parent_student_add
 from DB.Functions.student_parent_db import student_search, parent_search, parent_student_search, filter_students_db
-from DB.Functions.student_parent_db import validate_ci
+from DB.Functions.student_parent_db import validate_ci, validate_student
 from DB.Functions.student_parent_db import student_delete, parent_delete, parent_student_delete
 from DB.Functions.student_parent_db import student_update, parent_update, parent_student_update
 from DB.Functions.student_parent_db import get_students, check_amount as check
 from DB.Functions.temp_data_db import save_tempdata_db, get_tempdata_db, delete_tempdata_db, check_tempdata_db
+from DB.Functions.phases_db import get_phases, search_phase
 
 
 class State:
@@ -209,18 +210,38 @@ class Students(ft.UserControl):
             )
         ])
 
-        # Create the student grade text field
-        self.student_grade = ft.TextField(
-            width=500,
+        # Create the student grade Dropdown
+        self.student_grade = ft.Dropdown(
+            width=220,
             height=35,
             label='Etapa (Grado/Año)',
-            hint_text='Ingresa el Grado del Estudiante',
+            hint_text='Selecciona la Etapa',
+            filled=True,
             bgcolor='#f3f4fa',
             hint_style=ft.TextStyle(color='#C0C1E3'),
             label_style=ft.TextStyle(color='#4B4669'),
             text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
             border_color='#6D62A1',
             content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+        )
+
+        # Create the student status Dropdown
+        self.student_status = ft.Dropdown(
+            width=220,
+            height=35,
+            label='Estado',
+            hint_text='Selecciona el Estado',
+            filled=True,
+            bgcolor='#f3f4fa',
+            hint_style=ft.TextStyle(color='#C0C1E3'),
+            label_style=ft.TextStyle(color='#4B4669'),
+            text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+            border_color='#6D62A1',
+            content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+            options=[
+                ft.dropdown.Option('Activo'),
+                ft.dropdown.Option('Retirado'),
+            ]
         )
 
         # Create the layout
@@ -235,7 +256,10 @@ class Students(ft.UserControl):
                 self.student_date_inscription,
             ], spacing=20),
             self.student_address,
-            self.student_grade,
+            ft.Row([
+                self.student_grade,
+                self.student_status,
+            ], spacing=20),
         ], alignment=ft.MainAxisAlignment.START, spacing=20),
         width=500,
         height=480,
@@ -525,6 +549,7 @@ class Students(ft.UserControl):
         # add the layout to the page
         self.content = layout
 
+        self.drop_options()
         self.check_temp()
 
     def build(self):
@@ -559,6 +584,10 @@ class Students(ft.UserControl):
 
             data = eval(data)
 
+            phase = search_phase(id=data['phase_id'])
+
+            phase = f"{phase['Grado/Año']} {phase['Seccion']}"
+
             parent_id = parent_student_search(student_ci=data['ID'])
 
             parent_info = parent_search(parent_id)
@@ -573,7 +602,8 @@ class Students(ft.UserControl):
             self.student_birthdate.controls[0].value = data['birth_date']
             self.student_address.value = data['address']
             self.student_date_inscription.controls[0].value = data['admission_date']
-            self.student_grade.value = data['phase_id']
+            self.student_grade.value = phase
+            self.student_status.value = data['status']
 
             self.parent_name.value = parent_info['name']
             self.parent_lastname.value = parent_info['lastname']
@@ -617,6 +647,14 @@ class Students(ft.UserControl):
         self.student_date_inscription.controls[0].read_only = True
         self.update()
 
+
+    def drop_options(self):
+
+        phases_list = get_phases()
+        for phase in phases_list:
+            self.student_grade.options.append(ft.dropdown.Option(f"{phase['Grado/Año']} {phase['Seccion']}"))
+        self.update()
+
     def activate_fields(self, op):
         '''Activates all the fields in the student and parent forms'''
         if op == 1:
@@ -631,6 +669,7 @@ class Students(ft.UserControl):
             self.student_address.value = ''
             self.student_date_inscription.controls[0].value = ''
             self.student_grade.value = ''
+            self.student_status.value = ''
 
             self.parent_name.value = ''
             self.parent_lastname.value = ''
@@ -671,8 +710,6 @@ class Students(ft.UserControl):
                     actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))],
                 )
                 self.open_dlg(dlg)
-
-
         self.update()
 
     def cancel(self):
@@ -687,6 +724,7 @@ class Students(ft.UserControl):
         self.student_address.value = ''
         self.student_date_inscription.controls[0].value = ''
         self.student_grade.value = ''
+        self.student_status.value = ''
 
         self.parent_name.value = ''
         self.parent_lastname.value = ''
@@ -719,7 +757,7 @@ class Students(ft.UserControl):
         '''Validates the information entered in the student and parent forms'''
 
         # Validate the student information
-        if self.student_name.value == '' or self.student_lastname.value == '' or self.student_ci.value == '' or self.student_birthdate.controls[0].value == '' or self.student_address.value == '' or self.student_date_inscription.controls[0].value == '' or self.student_grade.value == '':
+        if self.student_name.value == '' or self.student_lastname.value == '' or self.student_ci.value == '' or self.student_birthdate.controls[0].value == '' or self.student_address.value == '' or self.student_date_inscription.controls[0].value == '' or self.student_grade.value == '' or self.student_status.value == '':
             return False
 
         # Validate the parent information
@@ -739,10 +777,15 @@ class Students(ft.UserControl):
             None. The method updates the table with the parent data.
         """
         for child in data:
+
+            phase = search_phase(id=child['phase_id'])
+            phase = f"{phase['Grado/Año']} {phase['Seccion']}"
+
+
             row = ft.DataRow([
                         ft.DataCell(ft.Container(ft.Text(child['name'], size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
                         ft.DataCell(ft.Container(ft.Text(child['ci'], size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
-                        ft.DataCell(ft.Container(ft.Text(child['phase_id'], size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
+                        ft.DataCell(ft.Container(ft.Text(phase, size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
                     ])
             self.parent_children.rows.append(row)
         self.update()
@@ -805,13 +848,19 @@ class Students(ft.UserControl):
                 parent_info = parent_search(parent_student)
 
             if student_info and parent_info:
+                phase = search_phase(id=student_info['phase_id'])
+
+                phase = f"{phase['Grado/Año']} {phase['Seccion']}"
+
+
                 self.student_ci.value = student_info['ci']
                 self.student_name.value = student_info['name']
                 self.student_lastname.value = student_info['lastname']
                 self.student_birthdate.controls[0].value = student_info['birth_date']
                 self.student_address.value = student_info['address']
-                self.student_grade.value = student_info['phase_id']
+                self.student_grade.value = phase
                 self.student_date_inscription.controls[0].value = student_info['admission_date']
+                self.student_status.value = student_info['status']
 
                 self.parent_ci.controls[0].value = parent_info['ci']
                 self.parent_name.value = parent_info['name']
@@ -845,17 +894,33 @@ class Students(ft.UserControl):
             else:
                 ci = self.student_ci.value
 
+            if self.parent_ci.controls[0].value[0] != 'v':
+                ci_r = 'v' + self.parent_ci.controls[0].value
+            else:
+                ci_r = self.parent_ci.controls[0].value
+
             if validate_ci(ci):
-                student_id = student_add(ci, self.student_name.value, self.student_lastname.value, self.student_birthdate.controls[0].value, self.student_address.value, self.student_grade.value,self.student_date_inscription.controls[0].value)
+                if ci_r != ci:
+                    grado = self.student_grade.value.split(' ')[0] + ' ' + self.student_grade.value.split(' ')[1]
+                    seccion = self.student_grade.value.split(' ')[2]
+                    grade_id = search_phase(grado, seccion)['ID']
 
-                if self.parent_ci.controls[0].value[0] != 'v':
-                    ci = 'v' + self.parent_ci.controls[0].value
+                    student_id = student_add(ci, self.student_name.value, self.student_lastname.value, self.student_birthdate.controls[0].value, self.student_address.value, grade_id,self.student_date_inscription.controls[0].value, self.student_status.value)
+
+                    if self.parent_ci.controls[0].value[0] != 'v':
+                        ci = 'v' + self.parent_ci.controls[0].value
+                    else:
+                        ci = self.parent_ci.controls[0].value
+
+                    parent_id = parent_add(ci, self.parent_name.value, self.parent_lastname.value, self.parent_contact.controls[0].value, self.parent_contact.controls[1].value)
+                    parent_student_add(parent_id, student_id)
+                    self.cancel()
                 else:
-                    ci = self.parent_ci.controls[0].value
-
-                parent_id = parent_add(ci, self.parent_name.value, self.parent_lastname.value, self.parent_contact.controls[0].value, self.parent_contact.controls[1].value)
-                parent_student_add(parent_id, student_id)
-                self.cancel()
+                    dlg = ft.AlertDialog(
+                        content=ft.Text('La cedula del representante no puede ser igual a la del estudiante'),
+                        actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+                    )
+                    self.open_dlg(dlg)
             else:
                 dlg = ft.AlertDialog(
                     content=ft.Text('La cedula del estudiante ya se encuentra registrada'),
@@ -948,16 +1013,40 @@ class Students(ft.UserControl):
             else:
                 ci = self.student_ci.value
 
-            student_update(ci, self.student_name.value, self.student_lastname.value, self.student_birthdate.controls[0].value, self.student_address.value, self.student_grade.value,self.student_date_inscription.controls[0].value, self.actual_student)
-
             if self.parent_ci.controls[0].value[0] != 'v':
-                ci = 'v' + self.parent_ci.controls[0].value
+                ci_r = 'v' + self.parent_ci.controls[0].value
             else:
-                ci = self.parent_ci.controls[0].value
+                ci_r = self.parent_ci.controls[0].value
+            
 
-            parent_update(ci, self.parent_name.value, self.parent_lastname.value, self.parent_contact.controls[0].value, self.parent_contact.controls[1].value, self.actual_parent)
-            parent_student_update(self.parent_ci.controls[0].value, self.student_ci.value)
-            self.cancel()
+            if validate_student(self.actual_student, ci):
+                if ci_r != ci:
+                    grado = self.student_grade.value.split(' ')[0] + ' ' + self.student_grade.value.split(' ')[1]
+                    seccion = self.student_grade.value.split(' ')[2]
+                    grade_id = search_phase(grado, seccion)['ID']
+
+                    student_update(ci, self.student_name.value, self.student_lastname.value, self.student_birthdate.controls[0].value, self.student_address.value, grade_id,self.student_date_inscription.controls[0].value, self.actual_student, self.student_status.value)
+
+                    if self.parent_ci.controls[0].value[0] != 'v':
+                        ci = 'v' + self.parent_ci.controls[0].value
+                    else:
+                        ci = self.parent_ci.controls[0].value
+
+                    parent_update(ci, self.parent_name.value, self.parent_lastname.value, self.parent_contact.controls[0].value, self.parent_contact.controls[1].value, self.actual_parent)
+                    parent_student_update(self.parent_ci.controls[0].value, self.student_ci.value)
+                    self.cancel()
+                else:
+                    dlg = ft.AlertDialog(
+                        content=ft.Text('La cedula del representante no puede ser igual a la del estudiante'),
+                        actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+                    )
+                    self.open_dlg(dlg)
+            else:
+                dlg = ft.AlertDialog(
+                    content=ft.Text('La cedula del estudiante ya se encuentra registrada'),
+                    actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+                )
+                self.open_dlg(dlg)
         else:
             dlg = ft.AlertDialog(
                 content=ft.Text('Faltan campos por llenar'),
@@ -1088,8 +1177,9 @@ class Studentslist(ft.UserControl):
                 ft.DataColumn(ft.Container(ft.Text('Nombre', size=15, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                 ft.DataColumn(ft.Container(ft.Text('Apellido', size=15, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                 ft.DataColumn(ft.Container(ft.Text('Cedula', size=15, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Grado', size=15, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Fecha de Inscripcion', size=15, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Grado', size=15, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Fecha de Inscripcion', size=15, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Status', size=15, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
             ],
         )
 
@@ -1155,17 +1245,21 @@ class Studentslist(ft.UserControl):
             list_students = filter_students_db(search)
 
             for student in list_students:
+                phase = search_phase(id=student['phase_id'])
+                phase = f"{phase['Grado/Año']} {phase['Seccion']}"
                 row = ft.DataRow([
                     ft.DataCell(ft.Container(ft.Text(student['name'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                     ft.DataCell(ft.Container(ft.Text(student['lastname'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                     ft.DataCell(ft.Container(ft.Text(student['ci'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                    ft.DataCell(ft.Container(ft.Text(student['phase_id'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                    ft.DataCell(ft.Container(ft.Text(student['admission_date'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(phase, size=12, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(student['admission_date'], size=12, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(student['status'], size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
                 ], data=student['ID'], on_select_changed= lambda e: self.student_selected(e))
                 self.data_table.rows.append(row)
                 self.clear_filter_button.visible = True
             self.update()
             self.scrol.scroll_to(offset=0,duration=100)
+            self.scrol_pos = check() + 1 # To avoid the scroll event
 
     def clear_filter(self):
         '''Clear the filter of the data table'''
@@ -1207,12 +1301,15 @@ class Studentslist(ft.UserControl):
             list_students = get_students(0, 9)
             last = 9
         for i in range(0, last):
+            phase = search_phase(id=list_students[i]['phase_id'])
+            phase = f"{phase['Grado/Año']} {phase['Seccion']}"
             row = ft.DataRow([
                 ft.DataCell(ft.Container(ft.Text(list_students[i]['name'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                 ft.DataCell(ft.Container(ft.Text(list_students[i]['lastname'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                 ft.DataCell(ft.Container(ft.Text(list_students[i]['ci'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                ft.DataCell(ft.Container(ft.Text(list_students[i]['phase_id'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                ft.DataCell(ft.Container(ft.Text(list_students[i]['admission_date'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(phase, size=12, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_students[i]['admission_date'], size=12, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_students[i]['status'], size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center))
             ], data=list_students[i]['ID'], on_select_changed= lambda e: self.student_selected(e))
             self.data_table.rows.append(row)
         self.update()
@@ -1236,12 +1333,16 @@ class Studentslist(ft.UserControl):
                     #Verificar si la lista esta vacia
                     if list_students:
                         for student in list_students:
+                            phase = search_phase(id=student['phase_id'])
+                            phase = f"{phase['Grado/Año']} {phase['Seccion']}"
+
                             row = ft.DataRow([
                                 ft.DataCell(ft.Container(ft.Text(student['name'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                                 ft.DataCell(ft.Container(ft.Text(student['lastname'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
                                 ft.DataCell(ft.Container(ft.Text(student['ci'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                                ft.DataCell(ft.Container(ft.Text(student['phase_id'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
-                                ft.DataCell(ft.Container(ft.Text(student['admission_date'], size=12, color='#4B4669', text_align='center'), width=200, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(phase, size=12, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(student['admission_date'], size=12, color='#4B4669', text_align='center'), width=150, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(student['status'], size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
                             ], data=student['ID'], on_select_changed= lambda e: self.student_selected(e))
                             self.data_table.rows.append(row)
                         self.update()

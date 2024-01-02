@@ -68,6 +68,7 @@ def student_table(conexion):
             direccion TEXT NOT NULL,
             etapa_id INTEGER NOT NULL,
             f_ingreso TEXT NOT NULL,
+            status TEXT NOT NULL,
             CONSTRAINT fk_etapa FOREIGN KEY(etapa_id) REFERENCES etapa(id_e) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()

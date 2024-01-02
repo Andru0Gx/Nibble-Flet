@@ -79,3 +79,33 @@ def update_phase(phase_id, phase_name, phase_section):
         """UPDATE etapa SET grado_anio = ?, seccion = ? WHERE id_e = ?;""", (phase_name, phase_section, phase_id))
     conexion.commit()
     conexion.close()
+
+#* ------------------ SEARCH PHASES ------------------ *#
+def search_phase(phase_name = None, phase_section = None, id = False):
+    '''Search a phase from the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    if id:
+        cursor.execute(
+            """SELECT id_e, grado_anio, seccion FROM etapa WHERE id_e = ?;""", (id,))
+    else:
+        cursor.execute(
+            """SELECT id_e, grado_anio, seccion FROM etapa WHERE grado_anio = ? AND seccion = ?;""", (phase_name, phase_section))
+
+    search = cursor.fetchone()
+    conexion.close()
+
+    phase = {
+        'ID': None,
+        'Grado/Año': None,
+        'Seccion': None
+    }
+
+    if search is not None:
+        phase['ID'] = search[0]
+        phase['Grado/Año'] = search[1]
+        phase['Seccion'] = search[2]
+
+    return phase

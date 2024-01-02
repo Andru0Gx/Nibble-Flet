@@ -64,10 +64,39 @@ def validate_ci(ci, representante = True):
     else:
         return True
 
+def validate_student(student_id, student_ci):
+    '''Validate the student'''
+    # Check if the ci is already in any table of the database
+    conexion = sqlite3.connect('DB/nibble.db')
+    cursor = conexion.cursor()
+
+
+    # Verificar si la cedula del estudiante coincide con la de otro estudiante (Omite el estudiante que se esta editando ID)
+    cursor.execute(
+        """SELECT cedula FROM estudiante WHERE cedula = ? AND id_s != ?;""", (student_ci, student_id))
+    ci_estudiante = cursor.fetchone()
+
+    # Verificar si la cedula del estudiante coincide con la de un representante
+    cursor.execute(
+        """SELECT cedula FROM representante WHERE cedula = ?;""", (student_ci,))
+    ci_representante = cursor.fetchone()
+
+    # Verificar si la cedula del estudiante coincide con la de un profesor
+    cursor.execute(
+        """SELECT cedula FROM profesor WHERE cedula = ?;""", (student_ci,))
+    ci_profesor = cursor.fetchone()
+
+    conexion.close()
+    if ci_estudiante or ci_representante or ci_profesor:
+        return False
+    else:
+        return True
+
+
 #^ ------------------ Add ------------------ *#
 #*1 - Add Student
 
-def student_add(ci, name, lastname, birth_date, address, phase_id, admission_date):
+def student_add(ci, name, lastname, birth_date, address, phase_id, admission_date, status):
     '''Add a student to the database'''
     conexion = sqlite3.connect('DB/nibble.db')
     cursor = conexion.cursor()
@@ -81,8 +110,9 @@ def student_add(ci, name, lastname, birth_date, address, phase_id, admission_dat
             f_nacimiento,
             direccion,
             etapa_id,
-            f_ingreso
-        ) VALUES (?, ?, ?, ?, ?, ?, ?);""", (ci, name, lastname, birth_date, address, phase_id, admission_date))
+            f_ingreso,
+            status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);""", (ci, name, lastname, birth_date, address, phase_id, admission_date, status))
     conexion.commit()
     conexion.close()
 
@@ -144,13 +174,14 @@ def student_search(ci):
         'birth_date': None,
         'address': None,
         'phase_id': None,
-        'admission_date': None
+        'admission_date': None,
+        'status': None
     }
 
     # print(student)
 
     if student:
-        student_info['ID'],student_info['ci'], student_info['name'], student_info['lastname'], student_info['birth_date'], student_info['address'], student_info['phase_id'], student_info['admission_date'] = student
+        student_info['ID'],student_info['ci'], student_info['name'], student_info['lastname'], student_info['birth_date'], student_info['address'], student_info['phase_id'], student_info['admission_date'], student_info['status'] = student
     else:
         return False
 
@@ -206,14 +237,15 @@ def parent_student_search(parent_ci = None, student_ci = None):
             'birth_date': None,
             'address': None,
             'phase_id': None,
-            'admission_date': None
+            'admission_date': None,
+            'status': None
         }
 
         for child in children:
             search = student_search(child[1])
 
             if search:
-                children_info['ID'],children_info['name'], children_info['lastname'], children_info['ci'], children_info['birth_date'], children_info['address'], children_info['phase_id'], children_info['admission_date'] = search.values()
+                children_info['ID'],children_info['name'], children_info['lastname'], children_info['ci'], children_info['birth_date'], children_info['address'], children_info['phase_id'], children_info['admission_date'], children_info['status'] = search.values()
                 list_children.append(children_info.copy())
             else:
                 return False
@@ -272,12 +304,12 @@ def parent_student_delete(student_ci, parent_ci):
 
 #^ ------------------ Update ------------------ *#
 #*1 - Update Student
-def student_update(ci, name, lastname, birth_date, address, phase_id, admission_date, id):
+def student_update(ci, name, lastname, birth_date, address, phase_id, admission_date, id, status):
     '''Update a student in the database'''
     conexion = sqlite3.connect('DB/nibble.db')
     cursor = conexion.cursor()
     cursor.execute(
-        """UPDATE estudiante SET cedula = ?, nombres = ?, apellidos = ?, f_nacimiento = ?, direccion = ?, etapa_id = ?, f_ingreso = ? WHERE id_s = ?;""", (ci, name, lastname, birth_date, address, phase_id, admission_date, id))
+        """UPDATE estudiante SET cedula = ?, nombres = ?, apellidos = ?, f_nacimiento = ?, direccion = ?, etapa_id = ?, f_ingreso = ?, status = ? WHERE id_s = ?;""", (ci, name, lastname, birth_date, address, phase_id, admission_date, status, id))
 
     conexion.commit()
     conexion.close()
@@ -324,11 +356,12 @@ def get_students(start_index, end_index):
         'birth_date': None,
         'address': None,
         'phase_id': None,
-        'admission_date': None
+        'admission_date': None,
+        'status': None
     }
 
     for student in students:
-        student_info['ID'],student_info['ci'], student_info['name'], student_info['lastname'], student_info['birth_date'], student_info['address'], student_info['phase_id'], student_info['admission_date'] = student
+        student_info['ID'],student_info['ci'], student_info['name'], student_info['lastname'], student_info['birth_date'], student_info['address'], student_info['phase_id'], student_info['admission_date'], student_info['status'] = student
         list_students.append(student_info.copy())
 
     conexion.commit()
@@ -356,16 +389,15 @@ def check_amount():
 
 
 #^ ------------------ Filter ------------------ *#
-#*1 - Filter Students (Name, Lastname, CI, phase, admission date)
+#*1 - Filter Students (Name, Lastname, CI, phase, admission date, status)
 def filter_students_db(filter):
     '''Filter students from the database'''
     conexion = sqlite3.connect('DB/nibble.db')
     cursor = conexion.cursor()
 
     cursor.execute(
-        f"""SELECT * FROM estudiante WHERE nombres LIKE '%{filter}%' OR apellidos LIKE '%{filter}%' OR cedula LIKE '%{filter}%' OR etapa_id LIKE '%{filter}%' OR f_ingreso LIKE '%{filter}%';"""
+        f"""SELECT * FROM estudiante WHERE nombres LIKE '%{filter}%' OR apellidos LIKE '%{filter}%' OR cedula LIKE '%{filter}%' OR etapa_id LIKE '%{filter}%' OR f_ingreso LIKE '%{filter}%' OR status LIKE '%{filter}%';"""
     )
-
     students = cursor.fetchall()
     list_students = []
     student_info = { # student info
@@ -376,11 +408,12 @@ def filter_students_db(filter):
         'birth_date': None,
         'address': None,
         'phase_id': None,
-        'admission_date': None
+        'admission_date': None,
+        'status': None
     }
 
     for student in students:
-        student_info['ID'],student_info['ci'], student_info['name'], student_info['lastname'], student_info['birth_date'], student_info['address'], student_info['phase_id'], student_info['admission_date'] = student
+        student_info['ID'],student_info['ci'], student_info['name'], student_info['lastname'], student_info['birth_date'], student_info['address'], student_info['phase_id'], student_info['admission_date'], student_info['status'] = student
         list_students.append(student_info.copy())
 
     conexion.commit()
