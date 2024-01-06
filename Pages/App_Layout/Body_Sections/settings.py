@@ -879,12 +879,43 @@ class Settings(ft.UserControl):
         dlg = ft.AlertDialog(
             content=ft.Column([
                 ft.Text('¿Estas seguro que quieres eliminar esta materia?', color='#4B4669', font_family='Arial', size=15),
-            ], spacing=10, width=300, height=50, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Text('Se recomienda borrar la materia solamente si la acaba de agregar, de lo contrario podria generar un error en el programa', color='#4B4669', font_family='Arial', size=15),
+            ], spacing=10, width=300, height=100, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             actions=[
                 ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
-                ft.ElevatedButton(text='Eliminar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.delete_subject(dlg, id)),
+                ft.ElevatedButton(text='Eliminar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.subject_secundary_confirm_delete(dlg, id)),
             ])
         self.open_dlg(dlg)
+
+    def subject_secundary_confirm_delete(self, dlg, id):
+        """
+        Confirms the deletion of a subject in the Settings page.
+
+        Parameters:
+            dlg (Dialog): The dialog box containing the confirmation message.
+            id (int): The ID of the subject to be deleted.
+
+        Description:
+            This method is called when the user confirms the deletion of a subject in the Settings page.
+            It updates the text and behavior of the confirmation button in the dialog box to give the user
+            a countdown before the deletion is executed. The countdown is displayed in the button text, and
+            the button color changes to indicate that it is the confirmation button. Once the countdown reaches
+            zero, the button text changes to "Confirmar Eliminacion" and the button color changes to indicate
+            that it is the final confirmation button. Clicking on this button triggers the deletion of the subject.
+
+        Example:
+            subject_secundary_confirm_delete(dlg, 1)
+        """
+        dlg.actions[1].on_click = None
+        for i in range(5, -1, -1):
+            dlg.actions[1].text = f'Espere {i} segundos...'
+            dlg.update()
+            time.sleep(1)
+
+        dlg.actions[1].text = 'Confirmar Eliminacion'
+        dlg.actions[1].bgcolor = '#f83c86'
+        dlg.actions[1].on_click = lambda e: self.delete_subject(dlg, id)
+        dlg.update()
 
     def delete_subject(self, dlg, id):
         """
