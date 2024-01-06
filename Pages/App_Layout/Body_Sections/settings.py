@@ -1185,13 +1185,33 @@ class Settings(ft.UserControl):
 
         dlg = ft.AlertDialog(
             content=ft.Column([
-                ft.Text('Esta seguro que desea eliminar la fase?', color='#4B4669', font_family='Arial', size=15),
-            ], spacing=10, width=300, height=50, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Text('Esta seguro que desea eliminar la fase?', color='#4B4669', font_family='Arial', size=15, weight='bold'),
+                ft.Text('Se recomienda borrar la fase solamente si la acaba de agregar, de lo contrario podria generar un error en el programa', color='#4B4669', font_family='Arial', size=15),
+            ], spacing=10, width=300, height=100, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             actions=[
                 ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
-                ft.ElevatedButton(text='Eliminar',bgcolor = '#6D62A1',color = '#f3f4fa',  on_click= lambda e: self.delete_phase(id, dlg)),
+                ft.ElevatedButton(text='Eliminar',bgcolor = '#6D62A1',color = '#f3f4fa',  on_click= lambda e: self.phase_secundary_confirm_delete(id, dlg)),
             ])
         self.open_dlg(dlg)
+
+    def phase_secundary_confirm_delete(self, id, dlg):
+        """
+        Displays a confirmation dialog box with a countdown timer. After the countdown, the dialog box is updated to allow the user to confirm the deletion.
+
+        :param dlg: The dialog box object that is displayed to the user.
+        :type dlg: dialog box
+        :return: None
+        """
+        dlg.actions[1].on_click = None
+        for i in range(5, -1, -1):
+            dlg.actions[1].text = f'Espere {i} segundos...'
+            dlg.update()
+            time.sleep(1)
+
+        dlg.actions[1].text = 'Confirmar Eliminacion'
+        dlg.actions[1].bgcolor = '#f83c86'
+        dlg.actions[1].on_click = lambda e: self.delete_phase(id, dlg)
+        dlg.update()
 
     def delete_phase(self, id, dlg):
         """
