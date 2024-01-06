@@ -45,6 +45,7 @@ class FletCalendar(ft.UserControl):
 
     def filter_event(self, date, all = False):
         '''Filter the events'''
+        date = datetime.datetime.strptime(date, '%d / %m / %Y').strftime('%d / %m / %Y')
         if filter_event_db(date, True):
             event_info = filter_event_db(date, True)
             list_event = ''
