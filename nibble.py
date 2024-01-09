@@ -29,7 +29,6 @@ from DB.Functions.temp_data_db import delete_tempdata_db
 #^ ------------------ RUN APP ------------------ ^#
 
 #TODO - Add Maximized window True
-#TODO - cambiar los botones de editar por guardar
 #TODO - Add try and except to all the functions and methods in the app (Log the errors)
 def main(page: ft.Page):
     '''Main function to run the app'''
@@ -66,8 +65,6 @@ def main(page: ft.Page):
     # on close window
     page.window_prevent_close = True
     page.on_window_event = lambda e: onclose(e)
-
-    #TODO - ADD STATUS TO THE STUDENTS TABLE
 
     db()
     page.update()
