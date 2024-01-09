@@ -196,8 +196,6 @@ class Forget(ft.UserControl):
         # Create the container for the layout
         self.layout = ft.Container(content=self.body_layout1,width=720, height=300, border_radius=20)
 
-        self.send_mail()
-
         # add the layout to the page
         self.content = self.layout
 

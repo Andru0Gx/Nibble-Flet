@@ -8,6 +8,7 @@ import flet as ft
 from DB.Functions.user_db import get_user,update_user
 from DB.Functions.phases_db import phase_add, get_phases, delete_phase, update_phase
 from DB.Functions.subjects_db import subject_add, get_subjects, delete_subject, update_subject
+from DB.Functions.db_info import get_amount
 
 class Settings(ft.UserControl):
     '''
@@ -423,43 +424,59 @@ class Settings(ft.UserControl):
                         ft.Container(width=20, height=20, bgcolor=ft.colors.CYAN),
                         ft.Text('Etapas', color='#4B4669', font_family='Arial', size=14),
                     ], spacing=10),
+                    ft.Row([
+                        ft.Container(width=20, height=20, bgcolor=ft.colors.RED),
+                        ft.Text('Usuario', color='#4B4669', font_family='Arial', size=14),
+                    ], spacing=10),
                 ], spacing=10),
                 border=ft.border.only(right=ft.BorderSide(color='#6D62A1', width=2)),
                 padding=ft.padding.only(right=10, left=50),
             ),
         ], alignment=ft.MainAxisAlignment.SPACE_EVENLY, spacing=20)
 
+        calendar = get_amount('calendario')
+        students = get_amount('estudiante')
+        phases = get_amount('etapa')
+        schedules = get_amount('horario')
+        grades = get_amount('nota')
+        teachers = get_amount('profesor')
+        parents = get_amount('representante')
+        user = get_amount('usuario')
 
         # Create a Graph to show the storage of the database
         self.storage_graph = ft.PieChart(
         sections=[
             ft.PieChartSection( # Calendario
-                20,
+                calendar,
                 color=ft.colors.BLUE,
             ),
             ft.PieChartSection( # Profesores
-                20,
+                teachers,
                 color=ft.colors.YELLOW,
             ),
             ft.PieChartSection( # Estudiantes
-                20,
+                students,
                 color=ft.colors.PINK,
             ),
             ft.PieChartSection( # Horarios
-                20,
+                schedules,
                 color=ft.colors.GREEN,
             ),
             ft.PieChartSection( # Notas
-                20,
+                grades,
                 color=ft.colors.INDIGO,
             ),
             ft.PieChartSection( # Representantes
-                20,
+                parents,
                 color=ft.colors.AMBER,
             ),
             ft.PieChartSection( # Etapas
-                20,
+                phases,
                 color=ft.colors.CYAN,
+            ),
+            ft.PieChartSection( # Usuario
+                user,
+                color=ft.colors.RED,
             ),
         ],
         sections_space=1,
