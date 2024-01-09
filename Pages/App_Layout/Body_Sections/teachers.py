@@ -4,6 +4,18 @@
 import datetime
 import flet as ft
 
+# Database
+from DB.Functions.teacher_db import validate_ci
+from DB.Functions.teacher_db import teacher_add, subject_add_to_teacher
+from DB.Functions.teacher_db import teacher_search, teacher_subjects_search
+from DB.Functions.teacher_db import teacher_delete, teacher_subject_delete, teacher_and_subjects_delete
+from DB.Functions.teacher_db import teacher_update
+
+
+
+from DB.Functions.subjects_db import get_subjects
+
+
 class Teachers(ft.UserControl):
     '''Teachers Page
 
@@ -25,6 +37,19 @@ class Teachers(ft.UserControl):
         super().__init__()
         self.page = page
         self.body = section
+
+        self.actual_teacher = None
+
+        self.del_log = []
+        self.add_log = []
+
+        self.subject_teacher_info = {
+            'ID': None,
+            'Name': None,
+            'Teacher ID': None,
+        }
+
+        self.subject_log = None
 
         #* ------------------ DatePicker ------------------ *#
         self.date_picker_birthdate = ft.DatePicker(
@@ -88,6 +113,7 @@ class Teachers(ft.UserControl):
             text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
             border_color='#6D62A1',
             content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+            input_filter=ft.InputFilter(regex_string='[0-9]'),
         )
 
         # Create the text field for the phone
@@ -102,7 +128,8 @@ class Teachers(ft.UserControl):
                 label_style=ft.TextStyle(color='#4B4669'),
                 text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                 border_color='#6D62A1',
-                content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
+                content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                input_filter=ft.InputFilter(regex_string='[0-9]'),
             ),
 
             ft.TextField(
@@ -115,7 +142,8 @@ class Teachers(ft.UserControl):
                 label_style=ft.TextStyle(color='#4B4669'),
                 text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                 border_color='#6D62A1',
-                content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
+                content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                input_filter=ft.InputFilter(regex_string='[0-9]'),
             )
         ], spacing=20)
 
@@ -191,6 +219,7 @@ class Teachers(ft.UserControl):
         border_radius=20,
         padding=ft.padding.all(20),
         border=ft.border.all(2, '#6D62A1'),
+        disabled=True,
         )
 
         #* ------------------ Layout - Subject ------------------ *#
@@ -208,17 +237,19 @@ class Teachers(ft.UserControl):
 
         # Create the text field for the subject
         self.teacher_subject = ft.Row([
-        ft.TextField(
+        ft.Dropdown(
             width=350,
             height=35,
             label='Materia',
-            hint_text='Ingresa la Materia',
+            hint_text='Selecciona la materia',
+            filled=True,
             bgcolor='#f3f4fa',
             hint_style=ft.TextStyle(color='#C0C1E3'),
             label_style=ft.TextStyle(color='#4B4669'),
             text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
             border_color='#6D62A1',
             content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+            on_change= lambda e: self.change_log(e),
         ),
         ft.Container(
                 ft.Text('Asignar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
@@ -227,6 +258,7 @@ class Teachers(ft.UserControl):
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
                 border_radius=15,
+                on_click= lambda e: self.subject_confirm(),
             )
         ], spacing=20, alignment=ft.MainAxisAlignment.CENTER)
 
@@ -236,14 +268,14 @@ class Teachers(ft.UserControl):
             border_radius=10,
             data_row_min_height=25,
             data_row_max_height=50,
-            column_spacing=10,
+            column_spacing=0,
             horizontal_margin=0,
             horizontal_lines= ft.BorderSide(1, '#6D62A1'),
             show_bottom_border=True,
 
-
             columns=[
-                ft.DataColumn(ft.Container(ft.Text('Materias Asignadas', size=15, color='#4B4669', text_align='center'), width=500, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Materias Asignadas', size=15, color='#4B4669', text_align='left'), width=300, alignment=ft.alignment.center_left, padding=ft.padding.only(left=30))),
+                ft.DataColumn(ft.Container(ft.Text('Eliminar', size=15, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
             ],
         )
 
@@ -255,7 +287,7 @@ class Teachers(ft.UserControl):
 
 
         # Layout for the documents / subject
-        layout_subject = ft.Container(
+        self.layout_subject = ft.Container(
             content=ft.Column([
             title_subject,
             self.teacher_subject,
@@ -266,6 +298,7 @@ class Teachers(ft.UserControl):
         border_radius=20,
         padding=ft.padding.all(20),
         border=ft.border.all(2, '#6D62A1'),
+        disabled=True,
         )
 
 
@@ -285,7 +318,8 @@ class Teachers(ft.UserControl):
             label_style=ft.TextStyle(color='#4B4669'),
             text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
             border_color='#6D62A1',
-            content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
+            content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+            input_filter=ft.InputFilter(regex_string='[0-9]'),
         ),
             ft.Container(
                 width=35,
@@ -298,15 +332,15 @@ class Teachers(ft.UserControl):
             )
         ])
 
-        # Create the Students Buttons (Add, Eliminate, Edit, Change View, Print)
-        self.students_buttons = ft.Row([
+        # Create the Teachers Buttons (Add, Eliminate, Edit, Change View, Print)
+        self.teachers_buttons = ft.Row([
             ft.Container(
                 ft.Text('Agregar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
                 width=80,
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                on_click= lambda e: self.add_teacher(),
+                on_click= lambda e: self.activate_fields(1),
                 border_radius=15,
             ),
 
@@ -316,7 +350,7 @@ class Teachers(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                on_click= lambda e: self.delete_teacher(),
+                on_click= lambda e: self.delete_confirm(),
                 border_radius=15,
             ),
 
@@ -326,8 +360,41 @@ class Teachers(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                on_click= lambda e: self.edit_teacher(),
+                on_click= lambda e: self.activate_fields(2),
                 border_radius=15,
+            ),
+
+            ft.Container(
+                ft.Text('Guardar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
+                width=80,
+                height=35,
+                bgcolor='#6D62A1',
+                alignment=ft.alignment.center,
+                border_radius=15,
+                on_click= lambda e: self.add_teacher(),
+                visible=False,
+            ),
+
+            ft.Container(
+                ft.Text('Guardar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
+                width=80,
+                height=35,
+                bgcolor='#6D62A1',
+                alignment=ft.alignment.center,
+                border_radius=15,
+                on_click= lambda e: self.confirm_edit(),
+                visible=False,
+            ),
+
+            ft.Container(
+                ft.Text('Cancelar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
+                width=80,
+                height=35,
+                bgcolor='#6D62A1',
+                alignment=ft.alignment.center,
+                on_click= lambda e: self.cancel(),
+                border_radius=15,
+                visible=False,
             ),
 
             ft.Container(
@@ -355,7 +422,7 @@ class Teachers(ft.UserControl):
         footer = ft.Container(
             content=ft.Row([
             self.search_bar,
-            self.students_buttons
+            self.teachers_buttons
         ],alignment=ft.MainAxisAlignment.CENTER, spacing=10),
         width=1025,
         height=100,
@@ -368,13 +435,15 @@ class Teachers(ft.UserControl):
         layout = ft.Column([
             ft.Row([
                 self.teacher_layout,
-                layout_subject
+                self.layout_subject
             ], alignment=ft.MainAxisAlignment.CENTER,spacing=20),
             footer
         ], alignment=ft.MainAxisAlignment.START, horizontal_alignment='center', spacing=20)
 
         # add the layout to the page
         self.content = layout
+
+        # self.drop_options()
 
     def build(self):
         return self.content
@@ -390,26 +459,413 @@ class Teachers(ft.UserControl):
         self.teacher_birthday.controls[0].read_only = True
         self.update()
 
+    def drop_options(self, data = None):
+        '''Add the options to the dropdown'''
+        del self.teacher_subject.controls[0].options[:]
+        subjects_list = get_subjects()
+
+        if data:
+            for subject in subjects_list:
+                for subject_t in data:
+                    if subject['ID'] == subject_t['ID']:
+                        subjects_list.remove(subject)
+                        subjects_list.insert(0, {'ID': None, 'Nombre': None})
+
+            for subject in subjects_list:
+                if subject['ID'] != None:
+                    self.teacher_subject.controls[0].options.append(ft.dropdown.Option(f"{subject['ID']} {subject['Nombre']}"))
+        else:
+            for subject in subjects_list:
+                self.teacher_subject.controls[0].options.append(ft.dropdown.Option(f"{subject['ID']} {subject['Nombre']}"))
+        self.update()
+
+    def activate_fields(self, op):
+        '''Activates all the fields in the teacher forms'''
+        if op == 1:
+            self.teacher_layout.disabled = False
+
+            self.teacher_name.value = ''
+            self.teacher_last_name.value = ''
+            self.teacher_ci.value = ''
+            self.teacher_contact.controls[0].value = ''
+            self.teacher_contact.controls[1].value = ''
+            self.teacher_email.value = ''
+            self.teacher_address.value = ''
+            self.teacher_birthday.controls[0].value = ''
+
+            self.search_bar.controls[0].value = ''
+
+            del self.subject_list.rows[:]
+
+            self.search_bar.visible = False
+            self.teachers_buttons.controls[0].visible = False
+            self.teachers_buttons.controls[1].visible = False
+            self.teachers_buttons.controls[2].visible = False
+            self.teachers_buttons.controls[3].visible = True
+            self.teachers_buttons.controls[4].visible = False
+            self.teachers_buttons.controls[5].visible = True
+            self.teachers_buttons.controls[6].visible = False
+            self.teachers_buttons.controls[7].visible = False
+
+        elif op == 2:
+            if self.validate():
+                self.teacher_layout.disabled = False
+                self.layout_subject.disabled = False
+
+                self.search_bar.visible = False
+                self.teachers_buttons.controls[0].visible = False
+                self.teachers_buttons.controls[1].visible = False
+                self.teachers_buttons.controls[2].visible = False
+                self.teachers_buttons.controls[3].visible = False
+                self.teachers_buttons.controls[4].visible = True
+                self.teachers_buttons.controls[5].visible = True
+                self.teachers_buttons.controls[6].visible = False
+                self.teachers_buttons.controls[7].visible = False
+
+                data = teacher_subjects_search(self.actual_teacher)
+                self.drop_options(data)
+
+            else:
+                dlg = ft.AlertDialog(
+                    content=ft.Text('Debe buscar un profesor primero'),
+                    actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))],
+                )
+                self.open_dlg(dlg)
+        self.update()
+
+    def validate(self):
+        '''Validate if the teacher exists'''
+        if self.teacher_name.value == '' or self.teacher_last_name.value == '' or self.teacher_ci.value == '' or self.teacher_contact.controls[0].value == '' or self.teacher_email.value == '' or self.teacher_address.value == '' or self.teacher_birthday.controls[0].value == '':
+            return False
+        else:
+            return True
+
+    def cancel(self):
+        '''Cancels the registration of a teacher'''
+        self.teacher_layout.disabled = True
+        self.layout_subject.disabled = True
+
+        self.teacher_name.value = ''
+        self.teacher_last_name.value = ''
+        self.teacher_ci.value = ''
+        self.teacher_contact.controls[0].value = ''
+        self.teacher_contact.controls[1].value = ''
+        self.teacher_email.value = ''
+        self.teacher_address.value = ''
+        self.teacher_birthday.controls[0].value = ''
+
+        self.teacher_subject.controls[0].value = ''
+
+        self.search_bar.controls[0].value = ''
+
+        self.teachers_buttons.controls[0].visible = True
+        self.teachers_buttons.controls[1].visible = True
+        self.teachers_buttons.controls[2].visible = True
+        self.teachers_buttons.controls[3].visible = False
+        self.teachers_buttons.controls[4].visible = False
+        self.teachers_buttons.controls[5].visible = False
+        self.teachers_buttons.controls[6].visible = True
+        self.teachers_buttons.controls[7].visible = True
+
+        self.search_bar.visible = True
+
+        self.actual_teacher = None
+
+        del self.subject_list.rows[:]
+
+        self.update()
+
+        self.del_log = []
+        self.add_log = []
+        self.subject_log = None
+
+
+
     def search_teacher(self):
         '''Search a teacher'''
-        print('Search Teacher')
+        if self.search_bar.controls[0].value == '':
+            self.cancel()
+        else:
+            if self.search_bar.controls[0].value[0] != 'v':
+                ci = 'v' + self.search_bar.controls[0].value
+            else:
+                ci = self.search_bar.controls[0].value
+
+            teacher_info = teacher_search(ci)
+
+            if teacher_info:
+                teacher_subjects = teacher_subjects_search(teacher_info['ID'])
+            
+                self.teacher_name.value = teacher_info['Name']
+                self.teacher_last_name.value = teacher_info['Last_Name']
+                self.teacher_ci.value = teacher_info['CI']
+                self.teacher_contact.controls[0].value = teacher_info['Phone1']
+                self.teacher_contact.controls[1].value = teacher_info['Phone2']
+                self.teacher_email.value = teacher_info['Email']
+                self.teacher_address.value = teacher_info['Address']
+                self.teacher_birthday.controls[0].value = teacher_info['Birth_Date']
+
+                self.actual_teacher = teacher_info['ID']
+
+                del self.subject_list.rows[:]
+
+                if teacher_subjects:
+                    self.subjects_row(teacher_subjects)
+
+                self.update()
+            else:
+                dlg = ft.AlertDialog(
+                    content=ft.Text('El profesor no se encuentra registrado'),
+                    actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))],
+                )
+                self.open_dlg(dlg)
+
+
 
     def add_teacher(self):
         '''Add a new teacher'''
-        print('Add Teacher')
+        if self.validate():
+            if self.teacher_ci.value[0] != 'v':
+                ci = self.teacher_ci.value = 'v' + self.teacher_ci.value
 
-    def delete_teacher(self):
+            if validate_ci(ci):
+                self.actual_teacher = teacher_add(ci, self.teacher_name.value, self.teacher_last_name.value, self.teacher_birthday.controls[0].value, self.teacher_contact.controls[0].value, self.teacher_contact.controls[1].value, self.teacher_address.value, self.teacher_email.value)
+                self.cancel()
+            else:
+                dlg = ft.AlertDialog(
+                    content=ft.Text('La cedula del profesor ya esta registrada'),
+                    actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))],
+                )
+                self.open_dlg(dlg)
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('Debe llenar todos los campos'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))],
+            )
+            self.open_dlg(dlg)
+
+
+    def delete_confirm(self):
+        '''Delete a teacher from the database'''
+        if self.validate():
+            dlg = ft.AlertDialog(
+                content=ft.Text('¿Esta seguro que desea eliminar al profesor?'),
+                actions=[
+                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.delete_teacher(dlg)),
+                    ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg))
+                ]
+            )
+            self.open_dlg(dlg)
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('Debe buscar un profesor primero'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
+
+    def delete_teacher(self, dlg):
         '''Delete a teacher'''
-        print('Delete Teacher')
+        if self.teacher_ci.value[0] != 'v':
+            ci = self.teacher_ci.value = 'v' + self.teacher_ci.value
+        else:
+            ci = self.teacher_ci.value
+        teacher_delete(ci)
+        teacher_and_subjects_delete(self.actual_teacher)
+        self.close(dlg)
+        self.cancel()
 
-    def edit_teacher(self):
+    def confirm_edit(self):
+        '''Confirm the changes in the teacher'''
+        if self.validate():
+            dlg = ft.AlertDialog(
+                    content=ft.Text('Pulse aceptar para confirmar los cambios'),
+                    actions=[
+                        ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.edit_teacher(dlg)),
+                        ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg))
+                    ]
+                )
+            self.open_dlg(dlg)
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('Debe llenar todos los campos'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))],
+            )
+            self.open_dlg(dlg)
+
+    def edit_teacher(self, dlg):
         '''Edit a teacher'''
-        print('Edit Teacher')
+        if self.del_log:
+            for subject in self.del_log:
+                teacher_subject_delete(self.actual_teacher, subject['ID'])
+
+        if self.add_log:
+            for subject in self.add_log:
+                subject_add_to_teacher(self.actual_teacher, subject['ID'])
+
+
+        if self.teacher_ci.value[0] != 'v':
+            ci = self.teacher_ci.value = 'v' + self.teacher_ci.value
+        else:
+            ci = self.teacher_ci.value
+
+        teacher_update(ci, self.teacher_name.value, self.teacher_last_name.value, self.teacher_birthday.controls[0].value, self.teacher_contact.controls[0].value, self.teacher_contact.controls[1].value, self.teacher_address.value, self.teacher_email.value, self.actual_teacher)
+        self.close(dlg)
+        self.cancel()
+
 
     def print_teacher(self):
         '''Print a teacher'''
         print('Print Teacher')
 
+
+    #* ------------------ Subject Functions ------------------ *#
+    def change_log(self, e):
+        '''Change the log'''
+        self.subject_log = e
+
+    def subject_edit_set(self, id, name):
+        return ft.Row([
+            # Create the button to delete the subject
+            ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_delete(e), data=[id, name]),
+        ], vertical_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, spacing=10)
+
+    def subjects_row(self, data):
+        for subject in data:
+            row = ft.DataRow([
+                        ft.DataCell(ft.Container(ft.Text(subject['Name'], size=12, color='#4B4669', text_align='center'), width=300, alignment=ft.alignment.center_left, padding=ft.padding.only(left=30))),
+                        ft.DataCell(ft.Container(self.subject_edit_set(subject['ID'], subject['Name']), width=100, alignment=ft.alignment.center))
+                    ])
+            self.subject_list.rows.append(row)
+        self.update()
+
+    def subject_confirm(self):
+        if self.teacher_subject.controls[0].value is not None:
+            self.add_subject()
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('Debe seleccionar una materia'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
+
+    def add_subject(self):
+        '''Add a subject to the teacher'''
+        subject_id = self.teacher_subject.controls[0].value.split(' ')[0]
+
+        # delete the option from the dropdown
+        for option in self.teacher_subject.controls[0].options:
+            if option.key == self.subject_log.control.value:
+                self.teacher_subject.controls[0].options.remove(option)
+
+        self.subject_teacher_info['ID'] = subject_id
+        self.subject_teacher_info['Name'] = self.teacher_subject.controls[0].value.split(' ', 1)[1]
+        self.subject_teacher_info['Teacher ID'] = self.actual_teacher
+
+        self.add_log.append(self.subject_teacher_info.copy())
+
+        del self.subject_list.rows[:]
+        teacher_subjects = teacher_subjects_search(self.actual_teacher)
+
+        for subject in self.del_log:
+            if subject['ID'] == subject_id:
+                self.del_log.remove(subject)
+
+        for subject in self.add_log:
+            teacher_subjects.append(subject)
+        
+        for subject in self.del_log:
+            subject_t = {
+                'ID': subject['ID'],
+                'Name': subject['Name'],
+            }
+
+            if subject_t in teacher_subjects:
+                teacher_subjects.remove(subject_t)
+
+        self.subjects_row(teacher_subjects)
+        self.teacher_subject.controls[0].value = ''
+
+        self.update()
+
+    def subject_confirm_delete(self, e):
+        '''Delete a subject from the teacher'''
+        data = e.control.data
+        dlg = ft.AlertDialog(
+            content=ft.Text('¿Esta seguro que desea eliminar la materia?'),
+            actions=[
+                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.delete_subject(data, dlg)),
+                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg))
+            ]
+        )
+        self.open_dlg(dlg)
+
+    def delete_subject(self, data, dlg):
+        '''Delete a subject from the teacher'''
+
+        drop = f'{data[0]} {data[1]}'
+
+        # add the option to the dropdown
+        self.teacher_subject.controls[0].options.append(ft.dropdown.Option(drop))
+
+        self.subject_teacher_info['ID'] = data[0]
+        self.subject_teacher_info['Name'] = data[1]
+        self.subject_teacher_info['Teacher ID'] = self.actual_teacher
+
+        self.del_log.append(self.subject_teacher_info.copy())
+
+        for subject in self.add_log:
+            if subject['ID'] == data[0]:
+                self.add_log.remove(subject)
+
+        del self.subject_list.rows[:]
+        teacher_subjects = teacher_subjects_search(self.actual_teacher)
+
+        for subject in self.del_log:
+            subject_t = {
+                'ID': subject['ID'],
+                'Name': subject['Name'],
+            }
+
+            if subject_t in teacher_subjects:
+                teacher_subjects.remove(subject_t)
+
+        for subject in self.add_log:
+            teacher_subjects.append(subject)
+
+        self.subjects_row(teacher_subjects)
+        self.update()
+
+        self.close(dlg)
+
+
+    #* ------------------ DGL Functions ------------------ *#
+    def open_dlg(self, dlg):
+        """
+        Open a dialog box in the user interface.
+
+        :param dlg: The dialog box object that needs to be opened.
+        :type dlg: object
+        """
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
+
+    def close(self, dlg):
+        """
+        Closes the dialog box by setting its 'open' attribute to False and updating the page.
+
+        Args:
+            dlg (Dialog): The dialog box to be closed.
+
+        Returns:
+            None
+        """
+        dlg.open = False
+        self.page.update()
+
+
+
+    #* ------------------ Functions ------------------ *#
     def view(self):
         '''
         Updates the content of the body section of the Teachers page with a new instance of the Teacherslist class.
@@ -424,16 +880,9 @@ class Teachers(ft.UserControl):
         self.body.update()
 
 
-class Teacherslist(ft.UserControl):
-    '''
-    The `Studentslist` class is a user control class that represents a list of students.
-    It provides a search bar and a data table with the list of students.
 
-    The class includes methods for:
-    - Searching for a student in the database.
-    - Changing the view to display the student form.
-    
-    '''
+class Teacherslist(ft.UserControl):
+
     def __init__(self, page: ft.Page, section: str):
         super().__init__()
         self.page = page
@@ -492,7 +941,7 @@ class Teacherslist(ft.UserControl):
                 ft.DataColumn(ft.Container(ft.Text('Nombre', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
                 ft.DataColumn(ft.Container(ft.Text('Apellido', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
                 ft.DataColumn(ft.Container(ft.Text('Cedula', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Materia', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Contacto 1', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
             ],
         )
 
@@ -560,10 +1009,10 @@ class Teacherslist(ft.UserControl):
 
     #^ ------------------ Functions ------------------ *#
     def search_teacher(self):
-        '''Search a student in the database'''
+        '''Search a teacher in the database'''
 
     def view(self):
-        '''Change the view of the data table to the Students'''
+        '''Change the view of the data table to the Teacher form'''
         self.body.content = Teachers(self.page, self.body)
         self.body.update()
 

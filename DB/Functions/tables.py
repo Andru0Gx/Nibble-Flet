@@ -44,10 +44,10 @@ def subject_teacher_table(conexion):
     cursor = conexion.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS profesor_materias(
-            profesor_ci TEXT,
+            profesor_id INTEGER,
             materia_id INTEGER,
-            PRIMARY KEY(profesor_ci, materia_id),
-            CONSTRAINT fk_prof_ci FOREIGN KEY(profesor_ci) REFERENCES profesor(cedula_p) ON DELETE CASCADE ON UPDATE CASCADE,
+            PRIMARY KEY(profesor_id, materia_id),
+            CONSTRAINT fk_prof_ci FOREIGN KEY(profesor_id) REFERENCES profesor(id_p) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT fk_mat_id FOREIGN KEY(materia_id) REFERENCES materia(id_m) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()

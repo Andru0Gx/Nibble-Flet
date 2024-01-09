@@ -48,8 +48,8 @@ def get_subjects():
         subject['Nombre'] = i[1]
         subjects_list.append(subject.copy())
 
-    # Ordenar la lista de materias en orden alfabetico por nombre
-    subjects_list.sort(key=lambda x: x['Nombre'])
+    # Ordenar la lista de materias en orden ascendente
+    subjects_list.sort(key=lambda x: x['ID'])
 
     return subjects_list
 
