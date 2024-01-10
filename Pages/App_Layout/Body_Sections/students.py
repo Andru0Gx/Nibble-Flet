@@ -1256,7 +1256,7 @@ class Studentslist(ft.UserControl):
                     ft.DataCell(ft.Container(ft.Text(student['status'], size=12, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
                 ], data=student['ID'], on_select_changed= lambda e: self.student_selected(e))
                 self.data_table.rows.append(row)
-                self.clear_filter_button.visible = True
+            self.clear_filter_button.visible = True
             self.update()
             self.scrol.scroll_to(offset=0,duration=100)
             self.scrol_pos = check() + 1 # To avoid the scroll event

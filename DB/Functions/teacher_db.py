@@ -250,7 +250,6 @@ def check_amount():
 
     cursor.execute(f"""SELECT COUNT(*) FROM profesor;""")
     amount = cursor.fetchone()[0]
-    print(amount)
 
     conexion.close()
     return amount
@@ -286,3 +285,7 @@ def filter_teachers_db(filter):
 
     conexion.close()
     return teachers_list
+
+
+# for i in range(1, 100):
+#     teacher_add(f'v{i}', f'Nombre {i}', f'Apellido {i}', f'Fecha {i}', f'Telefono {i}', f'Telefono {i}', f'Direccion {i}', f'Email {i}')

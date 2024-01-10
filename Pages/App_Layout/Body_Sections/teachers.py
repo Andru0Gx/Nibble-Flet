@@ -1,19 +1,32 @@
 '''Teachers Page'''
 
 # Libraries
+import time
 import datetime
+import threading
 import flet as ft
 
 # Database
 from DB.Functions.teacher_db import validate_ci
 from DB.Functions.teacher_db import teacher_add, subject_add_to_teacher
-from DB.Functions.teacher_db import teacher_search, teacher_subjects_search
+from DB.Functions.teacher_db import teacher_search, teacher_subjects_search, filter_teachers_db
 from DB.Functions.teacher_db import teacher_delete, teacher_subject_delete, teacher_and_subjects_delete
 from DB.Functions.teacher_db import teacher_update
-
-
-
+from DB.Functions.teacher_db import get_teachers, check_amount as check
 from DB.Functions.subjects_db import get_subjects
+from DB.Functions.temp_data_db import save_tempdata_db, get_tempdata_db, delete_tempdata_db, check_tempdata_db
+
+class State:
+    """
+    A class that represents the state of an object.
+    
+    Attributes:
+        i (int): The value of the state.
+    """
+    i = 0
+
+s = State()
+sem = threading.Semaphore()
 
 
 class Teachers(ft.UserControl):
@@ -443,10 +456,32 @@ class Teachers(ft.UserControl):
         # add the layout to the page
         self.content = layout
 
-        # self.drop_options()
+        self.check_temp()
 
     def build(self):
         return self.content
+
+    def check_temp(self):
+        if check_tempdata_db():
+            data = get_tempdata_db()
+
+            data = eval(data)
+
+
+            self.actual_teacher = data['ID']
+
+            self.teacher_name.value = data['Name']
+            self.teacher_last_name.value = data['Last_Name']
+            self.teacher_ci.value = data['CI']
+            self.teacher_contact.controls[0].value = data['Phone1']
+            self.teacher_contact.controls[1].value = data['Phone2']
+            self.teacher_email.value = data['Email']
+            self.teacher_address.value = data['Address']
+            self.teacher_birthday.controls[0].value = data['Birth_Date']
+
+            self.subjects_row(teacher_subjects_search(data['ID']))
+
+            delete_tempdata_db()
 
 
 
@@ -713,7 +748,7 @@ class Teachers(ft.UserControl):
         self.cancel()
 
 
-    def print_teacher(self):
+    def print_teacher(self): #TODO - Print Teacher
         '''Print a teacher'''
         print('Print Teacher')
 
@@ -882,11 +917,12 @@ class Teachers(ft.UserControl):
 
 
 class Teacherslist(ft.UserControl):
-
     def __init__(self, page: ft.Page, section: str):
         super().__init__()
         self.page = page
         self.body = section
+
+        self.scrol_pos = 10
 
         #* ------------------ Layout ------------------ *#
         # Create the Title
@@ -945,13 +981,13 @@ class Teacherslist(ft.UserControl):
             ],
         )
 
-        scrol = ft.Column([
+        self.scrol = ft.Column([
             self.data_table,
-        ], alignment=ft.MainAxisAlignment.START, spacing=20, scroll=ft.ScrollMode.ALWAYS, width=1100, height=490)
+        ], alignment=ft.MainAxisAlignment.START, spacing=20, scroll=ft.ScrollMode.ALWAYS, width=1100, height=490, on_scroll=lambda e: self.on_scroll(e))
 
-        self.data_container = ft.Container(scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#6D62A1'), border_radius=10, width=1100, height=500)
+        self.data_container = ft.Container(self.scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#6D62A1'), border_radius=10, width=1100, height=500)
 
-        up_button = ft.FloatingActionButton(content=ft.Icon(ft.icons.ARROW_UPWARD, color='#f3f4fa', size=20), bgcolor='#6D62A1', on_click= lambda e: scrol.scroll_to(offset=0,duration=100), width=50, height=35)
+        up_button = ft.FloatingActionButton(content=ft.Icon(ft.icons.ARROW_UPWARD, color='#f3f4fa', size=20), bgcolor='#6D62A1', on_click= lambda e: self.scrol.scroll_to(offset=0,duration=100), width=50, height=35)
 
 
         # Create the Button Change View
@@ -977,7 +1013,7 @@ class Teacherslist(ft.UserControl):
             )
 
         self.clear_filter_button = ft.Container(
-                ft.Icon(ft.icons.CLEAR_ALL, color='#f3f4fa', size=20),
+                ft.Icon(ft.icons.FILTER_ALT_OFF, color='#f3f4fa', size=20),
                 width=50,
                 height=35,
                 bgcolor='#6D62A1',
@@ -1004,21 +1040,135 @@ class Teacherslist(ft.UserControl):
         # add the layout to the page
         self.content = layout
 
+        self.show_teachers()
+
     def build(self):
         return self.content
 
     #^ ------------------ Functions ------------------ *#
+
+    def show_teachers(self):
+        """
+        Displays a list of teachers in a data table.
+
+        Retrieves the teachers data from the database and creates a row for each teachers in the data table.
+
+        Inputs:
+        - None
+
+        Outputs:
+        - None
+        """
+        if check() < 10:
+            list_teachers = get_teachers(0, check())
+            last = check()
+        else:
+            list_teachers = get_teachers(0, 9)
+            last = 9
+        for i in range(0, last):
+            row = ft.DataRow([
+                ft.DataCell(ft.Container(ft.Text(list_teachers[i]['Name'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_teachers[i]['Last_Name'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_teachers[i]['CI'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_teachers[i]['Phone1'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+            ], data=list_teachers[i]['ID'], on_select_changed= lambda e: self.teacher_selected(e))
+            self.data_table.rows.append(row)
+        self.update()
+
+    def on_scroll(self, e):
+        """
+        Called when the user scrolls to the bottom of the data table.
+    
+        Args:
+            self (object): The instance of the teacherslist class.
+            e (object): The event object that contains information about the scroll event.
+        
+        Returns:
+            None
+    
+        """
+        if e.pixels >= e.max_scroll_extent - 100:
+            if sem.acquire(blocking=False):
+                try:
+                    # Obten profesores desde la posición actual hasta la posición + 9
+                    list_teachers = get_teachers(self.scrol_pos, self.scrol_pos + 9)
+                    #Verificar si la lista esta vacia
+                    if list_teachers:
+                        for teacher in list_teachers:
+                            row = ft.DataRow([
+                                ft.DataCell(ft.Container(ft.Text(teacher['Name'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(teacher['Last_Name'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(teacher['CI'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(teacher['Phone1'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                            ], data=teacher['ID'], on_select_changed= lambda e: self.teacher_selected(e))
+                            self.data_table.rows.append(row)
+                        self.update()
+                        self.scrol_pos += 10
+                finally:
+                    sem.release()
+
+
     def search_teacher(self):
         '''Search a teacher in the database'''
+        search = self.search_bar.controls[0].value
 
-    def view(self):
+        if search == '':
+            self.search_bar.controls[1].bgcolor = '#ff0000'
+            self.search_bar.controls[1].content = ft.Text('Campo Vacio',size=15, color='#f3f4fa', font_family='Arial', text_align='center')
+            self.search_bar.controls[1].width = 100
+            self.update()
+            time.sleep(1)
+            self.search_bar.controls[1].bgcolor = '#6D62A1'
+            self.search_bar.controls[1].content = ft.Icon(ft.icons.SEARCH, color='#f3f4fa', size=20)
+            self.search_bar.controls[1].width = 35
+            self.update()
+        else:
+            self.data_table.rows.clear()
+            list_teachers = filter_teachers_db(search)
+
+            for teacher in list_teachers:
+                row = ft.DataRow([
+                    ft.DataCell(ft.Container(ft.Text(teacher['Name'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(teacher['Last_Name'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(teacher['CI'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(teacher['Phone1'], size=12, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
+                ], data=teacher['ID'], on_select_changed= lambda e: self.teacher_selected(e))
+                self.data_table.rows.append(row)
+            self.clear_filter_button.visible = True
+            self.update()
+            self.scrol.scroll_to(offset=0,duration=100)
+            self.scrol_pos = check() + 1 # To avoid the scroll event
+
+
+    def view(self, op=False):
         '''Change the view of the data table to the Teacher form'''
-        self.body.content = Teachers(self.page, self.body)
-        self.body.update()
-
-    def print_teacher_list(self):
-        '''Print the list of teachers'''
-
+        if op:
+            self.body.content = Teachers(self.page, self.body)
+            self.body.update()
+        else:
+            delete_tempdata_db()
+            self.body.content = Teachers(self.page, self.body)
+            self.body.update()
 
     def clear_filter(self):
         '''Clear the filter of the data table'''
+        self.scrol.scroll_to(offset=0,duration=100)
+        self.scrol_pos = 10
+        self.search_bar.controls[0].value = ''
+        del self.data_table.rows[:]
+        self.clear_filter_button.visible = False
+        self.update()
+        self.show_teachers()
+    
+    def teacher_selected(self, e):
+        '''Select a teacher from the data table'''
+        search = teacher_search(e.control.data)
+
+        if search:
+            save_tempdata_db(str(search))
+            self.view(True)
+        else:
+            pass
+
+    def print_teacher_list(self): #TODO - Print Teacher List
+        '''Print the list of teachers'''
