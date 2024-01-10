@@ -106,7 +106,7 @@ def teacher_search(ci):
     cursor.execute(
         """SELECT * FROM profesor WHERE cedula = ? or id_p = ?;""", (ci, ci))
     teacher = cursor.fetchone()
-    
+
     teacher_info = {
         'ID': None,
         'Name': None,
@@ -285,7 +285,3 @@ def filter_teachers_db(filter):
 
     conexion.close()
     return teachers_list
-
-
-# for i in range(1, 100):
-#     teacher_add(f'v{i}', f'Nombre {i}', f'Apellido {i}', f'Fecha {i}', f'Telefono {i}', f'Telefono {i}', f'Direccion {i}', f'Email {i}')

@@ -649,7 +649,19 @@ class Students(ft.UserControl):
 
 
     def drop_options(self):
+        """
+        Sets the dropdown options for the student grade.
 
+        This method retrieves the list of phases from the database using the 'get_phases' function. It then iterates over each phase and creates a dropdown option for the student grade using the phase's 'Grado/Año' and 'Seccion' values. The created option is appended to the 'options' attribute of the 'student_grade' dropdown.
+
+        This method should be called whenever the dropdown options need to be updated, such as when a new phase is added to the database.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
         phases_list = get_phases()
         for phase in phases_list:
             self.student_grade.options.append(ft.dropdown.Option(f"{phase['Grado/Año']} {phase['Seccion']}"))
@@ -1017,7 +1029,6 @@ class Students(ft.UserControl):
                 ci_r = 'v' + self.parent_ci.controls[0].value
             else:
                 ci_r = self.parent_ci.controls[0].value
-            
 
             if validate_student(self.actual_student, ci):
                 if ci_r != ci:

@@ -30,20 +30,62 @@ sem = threading.Semaphore()
 
 
 class Teachers(ft.UserControl):
-    '''Teachers Page
+    '''
+    A class representing a user interface for managing teachers and their assigned subjects.
 
-    Sections:
-    - Header
-    - Body
+    Parameters:
+    - page (ft.Page): The parent page to which this control belongs.
+    - section (str): The section of the page where this control is placed.
 
-    Header:
-    - Title
-    - Button to add a new teacher
-    - Button to show the teachers
-    - Button to show the teachers
+    Attributes:
+    - page (ft.Page): The parent page to which this control belongs.
+    - body (str): The section of the page where this control is placed.
+    - actual_teacher (int): The ID of the currently selected teacher.
+    - del_log (list): A list to store subjects to be removed from the teacher's assignments.
+    - add_log (list): A list to store subjects to be added to the teacher's assignments.
+    - subject_teacher_info (dict): Information about the teacher's assigned subject.
+    - subject_log: The currently selected subject for logging changes.
+    - date_picker_birthdate (ft.DatePicker): Date picker for selecting the teacher's birthdate.
+    - teacher_name (ft.TextField): Text field for entering the teacher's name.
+    - teacher_last_name (ft.TextField): Text field for entering the teacher's last name.
+    - teacher_ci (ft.TextField): Text field for entering the teacher's ID number.
+    - teacher_contact (ft.Row): Row containing text fields for entering contact information.
+    - teacher_email (ft.TextField): Text field for entering the teacher's email address.
+    - teacher_address (ft.TextField): Text field for entering the teacher's address.
+    - teacher_birthday (ft.Row): Row containing text field and date picker for the teacher's birthday.
+    - teacher_layout (ft.Container): Layout container for the teacher information.
+    - title_subject (ft.Text): Text element representing the title for subject-related actions.
+    - teacher_subject (ft.Row): Row containing a dropdown for selecting subjects and a button for confirmation.
+    - subject_list (ft.DataTable): DataTable for displaying the list of assigned subjects.
+    - data_container (ft.Container): Container for holding the subject list with scrolling capabilities.
+    - layout_subject (ft.Container): Layout container for subject-related actions.
+    - search_bar (ft.Row): Row containing a text field for searching teachers and a button for searching.
+    - teachers_buttons (ft.Row): Row containing buttons for adding, deleting, editing, saving, and canceling teacher information.
+    - content (ft.Column): Main content container for the entire Teachers interface.
 
-    Body:
-    - Container to show the content
+    Methods:
+    - __init__(self, page: ft.Page, section: str): Initializes the Teachers instance.
+    - build(self): Builds and returns the content of the Teachers interface.
+    - check_temp(self): Checks for temporary data and populates the form if available.
+    - change_birthdate(self, date): Changes the birthdate of the teacher.
+    - drop_options(self, data=None): Adds options to the subject dropdown based on available subjects.
+    - activate_fields(self, op): Activates or deactivates the form fields based on the operation.
+    - validate(self): Validates if all required fields are filled.
+    - cancel(self): Cancels the teacher registration or editing process.
+    - search_teacher(self): Searches for a teacher based on the provided ID.
+    - add_teacher(self): Adds a new teacher to the database.
+    - delete_confirm(self): Shows a confirmation dialog for deleting a teacher.
+    - delete_teacher(self, dlg): Deletes the currently selected teacher from the database.
+    - confirm_edit(self): Confirms the changes made to the teacher's information.
+    - edit_teacher(self, dlg): Updates the teacher's information in the database.
+    - print_teacher(self): Placeholder method for printing teacher information.
+    - change_log(self, e): Updates the subject log based on the selected subject.
+    - subjects_row(self, data): Adds rows to the subject list based on the provided data.
+    - subject_confirm(self): Confirms the addition of a subject to the teacher.
+    - add_subject(self): Adds the selected subject to the teacher's assignments.
+    - subject_confirm_delete(self, e): Shows a confirmation dialog for deleting a subject.
+    - delete_subject(self, data, dlg): Deletes the selected subject from the teacher's assignments.
+
     '''
 
     def __init__(self, page: ft.Page, section: str):
@@ -462,11 +504,17 @@ class Teachers(ft.UserControl):
         return self.content
 
     def check_temp(self):
+        """
+        Check the temporary data in the database and populate the fields with the retrieved data.
+
+        This method checks if there is temporary data stored in the database. If there is, it retrieves the data and populates the corresponding fields in the Teachers page with the retrieved values. The temporary data includes information such as the teacher's name, last name, CI (Cedula), contact information, email, address, and birth date.
+
+        Returns:
+            None
+        """
         if check_tempdata_db():
             data = get_tempdata_db()
-
             data = eval(data)
-
 
             self.actual_teacher = data['ID']
 
@@ -507,7 +555,7 @@ class Teachers(ft.UserControl):
                         subjects_list.insert(0, {'ID': None, 'Nombre': None})
 
             for subject in subjects_list:
-                if subject['ID'] != None:
+                if subject['ID'] is not None:
                     self.teacher_subject.controls[0].options.append(ft.dropdown.Option(f"{subject['ID']} {subject['Nombre']}"))
         else:
             for subject in subjects_list:
@@ -630,7 +678,7 @@ class Teachers(ft.UserControl):
 
             if teacher_info:
                 teacher_subjects = teacher_subjects_search(teacher_info['ID'])
-            
+
                 self.teacher_name.value = teacher_info['Name']
                 self.teacher_last_name.value = teacher_info['Last_Name']
                 self.teacher_ci.value = teacher_info['CI']
@@ -759,12 +807,34 @@ class Teachers(ft.UserControl):
         self.subject_log = e
 
     def subject_edit_set(self, id, name):
+        """
+        Sets up the UI for editing a subject.
+
+        Parameters:
+        - id (int): The ID of the subject.
+        - name (str): The name of the subject.
+
+        Returns:
+        - ft.Row: The UI element containing the button to delete the subject.
+
+        """
         return ft.Row([
             # Create the button to delete the subject
             ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_delete(e), data=[id, name]),
         ], vertical_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, spacing=10)
 
     def subjects_row(self, data):
+        """
+        Add rows to the subject list in the Teachers page.
+
+        Parameters:
+        - data (list): A list of dictionaries containing subject information. Each dictionary should have the following keys:
+            - 'ID' (int): The ID of the subject.
+            - 'Name' (str): The name of the subject.
+
+        Returns:
+        None
+        """
         for subject in data:
             row = ft.DataRow([
                         ft.DataCell(ft.Container(ft.Text(subject['Name'], size=12, color='#4B4669', text_align='center'), width=300, alignment=ft.alignment.center_left, padding=ft.padding.only(left=30))),
@@ -774,6 +844,18 @@ class Teachers(ft.UserControl):
         self.update()
 
     def subject_confirm(self):
+        """
+        Confirms the selection of a subject for the teacher.
+
+        If a subject is selected, the method calls the 'add_subject' method.
+        If no subject is selected, an alert dialog is displayed indicating that a subject must be selected.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
         if self.teacher_subject.controls[0].value is not None:
             self.add_subject()
         else:
@@ -807,7 +889,7 @@ class Teachers(ft.UserControl):
 
         for subject in self.add_log:
             teacher_subjects.append(subject)
-        
+
         for subject in self.del_log:
             subject_t = {
                 'ID': subject['ID'],
@@ -917,6 +999,49 @@ class Teachers(ft.UserControl):
 
 
 class Teacherslist(ft.UserControl):
+    '''
+    A custom user control for displaying a list of teachers in a graphical user interface.
+
+    Args:
+        page (ft.Page): The page to which the control belongs.
+        section (str): The section identifier for the control.
+
+    Attributes:
+        page (ft.Page): The page associated with the control.
+        body (str): The section identifier for the control.
+        scrol_pos (int): The current scroll position of the data table.
+
+    ...
+
+    Methods:
+        __init__(self, page: ft.Page, section: str)
+            Initializes the Teacherslist instance.
+
+        build(self)
+            Builds and returns the content of the user control.
+
+        show_teachers(self)
+            Displays a list of teachers in a data table.
+
+        on_scroll(self, e)
+            Called when the user scrolls to the bottom of the data table.
+
+        search_teacher(self)
+            Searches for a teacher in the database based on the input value.
+
+        view(self, op=False)
+            Changes the view of the data table to the Teacher form.
+
+        clear_filter(self)
+            Clears the filter of the data table and resets the scroll position.
+
+        teacher_selected(self, e)
+            Handles the selection of a teacher from the data table.
+
+        print_teacher_list(self)
+            Placeholder function for printing the list of teachers.
+
+    '''
     def __init__(self, page: ft.Page, section: str):
         super().__init__()
         self.page = page
@@ -1159,7 +1284,7 @@ class Teacherslist(ft.UserControl):
         self.clear_filter_button.visible = False
         self.update()
         self.show_teachers()
-    
+
     def teacher_selected(self, e):
         '''Select a teacher from the data table'''
         search = teacher_search(e.control.data)
