@@ -4,7 +4,7 @@
 import sqlite3
 
 #* ------------------ ADD SUBJECT ------------------ *#
-def subject_add(subject_name):
+def subject_add(subject_name, phase):
     '''Add a new subject to the database'''
     # Connect to the database
     conexion = sqlite3.connect('DB/Nibble.db')
@@ -12,13 +12,14 @@ def subject_add(subject_name):
 
     # search if the subject already exists
     if cursor.execute(
-        """SELECT nombre FROM materia WHERE nombre = ?;""", (subject_name,)).fetchone() is not None:
+        """SELECT nombre FROM materia WHERE nombre = ? AND etapa = ?;""", (subject_name, phase)).fetchone() is not None:
         pass
     else:
         cursor.execute(
             """INSERT INTO materia (
-                nombre
-            ) VALUES (?);""", (subject_name,))
+                nombre,
+                etapa
+            ) VALUES (?, ?);""", (subject_name, phase))
         conexion.commit()
 
     conexion.close()
@@ -32,13 +33,14 @@ def get_subjects():
     cursor = conexion.cursor()
 
     cursor.execute(
-        """SELECT id_m,nombre FROM materia;""")
+        """SELECT id_m,nombre, etapa FROM materia;""")
     search = cursor.fetchall()
     conexion.close()
 
     subject = {
         'ID': None,
-        'Nombre': None
+        'Nombre': None,
+        'Etapa': None
     }
 
     subjects_list = []
@@ -46,6 +48,7 @@ def get_subjects():
     for i in search:
         subject['ID'] = i[0]
         subject['Nombre'] = i[1]
+        subject['Etapa'] = i[2]
         subjects_list.append(subject.copy())
 
     # Ordenar la lista de materias en orden ascendente
@@ -66,13 +69,13 @@ def delete_subject(subject_id):
     conexion.close()
 
 #* ------------------ UPDATE SUBJECT ------------------ *#
-def update_subject(subject_id, subject_name):
+def update_subject(subject_id, subject_name, phase):
     '''Update a subject from the database'''
     # Connect to the database
     conexion = sqlite3.connect('DB/Nibble.db')
     cursor = conexion.cursor()
 
     cursor.execute(
-        """UPDATE materia SET nombre = ? WHERE id_m = ?;""", (subject_name, subject_id))
+        """UPDATE materia SET nombre = ?, etapa = ? WHERE id_m = ?;""", (subject_name, phase,subject_id))
     conexion.commit()
     conexion.close()

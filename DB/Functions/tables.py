@@ -32,7 +32,8 @@ def subject_table(conexion):
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS materia(
             id_m INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL
+            nombre TEXT NOT NULL,
+            etapa TEXT NOT NULL
         );""")
     conexion.commit()
 
@@ -127,15 +128,17 @@ def grade_table(conexion):
 
     cursor = conexion.cursor()
     cursor.execute(
-        """CREATE TABLE IF NOT EXISTS nota(
+        """CREATE TABLE IF NOT EXISTS calificaciones(
             id_nota INTEGER PRIMARY KEY AUTOINCREMENT,
             estudiante_ci TEXT NOT NULL,
             materia_id INTEGER NOT NULL,
-            momento INTEGER NOT NULL,
-            nro_actividad INTEGER NOT NULL,
-            descrip_actividad TEXT,
-            calificacion DECIMAL(4,2) NOT NULL,
-            fecha TEXT NOT NULL
+            momento_1 DECIMAL(4,2),
+            momento_2 DECIMAL(4,2),
+            momento_3 DECIMAL(4,2),
+            nota_final DECIMAL(4,2),
+            periodo TEXT NOT NULL,
+            CONSTRAINT fk_est_ci_grade FOREIGN KEY(estudiante_ci) REFERENCES estudiante(cedula) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT fk_mat_id_grade FOREIGN KEY(materia_id) REFERENCES materia(id_m) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()
 

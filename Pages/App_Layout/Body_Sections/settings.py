@@ -6,7 +6,7 @@ import flet as ft
 
 # Database
 from DB.Functions.user_db import get_user,update_user
-from DB.Functions.phases_db import phase_add, get_phases, delete_phase, update_phase
+from DB.Functions.phases_db import phase_add, get_phases, delete_phase, update_phase, search_phase
 from DB.Functions.subjects_db import subject_add, get_subjects, delete_subject, update_subject
 from DB.Functions.db_info import get_amount
 
@@ -244,7 +244,8 @@ class Settings(ft.UserControl):
             heading_row_height=35,
 
             columns=[
-                ft.DataColumn(ft.Container(ft.Text('Materia', color='#4B4669', font_family='Arial', size=15), width=250)),
+                ft.DataColumn(ft.Container(ft.Text('Materia', color='#4B4669', font_family='Arial', size=15), width=170)),
+                ft.DataColumn(ft.Container(ft.Text('Etapa', color='#4B4669', font_family='Arial', size=15), width=80)),
                 ft.DataColumn(ft.Container(ft.Text('Acciones', color='#4B4669', font_family='Arial', size=15), width=80)),
             ],
         )
@@ -438,7 +439,7 @@ class Settings(ft.UserControl):
         students = get_amount('estudiante')
         phases = get_amount('etapa')
         schedules = get_amount('horario')
-        grades = get_amount('nota')
+        grades = get_amount('calificaciones')
         teachers = get_amount('profesor')
         parents = get_amount('representante')
         user = get_amount('usuario')
@@ -692,35 +693,52 @@ class Settings(ft.UserControl):
 
         for subject in subjects_list:
             row = ft.DataRow([
-                    ft.DataCell(ft.Container(ft.Text(subject['Nombre'], color='#4B4669', font_family='Arial', size=12), width=250)),
-                    ft.DataCell(ft.Container(self.subject_edit_set(subject['ID'], subject['Nombre']), width=80)),
+                    ft.DataCell(ft.Container(ft.Text(subject['Nombre'].capitalize(), color='#4B4669', font_family='Arial', size=12), width=170)),
+                    ft.DataCell(ft.Container(ft.Text(subject['Etapa'], color='#4B4669', font_family='Arial', size=12), width=80)),
+                    ft.DataCell(ft.Container(self.subject_edit_set(subject['ID'], subject['Nombre'], subject['Etapa']), width=80)),
                 ], data=subject['ID'])
             self.subjects.rows.append(row)
         self.update()
 
     def subject_validate(self, dlg):
         '''Function to validate the subject'''
-        if dlg.content.controls[1].value != '':
-            return True
+        checker = bool(dlg.content.controls[3].value)
+        if checker:
+            if dlg.content.controls[1].value != '':
+                return True
+            else:
+                dlg.actions[1].text = 'Rellene todos los campos'
+                dlg.actions[1].bgcolor = '#ff0000'
+                dlg.update()
+
+                time.sleep(1)
+
+                dlg.actions[1].text = 'Agregar'
+                dlg.actions[1].bgcolor = '#6D62A1'
+                dlg.update()
+                return False
         else:
-            dlg.actions[1].text = 'Rellene todos los campos'
-            dlg.actions[1].bgcolor = '#ff0000'
-            dlg.update()
+            if dlg.content.controls[1].value != '' and dlg.content.controls[2].value is not None:
+                return True
+            else:
+                dlg.actions[1].text = 'Rellene todos los campos'
+                dlg.actions[1].bgcolor = '#ff0000'
+                dlg.update()
 
-            time.sleep(1)
+                time.sleep(1)
 
-            dlg.actions[1].text = 'Agregar'
-            dlg.actions[1].bgcolor = '#6D62A1'
-            dlg.update()
-            return False
+                dlg.actions[1].text = 'Agregar'
+                dlg.actions[1].bgcolor = '#6D62A1'
+                dlg.update()
+                return False
 
-    def subject_edit_set(self, id, subject_name):
+    def subject_edit_set(self, id, subject_name, phase_id):
         '''Function to set the subject edit buttons'''
         return ft.Row([
             # Create the button to edit the subject
-            ft.IconButton(icon=ft.icons.EDIT, icon_color='#3741c8', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_edit(e), data=[id, subject_name]),
+            ft.IconButton(icon=ft.icons.EDIT, icon_color='#3741c8', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_edit(e), data=[id, subject_name, phase_id]),
             # Create the button to delete the subject
-            ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_delete(e), data=[id, subject_name]),
+            ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_delete(e), data=[id, subject_name, phase_id]),
         ], vertical_alignment=ft.CrossAxisAlignment.CENTER)
 
     def subject_confirm_add(self):
@@ -760,13 +778,65 @@ class Settings(ft.UserControl):
                     text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                ),
+
+                ft.Dropdown(
+                    width=300,
+                    height=35,
+                    label='Etapa (Grado/Año)',
+                    hint_text='Selecciona la Etapa',
+                    filled=True,
+                    bgcolor='#f3f4fa',
+                    hint_style=ft.TextStyle(color='#C0C1E3'),
+                    label_style=ft.TextStyle(color='#4B4669'),
+                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                    border_color='#6D62A1',
+                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                ),
+
+                ft.Switch(
+                    height=35,
+                    label='Todas las Etapas',
+                    value=False,
+                    on_change= lambda e: self.switch_phase(e, dlg),
                 )
-            ], spacing=10, width=300, height=70, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+
+            ], spacing=10, width=300, height=150, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             actions=[
                 ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
                 ft.ElevatedButton(text='Agregar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.add_subject(dlg)),
             ])
+        self.drop_options(dlg)
         self.open_dlg(dlg)
+    
+
+    def switch_phase(self, e, dlg):
+        if e.control.value:
+            dlg.content.controls[2].disabled = True
+            dlg.content.controls[2].value = None
+        else:
+            dlg.content.controls[2].disabled  = False
+        
+        dlg.update()
+
+    def drop_options(self, dlg):
+        phases_list = get_phases()
+
+        # Format the phase list to remove the grado/año duplicates
+        for phase in phases_list:
+            for phase2 in phases_list:
+                if phase['Grado/Año'] == phase2['Grado/Año'] and phase['Seccion'] != phase2['Seccion']:
+                    phases_list.remove(phase2)
+
+        #sort the list by grado/año split ' ' [1]
+        phases_list.sort(key=lambda x: str(x['Grado/Año'].split(' ')[1]), reverse=True)
+
+        for phase in phases_list:
+            dlg.content.controls[2].options.append(ft.dropdown.Option(f"{phase['Grado/Año']}"))
+
+        self.update()
+
+
 
     def add_subject(self, dlg):
         """
@@ -777,7 +847,14 @@ class Settings(ft.UserControl):
         """
         if self.subject_validate(dlg):
             subject_name = dlg.content.controls[1].value
-            subject_add(subject_name)
+            subject_name = subject_name.upper()
+
+            if dlg.content.controls[3].value:
+                phase_id = 'Todos'
+            else:
+                phase_id = dlg.content.controls[2].value
+
+            subject_add(subject_name, phase_id)
             self.close(dlg)
             self.subjects.rows.clear()
             self.show_subjects()
@@ -794,8 +871,37 @@ class Settings(ft.UserControl):
         Returns:
             None
         """
+        phase = e.control.data[2]
         name = e.control.data[1]
         id = e.control.data[0]
+
+        dropdown = ft.Dropdown(
+            width=300,
+            height=35,
+            label='Etapa (Grado/Año)',
+            hint_text='Selecciona la Etapa',
+            filled=True,
+            bgcolor='#f3f4fa',
+            hint_style=ft.TextStyle(color='#C0C1E3'),
+            label_style=ft.TextStyle(color='#4B4669'),
+            text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+            border_color='#6D62A1',
+            content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+        )
+
+        switch = ft.Switch(
+            height=35,
+            label='Todas las Etapas',
+            value=False,
+            on_change= lambda e: self.switch_phase(e, dlg),
+        )
+
+        if phase == 'Todos':
+            switch.value = True
+            dropdown.disabled = True
+        else:
+            switch.value = False
+            dropdown.value = phase
 
         dlg = ft.AlertDialog(
             content=ft.Column([
@@ -811,13 +917,16 @@ class Settings(ft.UserControl):
                     text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
                     border_color='#6D62A1',
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
-                    value=name
-                )
-            ], spacing=10, width=300, height=70, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    value=name,
+                ),
+                dropdown,
+                switch,
+            ], spacing=10, width=300, height=150, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             actions=[
                 ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
                 ft.ElevatedButton(text='Editar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.edit_subject(dlg, id)),
             ])
+        self.drop_options(dlg)
         self.open_dlg(dlg)
 
     def edit_subject(self, dlg, id):
@@ -852,7 +961,15 @@ class Settings(ft.UserControl):
         """
         if self.subject_validate(dlg):
             subject_name = dlg.content.controls[1].value
-            update_subject(id, subject_name)
+            subject_name = subject_name.upper()
+
+            if dlg.content.controls[3].value:
+                phase = 'Todos'
+            else:
+                phase = dlg.content.controls[2].value
+
+
+            update_subject(id, subject_name, phase)
             self.close(dlg)
             self.subjects.rows.clear()
             self.show_subjects()
