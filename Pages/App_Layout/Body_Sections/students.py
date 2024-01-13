@@ -241,6 +241,7 @@ class Students(ft.UserControl):
             options=[
                 ft.dropdown.Option('Activo'),
                 ft.dropdown.Option('Retirado'),
+                ft.dropdown.Option('Graduado', disabled=True), #TODO - If state TRUE, disable the dropdown and the phase dropdown
             ]
         )
 
