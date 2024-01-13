@@ -84,7 +84,8 @@ def phase_table(conexion):
         """CREATE TABLE IF NOT EXISTS etapa(
             id_e INTEGER PRIMARY KEY AUTOINCREMENT,
             grado_anio TEXT,
-            seccion TEXT
+            seccion TEXT,
+            last_added TEXT
         );""")
     conexion.commit()
 
@@ -130,14 +131,14 @@ def grade_table(conexion):
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS calificaciones(
             id_nota INTEGER PRIMARY KEY AUTOINCREMENT,
-            estudiante_ci TEXT NOT NULL,
+            estudiante_id TEXT NOT NULL,
             materia_id INTEGER NOT NULL,
             momento_1 DECIMAL(4,2),
             momento_2 DECIMAL(4,2),
             momento_3 DECIMAL(4,2),
             nota_final DECIMAL(4,2),
             periodo TEXT NOT NULL,
-            CONSTRAINT fk_est_ci_grade FOREIGN KEY(estudiante_ci) REFERENCES estudiante(cedula) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT fk_est_id_grade FOREIGN KEY(estudiante_id) REFERENCES estudiante(id_s) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT fk_mat_id_grade FOREIGN KEY(materia_id) REFERENCES materia(id_m) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()

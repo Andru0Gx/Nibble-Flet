@@ -6,7 +6,7 @@ import flet as ft
 
 # Database
 from DB.Functions.user_db import get_user,update_user
-from DB.Functions.phases_db import phase_add, get_phases, delete_phase, update_phase, search_phase
+from DB.Functions.phases_db import phase_add, get_phases, delete_phase, update_phase
 from DB.Functions.subjects_db import subject_add, get_subjects, delete_subject, update_subject
 from DB.Functions.db_info import get_amount
 
@@ -304,9 +304,8 @@ class Settings(ft.UserControl):
             heading_row_height=35,
 
             columns=[
-                ft.DataColumn(ft.Container(ft.Text('Grado / Año', color='#4B4669', font_family='Arial', size=15), width=150)),
+                ft.DataColumn(ft.Container(ft.Text('Grado / Año', color='#4B4669', font_family='Arial', size=15), width=230)),
                 ft.DataColumn(ft.Container(ft.Text('Seccion', color='#4B4669', font_family='Arial', size=15), width=80)),
-                ft.DataColumn(ft.Container(ft.Text('Acciones', color='#4B4669', font_family='Arial', size=15), width=80)),
             ],
         )
 
@@ -318,7 +317,7 @@ class Settings(ft.UserControl):
             self.phase_scroll,
             width=400,
             height=200,
-            border_radius=ft.BorderRadius(top_left=0, top_right=10, bottom_left=10, bottom_right=10),
+            border_radius=ft.BorderRadius(top_left=0, top_right=0, bottom_left=10, bottom_right=10),
             padding=ft.padding.all(5),
             border=ft.border.all(2, '#bec0e3'),
         )
@@ -333,11 +332,22 @@ class Settings(ft.UserControl):
                 border_radius=ft.BorderRadius(top_left=15, top_right=0, bottom_left=15, bottom_right=0),
             )
 
+        self.delete_phase_button = ft.Container(
+                ft.Icon(ft.icons.DELETE, color='#ff0000', size=25),
+                width=30,
+                height=42,
+                bgcolor='#bec0e3',
+                alignment=ft.alignment.center_left,
+                on_click= lambda e: self.phase_confirm_delete(),
+                border_radius=ft.BorderRadius(top_left=0, top_right=15, bottom_left=0, bottom_right=15),
+            )
+
         phase_layout = ft.Column([
             phase_title,
             ft.Row([
                 self.add_phase_button,
                 phase_container,
+                self.delete_phase_button,
             ], alignment=ft.MainAxisAlignment.START, spacing=0, vertical_alignment=ft.CrossAxisAlignment.START),
         ], width=450)
 
@@ -794,7 +804,7 @@ class Settings(ft.UserControl):
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
                 ),
 
-                ft.Switch(
+                ft.Switch( #TODO - Find a way to select if is for School or for High School
                     height=35,
                     label='Todas las Etapas',
                     value=False,
@@ -808,18 +818,55 @@ class Settings(ft.UserControl):
             ])
         self.drop_options(dlg)
         self.open_dlg(dlg)
-    
+
 
     def switch_phase(self, e, dlg):
+        """
+        Switches the phase based on the value of the event control.
+
+        Parameters:
+            - self: The instance of the class containing this method.
+            - e: The event that triggers the switch.
+            - dlg: The dialog instance associated with the switch.
+
+        Description:
+            This function is designed to handle a phase switch in a dialog. It checks the value
+            of the event control, and if it's true, it disables the third control in the dialog.
+            If the value is false, it enables the third control.
+
+        Usage:
+            - Call this function when an event is triggered to switch phases in the dialog.
+
+        Example:
+            switch_phase(self, event_instance, dialog_instance)
+        """
         if e.control.value:
             dlg.content.controls[2].disabled = True
             dlg.content.controls[2].value = None
         else:
             dlg.content.controls[2].disabled  = False
-        
+
         dlg.update()
 
     def drop_options(self, dlg):
+        """
+        Populates dropdown options in the dialog based on unique Grado/Año values from phases.
+
+        Parameters:
+            - self: The instance of the class containing this method.
+            - dlg: The dialog instance to populate with dropdown options.
+
+        Description:
+            This function retrieves a list of phases, removes duplicate Grado/Año values with different Seccion,
+            sorts the list by Grado/Año in descending order, and populates the dropdown options in the dialog with
+            the formatted Grado/Año values.
+
+        Usage:
+            - Call this function to dynamically update dropdown options in the dialog.
+
+        Example:
+            drop_options(self, dialog_instance)
+        """
         phases_list = get_phases()
 
         # Format the phase list to remove the grado/año duplicates
@@ -1090,9 +1137,8 @@ class Settings(ft.UserControl):
 
         for phase in phases_list:
             row = ft.DataRow([
-                    ft.DataCell(ft.Container(ft.Text(phase['Grado/Año'], color='#4B4669', font_family='Arial', size=12), width=150)),
+                    ft.DataCell(ft.Container(ft.Text(phase['Grado/Año'], color='#4B4669', font_family='Arial', size=12), width=230)),
                     ft.DataCell(ft.Container(ft.Text(phase['Seccion'], color='#4B4669', font_family='Arial', size=12), width=80)),
-                    ft.DataCell(ft.Container(self.phase_edit_set(phase['ID'], phase['Grado/Año'], phase['Seccion']), width=80)),
                 ], data=phase['ID'])
             self.phase.rows.append(row)
 
@@ -1114,15 +1160,6 @@ class Settings(ft.UserControl):
             dlg.update()
             return False
 
-    def phase_edit_set(self, id, grade, section): #TODO - Add the function to edit the phase
-        '''Function to set the subject edit buttons'''
-        return ft.Row([
-            # Create the button to edit the subject
-            ft.IconButton(icon=ft.icons.EDIT, icon_color='#3741c8', width=35, height=35, icon_size=20, on_click= lambda e: self.phase_confirm_edit(e), data=[id, grade, section]),
-            # Create the button to delete the subject
-            ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.phase_confirm_delete(e), data=[id, grade, section]),
-        ], vertical_alignment=ft.CrossAxisAlignment.CENTER)
-
     def phase_confirm_add(self):
         """
         Displays a dialog box for adding a phase.
@@ -1143,10 +1180,10 @@ class Settings(ft.UserControl):
                 ft.Text('Agregar Fase', color='#4B4669', font_family='Arial', size=20),
                 ft.Row([
                     ft.TextField(
-                        width=150,
+                        width=200,
                         height=35,
-                        label='Fase',
-                        hint_text='Ingresa la fase',
+                        label='Utlima Fase',
+                        hint_text='Ingresa la ultima fase',
                         bgcolor='#f3f4fa',
                         hint_style=ft.TextStyle(color='#C0C1E3'),
                         label_style=ft.TextStyle(color='#4B4669'),
@@ -1156,7 +1193,7 @@ class Settings(ft.UserControl):
                         input_filter=ft.InputFilter(regex_string='[0-9]'),
                     ),
                     ft.TextField(
-                        width=140,
+                        width=90,
                         height=35,
                         label='Seccion',
                         hint_text='Ingresa la seccion',
@@ -1172,8 +1209,8 @@ class Settings(ft.UserControl):
 
                 ft.RadioGroup(content=ft.Container(
                     ft.Row([
-                        ft.Radio(value='Grado', label='Grado'),
-                        ft.Radio(value='Año', label='Año'),
+                        ft.Radio(value='Colegio', label='Colegio'),
+                        ft.Radio(value='Liceo', label='Liceo'),
                     ], alignment=ft.MainAxisAlignment.START), padding=ft.padding.only(left=10,top=0,right=10,bottom=0))
                 ),
 
@@ -1214,12 +1251,10 @@ class Settings(ft.UserControl):
         - If the validation fails, it does nothing.
         """
         if self.phase_validate(dlg):
-            if dlg.content.controls[2].value == 'Grado':
-                phase_name = dlg.content.controls[1].controls[0].value + ' Grado'
-            else:
-                phase_name = dlg.content.controls[1].controls[0].value + ' Año'
-
-            phase_add(phase_name, dlg.content.controls[1].controls[1].value)
+            last_phase = dlg.content.controls[1].controls[0].value
+            section = dlg.content.controls[1].controls[1].value
+            phase_type = dlg.content.controls[2].value
+            phase_add(last_phase, section, phase_type)
             del self.phase.rows[:]
             self.update()
             self.show_phases()
@@ -1336,7 +1371,7 @@ class Settings(ft.UserControl):
         else:
             pass
 
-    def phase_confirm_delete(self, e):
+    def phase_confirm_delete(self):
         """
         Displays a confirmation dialog to the user when they want to delete a phase.
 
@@ -1346,8 +1381,6 @@ class Settings(ft.UserControl):
         Returns:
             None
         """
-        id = e.control.data[0]
-
         dlg = ft.AlertDialog(
             content=ft.Column([
                 ft.Text('Esta seguro que desea eliminar la fase?', color='#4B4669', font_family='Arial', size=15, weight='bold'),
@@ -1355,11 +1388,11 @@ class Settings(ft.UserControl):
             ], spacing=10, width=300, height=100, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             actions=[
                 ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
-                ft.ElevatedButton(text='Eliminar',bgcolor = '#6D62A1',color = '#f3f4fa',  on_click= lambda e: self.phase_secundary_confirm_delete(id, dlg)),
+                ft.ElevatedButton(text='Eliminar',bgcolor = '#6D62A1',color = '#f3f4fa',  on_click= lambda e: self.phase_secundary_confirm_delete(dlg)),
             ])
         self.open_dlg(dlg)
 
-    def phase_secundary_confirm_delete(self, id, dlg):
+    def phase_secundary_confirm_delete(self, dlg):
         """
         Displays a confirmation dialog box with a countdown timer. After the countdown, the dialog box is updated to allow the user to confirm the deletion.
 
@@ -1375,10 +1408,10 @@ class Settings(ft.UserControl):
 
         dlg.actions[1].text = 'Confirmar Eliminacion'
         dlg.actions[1].bgcolor = '#f83c86'
-        dlg.actions[1].on_click = lambda e: self.delete_phase(id, dlg)
+        dlg.actions[1].on_click = lambda e: self.delete_phase(dlg)
         dlg.update()
 
-    def delete_phase(self, id, dlg):
+    def delete_phase(self, dlg):
         """
         Delete a phase from the list of phases.
 
@@ -1390,7 +1423,7 @@ class Settings(ft.UserControl):
             None
 
         """
-        delete_phase(id)
+        delete_phase()
         del self.phase.rows[:]
         self.update()
         self.show_phases()
