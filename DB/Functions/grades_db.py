@@ -25,11 +25,13 @@ locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 
 #* ------------------ ADD GRADE ------------------ *#
-def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None, final_grade= None, new_period = False):
+def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None, final_grade= None, new_period = False, disapprove=False):
     '''Add a new grade to the database'''
     # Connect to the database
     conexion = sqlite3.connect('DB/Nibble.db')
     cursor = conexion.cursor()
+
+    period = None
 
     student_phase_id = cursor.execute(
         """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_ci,)).fetchone()[0]
@@ -38,8 +40,13 @@ def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None,
         """SELECT grado_anio, seccion FROM etapa WHERE id_e = ?;""", (student_phase_id,)).fetchone()
     phase_name = str(phase_name[0] + ' ' + phase_name[1])
 
-    period = datetime.datetime.now().strftime('%d %B %Y')
-    period = str(period + ' - ' + phase_name)
+    if disapprove:
+        period = datetime.datetime.now() + datetime.timedelta(days=1)
+        period = period.strftime('%d %B %Y')
+        period = str(period + ' - ' + phase_name)
+    else:
+        period = datetime.datetime.now().strftime('%d %B %Y')
+        period = str(period + ' - ' + phase_name)
 
     if new_period:
         cursor.execute(
@@ -136,7 +143,7 @@ def disapprove_student(student_id, new_status):
 
     subjects_list = filter_subjects(phase_data, phase_type)
     for i in subjects_list:
-        grade_add(student_id, i['ID'], new_period=True)
+        grade_add(student_id, i['ID'], new_period=True, disapprove=True)
 
     conexion.close()
 
