@@ -6,7 +6,7 @@ import flet as ft
 
 # Database
 from DB.Functions.user_db import get_user,update_user
-from DB.Functions.phases_db import phase_add, get_phases, delete_phase, update_phase
+from DB.Functions.phases_db import phase_add, get_phases, delete_phase
 from DB.Functions.subjects_db import subject_add, get_subjects, delete_subject, update_subject
 from DB.Functions.db_info import get_amount
 
@@ -1209,8 +1209,8 @@ class Settings(ft.UserControl):
                     ft.TextField(
                         width=200,
                         height=35,
-                        label='Utlima Fase',
-                        hint_text='Ingresa la ultima fase',
+                        label='Ultimo Grado/Año',
+                        hint_text='Ingresa el ultimo Grado/Año',
                         bgcolor='#f3f4fa',
                         hint_style=ft.TextStyle(color='#C0C1E3'),
                         label_style=ft.TextStyle(color='#4B4669'),
@@ -1282,115 +1282,6 @@ class Settings(ft.UserControl):
             section = dlg.content.controls[1].controls[1].value
             phase_type = dlg.content.controls[2].value
             phase_add(last_phase, section, phase_type)
-            del self.phase.rows[:]
-            self.update()
-            self.show_phases()
-            self.close(dlg)
-        else:
-            pass
-
-    def phase_confirm_edit(self, e):
-        """
-        Displays a dialog box for editing a phase in a settings page.
-
-        Args:
-            e (Event): An event object that contains data about the control that triggered the event.
-
-        Returns:
-            None
-
-        Example Usage:
-            settings = Settings(page)
-            settings.phase_confirm_edit(e)
-
-        Code Analysis:
-            - Extracts the id, section, and grade from the event data.
-            - Splits the grade into the grade value and grade type.
-            - Creates a dialog box with text fields for entering the new phase and section, and a radio group for selecting the grade type.
-            - Sets the initial values of the text fields and radio group based on the extracted data.
-            - Adds "Cancelar" and "Editar" buttons to the dialog box, with event handlers for canceling or saving the changes.
-            - Displays the dialog box to the user.
-        """
-        id = e.control.data[0]
-        section = e.control.data[2]
-        grade = e.control.data[1]
-
-        grade_type = grade.split(' ')[1]
-        grade = grade.split(' ')[0]
-
-        dlg = ft.AlertDialog(
-            content=ft.Column([
-                ft.Text('Editar Fase', color='#4B4669', font_family='Arial', size=20),
-
-                ft.Row([
-                    ft.TextField(
-                        width=150,
-                        height=35,
-                        label='Fase',
-                        hint_text='Ingresa la fase',
-                        bgcolor='#f3f4fa',
-                        hint_style=ft.TextStyle(color='#C0C1E3'),
-                        label_style=ft.TextStyle(color='#4B4669'),
-                        text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
-                        border_color='#6D62A1',
-                        content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
-                        input_filter=ft.InputFilter(regex_string='[0-9]'),
-                        value=grade,
-                    ),
-                    ft.TextField(
-                        width=140,
-                        height=35,
-                        label='Seccion',
-                        hint_text='Ingresa la seccion',
-                        bgcolor='#f3f4fa',
-                        hint_style=ft.TextStyle(color='#C0C1E3'),
-                        label_style=ft.TextStyle(color='#4B4669'),
-                        text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
-                        border_color='#6D62A1',
-                        content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
-                        input_filter=ft.InputFilter(regex_string='[A-Z]'),
-                        value=section,
-                    )
-                ], alignment=ft.MainAxisAlignment.CENTER, spacing=10, width=300, height=35),
-
-                ft.RadioGroup(content=ft.Container(
-                    ft.Row([
-                        ft.Radio(value='Grado', label='Grado'),
-                        ft.Radio(value='Año', label='Año'),
-                    ], alignment=ft.MainAxisAlignment.START), padding=ft.padding.only(left=10,top=0,right=10,bottom=0)),
-                    value=grade_type
-                ),
-
-            ], spacing=10, width=300, height=125, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            actions=[
-                ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
-                ft.ElevatedButton(text='Editar',bgcolor = '#6D62A1',color = '#f3f4fa',  on_click= lambda e: self.edit_phase(dlg, id)),
-            ])
-        self.open_dlg(dlg)
-
-    def edit_phase(self, dlg, id):
-        """
-        Update a phase in the database based on user input from a dialog box.
-
-        Args:
-            dlg (DialogBox): The dialog box object that contains the user input.
-            id (int): The ID of the phase to be updated in the database.
-
-        Returns:
-            None
-
-        Example Usage:
-            settings = Settings(page)
-            settings.edit_phase(dlg, id)
-
-        """
-        if self.phase_validate(dlg):
-            if dlg.content.controls[2].value == 'Grado':
-                phase_name = dlg.content.controls[1].controls[0].value + ' Grado'
-            else:
-                phase_name = dlg.content.controls[1].controls[0].value + ' Año'
-
-            update_phase(id, phase_name, dlg.content.controls[1].controls[1].value)
             del self.phase.rows[:]
             self.update()
             self.show_phases()
