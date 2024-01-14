@@ -38,7 +38,7 @@ def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None,
         """SELECT grado_anio, seccion FROM etapa WHERE id_e = ?;""", (student_phase_id,)).fetchone()
     phase_name = str(phase_name[0] + ' ' + phase_name[1])
 
-    period = datetime.datetime.now().strftime('%B %Y')
+    period = datetime.datetime.now().strftime('%d %B %Y')
     period = str(period + ' - ' + phase_name)
 
     if new_period:
@@ -108,6 +108,37 @@ def approve_student(student_id,new_status, new_phase=None):
         conexion.commit()
         conexion.close()
 
+#* ------------------ DISAPPROVE STUDENT ------------------ *#
+def disapprove_student(student_id, new_status):
+    '''Disapprove a student'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+
+    student_info = cursor.execute(
+        """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()
+
+    phase_type = cursor.execute(
+        """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
+
+    if phase_type.split(' ')[1] == 'Año':
+        phase_type = 'Liceo'
+    elif phase_type.split(' ')[1] == 'Grado':
+        phase_type = 'Colegio'
+
+    cursor.execute(
+        """UPDATE estudiante SET status = ? WHERE id_s = ?;""", (new_status, student_id))
+    conexion.commit()
+
+    phase_data = cursor.execute(
+        """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
+
+    subjects_list = filter_subjects(phase_data, phase_type)
+    for i in subjects_list:
+        grade_add(student_id, i['ID'], new_period=True)
+
+    conexion.close()
 
 
 

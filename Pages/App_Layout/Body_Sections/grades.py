@@ -8,7 +8,7 @@ import flet as ft
 from DB.Functions.student_parent_db import student_search
 from DB.Functions.subjects_db import filter_subjects, search_subject_by_id
 from DB.Functions.phases_db import search_phase, get_phases
-from DB.Functions.grades_db import grade_add, filter_grades_by_period, filter_grades_by_student, get_periods, approve_student
+from DB.Functions.grades_db import grade_add, filter_grades_by_period, filter_grades_by_student, get_periods, approve_student, disapprove_student
 
 
 class Grades(ft.UserControl):
@@ -241,7 +241,7 @@ class Grades(ft.UserControl):
                 height=35,
                 bgcolor='#C0C1E3', # Color when the button is disabled
                 alignment=ft.alignment.center,
-                # on_click=, #TODO - Add the function to disapprove the student
+                on_click= lambda e: self.disapprove_student_confirm(),
                 border_radius=15,
                 disabled=True,
             ),
@@ -291,6 +291,13 @@ class Grades(ft.UserControl):
     def show_subjects_by_periods(self, period):
         '''Show the subjects in the table'''
         del self.table.rows[:]
+
+        periods = get_periods(self.actual_student)
+        if self.student_period.content.controls[0].value != periods[-1]:
+            self.table.disabled = True
+        else:
+            self.table.disabled = False
+        self.update()
 
         list_grades = filter_grades_by_period(period, self.actual_student)
 
@@ -548,6 +555,7 @@ class Grades(ft.UserControl):
 
         if self.student_name.content.value != 'Nombre del Estudiante':
             self.body_container.disabled = False
+            self.table.disabled = False
             self.search_bar.visible = False
             self.grades_buttons.controls[0].visible = False
             self.grades_buttons.controls[1].visible = True
@@ -623,7 +631,7 @@ class Grades(ft.UserControl):
         self.cancel()
 
 
-    #* ------------------ Approve / Disapprove Functions ------------------ *#
+    #* ------------------ Approve Functions ------------------ *#
     def activate_approve_buttons(self):
         '''Activate the approve and disapprove buttons if the student grades are complete'''
         content = self.table.rows
@@ -746,7 +754,7 @@ class Grades(ft.UserControl):
             validate_dlg(self, dialog_instance)
         """
         if dlg.content.controls[3].value == 'Graduado':
-            self.approve_student(dlg, dlg.content.controls[3].value)
+            self.approve_student_second_confirm(dlg, dlg.content.controls[3].value)
         else:
             if dlg.content.controls[2].value is None:
                 dlg.actions[1].text = 'Selecciona una Etapa'
@@ -758,7 +766,7 @@ class Grades(ft.UserControl):
                 dlg.update()
             else:
                 if dlg.content.controls[3].value == 'Activo' or dlg.content.controls[3].value == 'Retirado':
-                    self.approve_student(dlg, dlg.content.controls[3].value)
+                    self.approve_student_second_confirm(dlg, dlg.content.controls[3].value)
                 else:
                     dlg.actions[1].text = 'Selecciona un Estado'
                     dlg.actions[1].bgcolor = '#ff0000'
@@ -768,6 +776,31 @@ class Grades(ft.UserControl):
                     dlg.actions[1].bgcolor = '#6D62A1'
                     dlg.update()
 
+    def approve_student_second_confirm(self, dlg, op):
+        '''
+        Displays a confirmation dialog for approving a student with a countdown and final confirmation.
+
+        Parameters:
+            - self: Instance of the Grades class.
+            - dlg: AlertDialog instance to display the confirmation dialog.
+            - op (str): The operation to perform ('Activo', 'Retirado', or 'Graduado').
+
+        Note:
+            This function updates the dialog's actions dynamically with a countdown before final confirmation.
+
+        Example:
+            approve_student_second_confirm(self, dlg, 'Activo')
+        '''
+        dlg.actions[1].on_click = None
+        for i in range(5, -1, -1):
+            dlg.actions[1].text = f'Espere {i} segundos...'
+            dlg.update()
+            time.sleep(1)
+
+        dlg.actions[1].text = 'Confirmar Aprobado'
+        dlg.actions[1].bgcolor = '#70f83a'
+        dlg.actions[1].on_click = lambda e: self.approve_student(dlg, op)
+        dlg.update()
 
     def approve_student(self, dlg, op):
         '''Approve the student'''
@@ -784,6 +817,98 @@ class Grades(ft.UserControl):
         self.close(dlg)
         self.cancel()
 
+    #* ------------------ Disapprove Functions ------------------ *#
+    def disapprove_student_confirm(self):
+        '''Disapprove the student'''
+        dlg = ft.AlertDialog(
+            content=ft.Column([
+                ft.Text('Esta seguro que desea desaprobar al estudiante?', color='#4B4669', font_family='Arial', size=15),
+                ft.Dropdown(
+                    width=300,
+                    height=35,
+                    label='Estado',
+                    hint_text='Selecciona el estado',
+                    filled=True,
+                    bgcolor='#f3f4fa',
+                    hint_style=ft.TextStyle(color='#C0C1E3'),
+                    label_style=ft.TextStyle(color='#4B4669'),
+                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                    border_color='#6D62A1',
+                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                    options=[
+                        ft.dropdown.Option('Activo'),
+                        ft.dropdown.Option('Retirado'),
+                    ],
+                ),
+
+            ], spacing=10, width=300, height=80, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            actions=[
+                ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
+                ft.ElevatedButton(text='Aceptar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.validate_disaprove(dlg))
+            ]
+        )
+        self.open_dlg(dlg)
+
+
+    def validate_disaprove(self, dlg):
+        """
+        Validates the dialog's dropdown values and calls the disapprove_student() method if the values are valid.
+
+        Parameters:
+            - self: The instance of the class containing this method.
+            - dlg: The dialog instance to validate.
+
+        Description:
+            This function checks if the dropdown values in the dialog are valid. If the values are valid, the
+            disapprove_student() method is called. If the values are invalid, an error message is displayed.
+
+        Usage:
+            - Call this function to validate the dialog's dropdown values.
+
+        Example:
+            validate_dlg(self, dialog_instance)
+        """
+        if dlg.content.controls[1].value is None:
+            dlg.actions[1].text = 'Selecciona un Estado'
+            dlg.actions[1].bgcolor = '#ff0000'
+            dlg.update()
+            time.sleep(1)
+            dlg.actions[1].text = 'Aceptar'
+            dlg.actions[1].bgcolor = '#6D62A1'
+            dlg.update()
+        else:
+            self.disapprove_student_second_confirm(dlg)
+
+    def disapprove_student_second_confirm(self, dlg):
+        '''
+        Displays a confirmation dialog for disapproving a student with a countdown and final confirmation.
+
+        Parameters:
+            - self: Instance of the Grades class.
+            - dlg: AlertDialog instance to display the confirmation dialog.
+
+        Note:
+            This function updates the dialog's actions dynamically with a countdown before final disapproval confirmation.
+
+        Example:
+            disapprove_student_second_confirm(self, dlg)
+        '''
+        dlg.actions[1].on_click = None
+        for i in range(5, -1, -1):
+            dlg.actions[1].text = f'Espere {i} segundos...'
+            dlg.update()
+            time.sleep(1)
+
+        dlg.actions[1].text = 'Confirmar Desaprobado'
+        dlg.actions[1].bgcolor = '#f83c86'
+        dlg.actions[1].on_click = lambda e: self.disapprove_student(dlg)
+        dlg.update()
+
+    def disapprove_student(self, dlg):
+        '''Disapprove the student'''
+        disapprove_student(self.actual_student, dlg.content.controls[1].value)
+        self.close(dlg)
+        self.cancel()
 
 
 
