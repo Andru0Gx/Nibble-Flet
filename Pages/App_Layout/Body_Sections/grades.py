@@ -126,7 +126,7 @@ class Grades(ft.UserControl):
                 ft.DataColumn(ft.Container(ft.Text('Momento 1', size=15, color='#4B4669', text_align='center'), width=145, alignment=ft.alignment.center)),
                 ft.DataColumn(ft.Container(ft.Text('Momento 2', size=15, color='#4B4669', text_align='center'), width=145, alignment=ft.alignment.center)),
                 ft.DataColumn(ft.Container(ft.Text('Momento 3', size=15, color='#4B4669', text_align='center'), width=145, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Nota Final', size=15, color='#4B4669', text_align='center'), width=145, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Promedio', size=15, color='#4B4669', text_align='center'), width=145, alignment=ft.alignment.center)),
             ],
         )
 
