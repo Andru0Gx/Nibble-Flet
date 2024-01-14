@@ -8,7 +8,7 @@ import locale
 # Database
 from DB.Functions.subjects_db import filter_subjects
 
-locale.setlocale(locale.LC_ALL, 'es-ES')
+locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 # Tables Structure
 # Calificaciones
