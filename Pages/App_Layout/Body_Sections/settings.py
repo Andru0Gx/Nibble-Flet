@@ -714,7 +714,7 @@ class Settings(ft.UserControl):
         '''Function to validate the subject'''
         checker = bool(dlg.content.controls[3].value)
         if checker:
-            if dlg.content.controls[1].value != '':
+            if dlg.content.controls[1].value != '' and dlg.content.controls[4].value is not None:
                 return True
             else:
                 dlg.actions[1].text = 'Rellene todos los campos'
@@ -804,14 +804,22 @@ class Settings(ft.UserControl):
                     content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
                 ),
 
-                ft.Switch( #TODO - Find a way to select if is for School or for High School
+                ft.Switch(
                     height=35,
                     label='Todas las Etapas',
                     value=False,
                     on_change= lambda e: self.switch_phase(e, dlg),
-                )
+                ),
 
-            ], spacing=10, width=300, height=150, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.RadioGroup(content=ft.Container(
+                    ft.Row([
+                        ft.Radio(value='Colegio', label='Colegio'),
+                        ft.Radio(value='Liceo', label='Liceo'),
+                    ], alignment=ft.MainAxisAlignment.START), padding=ft.padding.only(left=10,top=0,right=10,bottom=0)),
+                    disabled=True,
+                ),
+
+            ], spacing=10, width=300, height=200, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             actions=[
                 ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
                 ft.ElevatedButton(text='Agregar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.add_subject(dlg)),
@@ -843,8 +851,11 @@ class Settings(ft.UserControl):
         if e.control.value:
             dlg.content.controls[2].disabled = True
             dlg.content.controls[2].value = None
+            dlg.content.controls[4].disabled = False
         else:
             dlg.content.controls[2].disabled  = False
+            dlg.content.controls[4].disabled = True
+            dlg.content.controls[4].value = None
 
         dlg.update()
 
@@ -897,7 +908,7 @@ class Settings(ft.UserControl):
             subject_name = subject_name.upper()
 
             if dlg.content.controls[3].value:
-                phase_id = 'Todos'
+                phase_id = dlg.content.controls[4].value
             else:
                 phase_id = dlg.content.controls[2].value
 
@@ -943,8 +954,23 @@ class Settings(ft.UserControl):
             on_change= lambda e: self.switch_phase(e, dlg),
         )
 
-        if phase == 'Todos':
+        radio = ft.RadioGroup(content=ft.Container(
+            ft.Row([
+                ft.Radio(value='Colegio', label='Colegio'),
+                ft.Radio(value='Liceo', label='Liceo'),
+            ], alignment=ft.MainAxisAlignment.START), padding=ft.padding.only(left=10,top=0,right=10,bottom=0)),
+            disabled=True,
+        )
+
+        if phase == 'Colegio':
             switch.value = True
+            radio.disabled = False
+            radio.value = 'Colegio'
+            dropdown.disabled = True
+        elif phase == 'Liceo':
+            switch.value = True
+            radio.disabled = False
+            radio.value = 'Liceo'
             dropdown.disabled = True
         else:
             switch.value = False
@@ -968,7 +994,8 @@ class Settings(ft.UserControl):
                 ),
                 dropdown,
                 switch,
-            ], spacing=10, width=300, height=150, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                radio
+            ], spacing=10, width=300, height=200, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             actions=[
                 ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
                 ft.ElevatedButton(text='Editar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.edit_subject(dlg, id)),
@@ -1011,7 +1038,7 @@ class Settings(ft.UserControl):
             subject_name = subject_name.upper()
 
             if dlg.content.controls[3].value:
-                phase = 'Todos'
+                phase = dlg.content.controls[4].value
             else:
                 phase = dlg.content.controls[2].value
 
