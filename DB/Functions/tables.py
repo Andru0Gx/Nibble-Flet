@@ -133,13 +133,16 @@ def grade_table(conexion):
             id_nota INTEGER PRIMARY KEY AUTOINCREMENT,
             estudiante_id TEXT NOT NULL,
             materia_id INTEGER NOT NULL,
+            etapa_id INTEGER NOT NULL,
             momento_1 DECIMAL(4,2),
             momento_2 DECIMAL(4,2),
             momento_3 DECIMAL(4,2),
             nota_final DECIMAL(4,2),
             periodo TEXT NOT NULL,
+            estado TEXT,
             CONSTRAINT fk_est_id_grade FOREIGN KEY(estudiante_id) REFERENCES estudiante(id_s) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT fk_mat_id_grade FOREIGN KEY(materia_id) REFERENCES materia(id_m) ON DELETE CASCADE ON UPDATE CASCADE
+            CONSTRAINT fk_etapa_id_grade FOREIGN KEY(etapa_id) REFERENCES etapa(id_e) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()
 
