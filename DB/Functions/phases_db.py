@@ -47,27 +47,6 @@ def phase_add(last_phase, phase_section, phase_type):
     conexion.commit()
     conexion.close()
 
-# def phase_add(phase_name, phase_section):
-#     '''Add a new phase to the database'''
-#     # Connect to the database
-#     conexion = sqlite3.connect('DB/Nibble.db')
-#     cursor = conexion.cursor()
-
-#     # search if the phase already exists
-#     if cursor.execute(
-#         """SELECT grado_anio, seccion FROM etapa WHERE grado_anio = ? AND seccion = ?;""", (phase_name, phase_section)).fetchone() is not None:
-#         pass
-#     else:
-#         cursor.execute(
-#             """INSERT INTO etapa (
-#                 grado_anio,
-#                 seccion
-#             ) VALUES (?, ?);""", (phase_name, phase_section))
-#         conexion.commit()
-
-#     conexion.close()
-
-
 #* ------------------ GET PHASES ------------------ *#
 def get_phases():
     '''Get all the phases from the database'''
@@ -113,19 +92,6 @@ def delete_phase():
     conexion.commit()
     conexion.close()
 
-
-
-# def delete_phase(phase_id):
-#     '''Delete a phase from the database'''
-#     # Connect to the database
-#     conexion = sqlite3.connect('DB/Nibble.db')
-#     cursor = conexion.cursor()
-
-#     cursor.execute(
-#         """DELETE FROM etapa WHERE id_e = ?;""", (phase_id,))
-#     conexion.commit()
-#     conexion.close()
-
 #* ------------------ UPDATE PHASES ------------------ *#
 def update_phase(phase_id, phase_name, phase_section):
     '''Update a phase from the database'''
@@ -167,3 +133,72 @@ def search_phase(phase_name = None, phase_section = None, id = False):
         phase['Seccion'] = search[2]
 
     return phase
+
+#^ ------------------ GET PHASES  ------------------ ^#
+#* Get the first X phases
+def get_x_phases(start_index, end_index):
+    '''Get the first X phases from the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute(f"""SELECT * FROM etapa LIMIT {start_index - 1}, {end_index - start_index + 1};""")
+    phases = cursor.fetchall()
+
+    phases_list = []
+    phase_info = {
+        'ID': None,
+        'Grado/Año': None,
+        'Seccion': None
+    }
+
+    for i in phases:
+        phase_info['ID'] = i[0]
+        phase_info['Grado/Año'] = i[1]
+        phase_info['Seccion'] = i[2]
+        phases_list.append(phase_info.copy())
+
+    conexion.close()
+
+    return phases_list
+
+#* Check the amount of phases
+def check_amount():
+    '''Check the amount of phases in the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute("""SELECT COUNT(*) FROM etapa;""")
+    amount = cursor.fetchone()[0]
+
+    conexion.close()
+    return amount
+
+#^ ------------------ FILTER PHASES ------------------ ^#
+#* Filter phases (NAME, SECTION, ID)
+def filter_phases_db(filter):
+    '''Filter phases in the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    # Get the phases
+    cursor.execute(f"""SELECT * FROM etapa WHERE grado_anio LIKE '%{filter}%' OR seccion LIKE '%{filter}%' OR id_e LIKE '%{filter}%';""")
+    phases = cursor.fetchall()
+
+    phases_list = []
+    phase_info = {
+        'ID': None,
+        'Grado/Año': None,
+        'Seccion': None
+    }
+
+    for i in phases:
+        phase_info['ID'] = i[0]
+        phase_info['Grado/Año'] = i[1]
+        phase_info['Seccion'] = i[2]
+        phases_list.append(phase_info.copy())
+
+    conexion.close()
+    return phases_list
