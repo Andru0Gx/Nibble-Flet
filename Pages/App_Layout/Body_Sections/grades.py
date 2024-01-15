@@ -236,7 +236,7 @@ class Grades(ft.UserControl):
             ),
 
             ft.Container(
-                ft.Text('Desaprobar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
+                ft.Text('Reprobar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
                 width=100,
                 height=35,
                 bgcolor='#C0C1E3', # Color when the button is disabled
@@ -514,7 +514,7 @@ class Grades(ft.UserControl):
                 self.show_periods()
 
                 if self.student_period.content.controls[0].options != []:
-                    self.show_subjects_by_periods(self.student_period.content.controls[0].value)
+                    self.show_subjects_by_periods(self.student_period.content.controls[0].value['Periodo'])
                 else:
                     self.show_subjects_by_search(phase['Grado/Año'])
 
@@ -537,7 +537,7 @@ class Grades(ft.UserControl):
         periods = get_periods(self.actual_student)
         if periods:
             for period in periods:
-                self.student_period.content.controls[0].options.append(ft.dropdown.Option(f'{period}'))
+                self.student_period.content.controls[0].options.append(ft.dropdown.Option(text=f"{period['Periodo']} ({period['Estado']})", key=period))
 
             # Mostrar el periodo actual
             self.student_period.content.controls[0].value = periods[-1]
@@ -648,54 +648,13 @@ class Grades(ft.UserControl):
     def approve_student_confirm(self):
         '''Approve the student'''
 
-        student_info = student_search(self.actual_ci)
-        phase_info = search_phase(id = student_info['phase_id'])
-
         dlg = ft.AlertDialog(
-            content=ft.Column([
-                ft.Text('Aprobar Estudiante', color='#4B4669', font_family='Arial', size=20),
-                ft.Text(f"Etapa actual del estudiante: {phase_info['Grado/Año']} {phase_info['Seccion']}", color='#4B4669', font_family='Arial', size=15),
-                ft.Dropdown(
-                    width=300,
-                    height=35,
-                    label='Etapa (Grado/Año)',
-                    hint_text='Selecciona la Etapa',
-                    filled=True,
-                    bgcolor='#f3f4fa',
-                    hint_style=ft.TextStyle(color='#C0C1E3'),
-                    label_style=ft.TextStyle(color='#4B4669'),
-                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
-                    border_color='#6D62A1',
-                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
-                ),
-
-                ft.Dropdown(
-                    width=300,
-                    height=35,
-                    label='Estado',
-                    hint_text='Selecciona el estado',
-                    filled=True,
-                    bgcolor='#f3f4fa',
-                    hint_style=ft.TextStyle(color='#C0C1E3'),
-                    label_style=ft.TextStyle(color='#4B4669'),
-                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
-                    border_color='#6D62A1',
-                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
-                    options=[
-                        ft.dropdown.Option('Activo'),
-                        ft.dropdown.Option('Retirado'),
-                        ft.dropdown.Option('Graduado'),
-                    ],
-                    on_change= lambda e: self.change(dlg, e),
-                ),
-
-            ], spacing=10, width=300, height=150, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            content=ft.Text('¿Estas seguro de aprobar al estudiante?'),
             actions=[
-                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
-                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.validate_dlg(dlg), bgcolor='#6D62A1', color='#f3f4fa')
+                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg)),
+                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.approve_student_second_confirm(dlg))
             ]
         )
-        self.drop_options(dlg)
         self.open_dlg(dlg)
 
     def change(self, dlg, e):
@@ -734,49 +693,7 @@ class Grades(ft.UserControl):
 
         self.update()
 
-
-    def validate_dlg(self, dlg):
-        """
-        Validates the dialog's dropdown values and calls the approve_student() method if the values are valid.
-
-        Parameters:
-            - self: The instance of the class containing this method.
-            - dlg: The dialog instance to validate.
-
-        Description:
-            This function checks if the dropdown values in the dialog are valid. If the values are valid, the
-            approve_student() method is called. If the values are invalid, an error message is displayed.
-
-        Usage:
-            - Call this function to validate the dialog's dropdown values.
-
-        Example:
-            validate_dlg(self, dialog_instance)
-        """
-        if dlg.content.controls[3].value == 'Graduado':
-            self.approve_student_second_confirm(dlg, dlg.content.controls[3].value)
-        else:
-            if dlg.content.controls[2].value is None:
-                dlg.actions[1].text = 'Selecciona una Etapa'
-                dlg.actions[1].bgcolor = '#ff0000'
-                dlg.update()
-                time.sleep(1)
-                dlg.actions[1].text = 'Aceptar'
-                dlg.actions[1].bgcolor = '#6D62A1'
-                dlg.update()
-            else:
-                if dlg.content.controls[3].value == 'Activo' or dlg.content.controls[3].value == 'Retirado':
-                    self.approve_student_second_confirm(dlg, dlg.content.controls[3].value)
-                else:
-                    dlg.actions[1].text = 'Selecciona un Estado'
-                    dlg.actions[1].bgcolor = '#ff0000'
-                    dlg.update()
-                    time.sleep(1)
-                    dlg.actions[1].text = 'Aceptar'
-                    dlg.actions[1].bgcolor = '#6D62A1'
-                    dlg.update()
-
-    def approve_student_second_confirm(self, dlg, op):
+    def approve_student_second_confirm(self, dlg):
         '''
         Displays a confirmation dialog for approving a student with a countdown and final confirmation.
 
@@ -799,20 +716,16 @@ class Grades(ft.UserControl):
 
         dlg.actions[1].text = 'Confirmar Aprobado'
         dlg.actions[1].bgcolor = '#70f83a'
-        dlg.actions[1].on_click = lambda e: self.approve_student(dlg, op)
+        dlg.actions[1].on_click = lambda e: self.approve_student(dlg)
         dlg.update()
 
-    def approve_student(self, dlg, op):
+    def approve_student(self, dlg):
         '''Approve the student'''
-        if op == 'Graduado':
-            approve_student(self.actual_student, op)
-        else:
-            phase_name = dlg.content.controls[2].value.split(' ')[0] + ' ' + dlg.content.controls[2].value.split(' ')[1]
-            phase_section = dlg.content.controls[2].value.split(' ')[2]
-            phase_id = search_phase(phase_name, phase_section)['ID']
-            approve_student(self.actual_student, op, phase_id)
-            self.search_bar.controls[0].value = self.actual_ci
-            self.update()
+
+        actual_phase = self.student_period.content.controls[0].value['Periodo']
+        approve_student(self.actual_student, actual_phase)
+
+
 
         self.close(dlg)
         self.cancel()
@@ -821,63 +734,13 @@ class Grades(ft.UserControl):
     def disapprove_student_confirm(self):
         '''Disapprove the student'''
         dlg = ft.AlertDialog(
-            content=ft.Column([
-                ft.Text('Esta seguro que desea desaprobar al estudiante?', color='#4B4669', font_family='Arial', size=15),
-                ft.Dropdown(
-                    width=300,
-                    height=35,
-                    label='Estado',
-                    hint_text='Selecciona el estado',
-                    filled=True,
-                    bgcolor='#f3f4fa',
-                    hint_style=ft.TextStyle(color='#C0C1E3'),
-                    label_style=ft.TextStyle(color='#4B4669'),
-                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
-                    border_color='#6D62A1',
-                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
-                    options=[
-                        ft.dropdown.Option('Activo'),
-                        ft.dropdown.Option('Retirado'),
-                    ],
-                ),
-
-            ], spacing=10, width=300, height=80, alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            content=ft.Text('¿Estas seguro de reprobar al estudiante?'),
             actions=[
-                ft.ElevatedButton(text='Cancelar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.close(dlg)),
-                ft.ElevatedButton(text='Aceptar',bgcolor = '#6D62A1',color = '#f3f4fa', on_click= lambda e: self.validate_disaprove(dlg))
+                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg)),
+                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.disapprove_student_second_confirm(dlg))
             ]
         )
         self.open_dlg(dlg)
-
-
-    def validate_disaprove(self, dlg):
-        """
-        Validates the dialog's dropdown values and calls the disapprove_student() method if the values are valid.
-
-        Parameters:
-            - self: The instance of the class containing this method.
-            - dlg: The dialog instance to validate.
-
-        Description:
-            This function checks if the dropdown values in the dialog are valid. If the values are valid, the
-            disapprove_student() method is called. If the values are invalid, an error message is displayed.
-
-        Usage:
-            - Call this function to validate the dialog's dropdown values.
-
-        Example:
-            validate_dlg(self, dialog_instance)
-        """
-        if dlg.content.controls[1].value is None:
-            dlg.actions[1].text = 'Selecciona un Estado'
-            dlg.actions[1].bgcolor = '#ff0000'
-            dlg.update()
-            time.sleep(1)
-            dlg.actions[1].text = 'Aceptar'
-            dlg.actions[1].bgcolor = '#6D62A1'
-            dlg.update()
-        else:
-            self.disapprove_student_second_confirm(dlg)
 
     def disapprove_student_second_confirm(self, dlg):
         '''
@@ -906,7 +769,8 @@ class Grades(ft.UserControl):
 
     def disapprove_student(self, dlg):
         '''Disapprove the student'''
-        disapprove_student(self.actual_student, dlg.content.controls[1].value)
+        actual_phase = self.student_period.content.controls[0].value['Periodo']
+        disapprove_student(self.actual_student, actual_phase)
         self.close(dlg)
         self.cancel()
 
