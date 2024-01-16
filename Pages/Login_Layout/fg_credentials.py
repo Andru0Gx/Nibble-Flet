@@ -238,20 +238,24 @@ class Forget(ft.UserControl):
         correo = self.credentials['email']
 
         if self.wifi_verification():
-            message = MIMEMultipart('plain')
-            message['From'] = 'SC.Nibble@outlook.com'
-            message['To'] = correo
-            message['Subject'] = 'Código de verificación para Nibble'
+            print('Executing')
+            try:
+                message = MIMEMultipart('plain')
+                message['From'] = 'SC.Nibble@outlook.com'
+                message['To'] = correo
+                message['Subject'] = 'Código de verificación para Nibble'
 
-            text = f" Estimado/a {correo},\n\nEspero que este correo te encuentre bien. En relación a tu solicitud de verificación en Nibble, nos complace proporcionarte el código de verificación necesario para completar el proceso de autenticación.\n\nCódigo de verificación: {codigo}\n\nPor favor, ten en cuenta que este código es confidencial y solo debe ser utilizado para el propósito de verificación en Nibble. No compartas este código con nadie, ya que podría comprometer la seguridad de tu cuenta.\n\nSi no has solicitado este código de verificación o tienes alguna pregunta o inquietud adicional, te recomendamos ponerse en contacto con nuestro equipo de soporte lo antes posible. Estaremos encantados de ayudarte en lo que necesites.\n\nGracias por confiar en Nibble. Esperamos brindarte una excelente experiencia.\n\nAtentamente,\n\nEl equipo de Nibble"
+                text = f" Estimado/a {correo},\n\nEspero que este correo te encuentre bien. En relación a tu solicitud de verificación en Nibble, nos complace proporcionarte el código de verificación necesario para completar el proceso de autenticación.\n\nCódigo de verificación: {codigo}\n\nPor favor, ten en cuenta que este código es confidencial y solo debe ser utilizado para el propósito de verificación en Nibble. No compartas este código con nadie, ya que podría comprometer la seguridad de tu cuenta.\n\nSi no has solicitado este código de verificación o tienes alguna pregunta o inquietud adicional, te recomendamos ponerse en contacto con nuestro equipo de soporte lo antes posible. Estaremos encantados de ayudarte en lo que necesites.\n\nGracias por confiar en Nibble. Esperamos brindarte una excelente experiencia.\n\nAtentamente,\n\nEl equipo de Nibble"
 
-            message.attach(MIMEText(text, 'plain'))
-            smtp = SMTP('smtp.office365.com', 587)
-            smtp.starttls()
-            smtp.login('SC.Nibble@outlook.com', 'Nibble.1234')
-            smtp.sendmail('SC.Nibble@outlook.com', correo, message.as_string())
-            smtp.quit()
-            return True
+                message.attach(MIMEText(text, 'plain'))
+                smtp = SMTP('smtp.office365.com', 587)
+                smtp.starttls()
+                smtp.login('SC.Nibble@outlook.com', 'Nibble.1234')
+                smtp.sendmail('SC.Nibble@outlook.com', correo, message.as_string())
+                smtp.quit()
+                return True
+            except:
+                pass
         else:
             self.dlg = ft.AlertDialog(
                 content=ft.Text('No tienes conexion a internet o se encuentra inestable.\nNota: Puedes usar las preguntas de seguridad.', size=15, color='#4B4669', font_family='Arial', text_align='left'),
