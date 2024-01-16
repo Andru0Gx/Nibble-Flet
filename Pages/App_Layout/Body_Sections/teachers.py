@@ -102,6 +102,7 @@ class Teachers(ft.UserControl):
             'ID': None,
             'Name': None,
             'Teacher ID': None,
+            'Grade': None
         }
 
         self.subject_log = None
@@ -547,19 +548,21 @@ class Teachers(ft.UserControl):
         del self.teacher_subject.controls[0].options[:]
         subjects_list = get_subjects()
 
+        self.teacher_subject.controls[0].options.append(ft.dropdown.Option('Materia', disabled=True))
+
         if data:
             for subject in subjects_list:
                 for subject_t in data:
                     if subject['ID'] == subject_t['ID']:
                         subjects_list.remove(subject)
-                        subjects_list.insert(0, {'ID': None, 'Nombre': None})
+                        subjects_list.insert(0, {'ID': None, 'Nombre': None, 'Etapa': None})
 
             for subject in subjects_list:
                 if subject['ID'] is not None:
-                    self.teacher_subject.controls[0].options.append(ft.dropdown.Option(f"{subject['ID']} {subject['Nombre']}"))
+                    self.teacher_subject.controls[0].options.append(ft.dropdown.Option(f"{subject['ID']} {subject['Nombre']} - {subject['Etapa']}"))
         else:
             for subject in subjects_list:
-                self.teacher_subject.controls[0].options.append(ft.dropdown.Option(f"{subject['ID']} {subject['Nombre']}"))
+                self.teacher_subject.controls[0].options.append(ft.dropdown.Option(f"{subject['ID']} {subject['Nombre']} - {subject['Etapa']}"))
         self.update()
 
     def activate_fields(self, op):
@@ -806,7 +809,7 @@ class Teachers(ft.UserControl):
         '''Change the log'''
         self.subject_log = e
 
-    def subject_edit_set(self, id, name):
+    def subject_edit_set(self, id, name, grade):
         """
         Sets up the UI for editing a subject.
 
@@ -820,10 +823,10 @@ class Teachers(ft.UserControl):
         """
         return ft.Row([
             # Create the button to delete the subject
-            ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_delete(e), data=[id, name]),
+            ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_delete(e), data=[id, name, grade]),
         ], vertical_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, spacing=10)
 
-    def subjects_row(self, data):
+    def subjects_row(self, data):#TODO - REVISAR FUNCION PARA AGREGAR LA ETAPA AL LADO DEL NOMBRE
         """
         Add rows to the subject list in the Teachers page.
 
@@ -837,8 +840,8 @@ class Teachers(ft.UserControl):
         """
         for subject in data:
             row = ft.DataRow([
-                        ft.DataCell(ft.Container(ft.Text(subject['Name'], size=12, color='#4B4669', text_align='center'), width=300, alignment=ft.alignment.center_left, padding=ft.padding.only(left=30))),
-                        ft.DataCell(ft.Container(self.subject_edit_set(subject['ID'], subject['Name']), width=100, alignment=ft.alignment.center))
+                        ft.DataCell(ft.Container(ft.Text(f"{subject['Name']} - {subject['Grade']}", size=12, color='#4B4669', text_align='center'), width=300, alignment=ft.alignment.center_left, padding=ft.padding.only(left=30))),
+                        ft.DataCell(ft.Container(self.subject_edit_set(subject['ID'], subject['Name'], subject['Grade']), width=100, alignment=ft.alignment.center))
                     ])
             self.subject_list.rows.append(row)
         self.update()
@@ -856,7 +859,7 @@ class Teachers(ft.UserControl):
         Returns:
             None
         """
-        if self.teacher_subject.controls[0].value is not None:
+        if self.teacher_subject.controls[0].value is not None and self.teacher_subject.controls[0].value != 'Materia':
             self.add_subject()
         else:
             dlg = ft.AlertDialog(
@@ -867,42 +870,49 @@ class Teachers(ft.UserControl):
 
     def add_subject(self):
         '''Add a subject to the teacher'''
-        subject_id = self.teacher_subject.controls[0].value.split(' ')[0]
+        try:
+            subject_id = self.teacher_subject.controls[0].value.split(' ')[0]
 
-        # delete the option from the dropdown
-        for option in self.teacher_subject.controls[0].options:
-            if option.key == self.subject_log.control.value:
-                self.teacher_subject.controls[0].options.remove(option)
+            # delete the option from the dropdown
+            for option in self.teacher_subject.controls[0].options:
+                if option.key == self.subject_log.control.value:
+                    self.teacher_subject.controls[0].options.remove(option)
 
-        self.subject_teacher_info['ID'] = subject_id
-        self.subject_teacher_info['Name'] = self.teacher_subject.controls[0].value.split(' ', 1)[1]
-        self.subject_teacher_info['Teacher ID'] = self.actual_teacher
+            name = self.teacher_subject.controls[0].value.split(' ')[1]
 
-        self.add_log.append(self.subject_teacher_info.copy())
+            self.subject_teacher_info['ID'] = subject_id
+            self.subject_teacher_info['Name'] = name.split(' -')[0]
+            self.subject_teacher_info['Teacher ID'] = self.actual_teacher
+            self.subject_teacher_info['Grade'] = self.teacher_subject.controls[0].value.split('- ')[1]
+            self.teacher_subject.controls[0].value = 'Materia'
 
-        del self.subject_list.rows[:]
-        teacher_subjects = teacher_subjects_search(self.actual_teacher)
+            self.add_log.append(self.subject_teacher_info.copy())
 
-        for subject in self.del_log:
-            if subject['ID'] == subject_id:
-                self.del_log.remove(subject)
+            del self.subject_list.rows[:]
+            teacher_subjects = teacher_subjects_search(self.actual_teacher)
 
-        for subject in self.add_log:
-            teacher_subjects.append(subject)
+            for subject in self.del_log:
+                if subject['ID'] == subject_id:
+                    self.del_log.remove(subject)
 
-        for subject in self.del_log:
-            subject_t = {
-                'ID': subject['ID'],
-                'Name': subject['Name'],
-            }
+            for subject in self.add_log:
+                teacher_subjects.append(subject)
 
-            if subject_t in teacher_subjects:
-                teacher_subjects.remove(subject_t)
+            for subject in self.del_log:
+                subject_t = {
+                    'ID': subject['ID'],
+                    'Name': subject['Name'],
+                    'Grade': subject['Grade']
+                }
 
-        self.subjects_row(teacher_subjects)
-        self.teacher_subject.controls[0].value = ''
+                if subject_t in teacher_subjects:
+                    teacher_subjects.remove(subject_t)
 
-        self.update()
+            self.subjects_row(teacher_subjects)
+
+            self.update()
+        except:
+            pass
 
     def subject_confirm_delete(self, e):
         '''Delete a subject from the teacher'''
@@ -918,15 +928,14 @@ class Teachers(ft.UserControl):
 
     def delete_subject(self, data, dlg):
         '''Delete a subject from the teacher'''
-
-        drop = f'{data[0]} {data[1]}'
-
+        drop = f'{data[0]} {data[1]} - {data[2]}'
         # add the option to the dropdown
         self.teacher_subject.controls[0].options.append(ft.dropdown.Option(drop))
 
         self.subject_teacher_info['ID'] = data[0]
         self.subject_teacher_info['Name'] = data[1]
         self.subject_teacher_info['Teacher ID'] = self.actual_teacher
+        self.subject_teacher_info['Grade'] = data[2]
 
         self.del_log.append(self.subject_teacher_info.copy())
 
@@ -941,8 +950,8 @@ class Teachers(ft.UserControl):
             subject_t = {
                 'ID': subject['ID'],
                 'Name': subject['Name'],
+                'Grade': subject['Grade']
             }
-
             if subject_t in teacher_subjects:
                 teacher_subjects.remove(subject_t)
 

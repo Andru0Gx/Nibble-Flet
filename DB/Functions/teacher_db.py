@@ -141,12 +141,13 @@ def teacher_subjects_search(teacher_id):
     subject = {
         'ID': None,
         'Name': None,
+        'Grade': None,
     }
 
     for subject_id in subject_list:
         cursor.execute(
-            """SELECT id_m, nombre FROM materia WHERE id_m = ?;""", (subject_id[0],))
-        subject['ID'], subject['Name'] = cursor.fetchone()
+            """SELECT id_m, nombre, etapa FROM materia WHERE id_m = ?;""", (subject_id[0],))
+        subject['ID'], subject['Name'], subject['Grade'] = cursor.fetchone()
         subject_list[subject_list.index(subject_id)] = subject.copy()
 
     conexion.close()
