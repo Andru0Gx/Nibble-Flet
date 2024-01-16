@@ -100,7 +100,7 @@ class Forget(ft.UserControl):
         # Create the text content to change the layout
         self.change_method = ft.Container(height=20, width=225,padding=ft.padding.only(left=0), content=ft.Text('Preguntas de Seguridad', size=15, color='#4B4669', font_family='Arial', text_align='start'), on_click= lambda e: self.change_layout(password))
 
-        self.resend = ft.Container(height=20, width=225,padding=ft.padding.only(left=0), content=ft.Text('Reenviar codigo', size=15, color='#4B4669', font_family='Arial', text_align='start'), on_click= lambda e: self.send_mail())
+        self.resend = ft.Container(height=20, width=225,padding=ft.padding.only(left=0), content=ft.Text('Enviar codigo', size=15, color='#4B4669', font_family='Arial', text_align='start'), on_click= lambda e: self.send_mail())
 
         # Create the Entry for the validation code
         self.code = ft.TextField(
@@ -238,8 +238,8 @@ class Forget(ft.UserControl):
         correo = self.credentials['email']
 
         if self.wifi_verification():
-            print('Executing')
             try:
+                print('execute')
                 message = MIMEMultipart('plain')
                 message['From'] = 'SC.Nibble@outlook.com'
                 message['To'] = correo
@@ -255,7 +255,7 @@ class Forget(ft.UserControl):
                 smtp.quit()
                 return True
             except:
-                pass
+                return False
         else:
             self.dlg = ft.AlertDialog(
                 content=ft.Text('No tienes conexion a internet o se encuentra inestable.\nNota: Puedes usar las preguntas de seguridad.', size=15, color='#4B4669', font_family='Arial', text_align='left'),
