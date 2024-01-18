@@ -23,7 +23,7 @@ locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 
 #* ------------------ ADD GRADE ------------------ *#
-def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None, final_grade= None, new_period = False, disapprove=False):
+def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None, final_grade= None, new_period = False, disapprove=False, actual_period = None):
     '''Add a new grade to the database'''
     # Connect to the database
     conexion = sqlite3.connect('DB/Nibble.db')
@@ -62,9 +62,9 @@ def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None,
     else:
         # # search if the grade already exists if TRUE update the grade
         if cursor.execute(
-            """SELECT estudiante_id, materia_id, periodo FROM calificaciones WHERE estudiante_id = ? AND materia_id = ?;""", (student_ci, subject_id)).fetchone() is not None:
+            """SELECT estudiante_id, materia_id, periodo FROM calificaciones WHERE estudiante_id = ? AND materia_id = ? AND periodo = ?;""", (student_ci, subject_id, actual_period)).fetchone() is not None:
             cursor.execute(
-                """UPDATE calificaciones SET momento_1 = ?, momento_2 = ?, momento_3 = ?, nota_final = ? WHERE estudiante_id = ? AND materia_id = ?;""", (grade1, grade2, grade3, final_grade, student_ci, subject_id))
+                """UPDATE calificaciones SET momento_1 = ?, momento_2 = ?, momento_3 = ?, nota_final = ? WHERE estudiante_id = ? AND materia_id = ? AND periodo = ?;""", (grade1, grade2, grade3, final_grade, student_ci, subject_id, actual_period))
         else:
             cursor.execute(
                 """INSERT INTO calificaciones (
@@ -351,10 +351,11 @@ def filter_grades_by_period(period, student_id):
     # Connect to the database
     conexion = sqlite3.connect('DB/Nibble.db')
     cursor = conexion.cursor()
-
+    print(period)
     cursor.execute(
         """SELECT id_nota, estudiante_id, materia_id, momento_1, momento_2, momento_3, nota_final, periodo FROM calificaciones WHERE periodo = ? AND estudiante_id = ?;""", (period, student_id))
     search = cursor.fetchall()
+    print(search)
     conexion.close()
 
     grade = {
