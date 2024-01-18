@@ -401,10 +401,7 @@ class Phases(ft.UserControl):
                 self.close(dlg)
                 student = verify_promote_student(data,new_phase)
                 self.student_without_notes(student)
-            elif verify_promote_student(data,new_phase) is False:
-                self.close(dlg)
-                self.phase_without_students()
-            elif verify_promote_student(data,new_phase) is True:
+            else:
                 dlg.actions[1].bgcolor = '#70f83a'
                 dlg.actions[1].color = '#2d2d2d'
                 dlg.actions[1].text = 'Estudiantes Promovidos'
@@ -412,14 +409,11 @@ class Phases(ft.UserControl):
                 time.sleep(1.5)
                 self.close(dlg)
         else:
-            if isinstance(verify_promote_student(data), dict):
+            if isinstance(verify_promote_student(data, graduate=True), dict):
                 self.close(dlg)
-                student = verify_promote_student(data)
+                student = verify_promote_student(data, graduate=True)
                 self.student_without_notes(student)
-            elif verify_promote_student(data) is False:
-                self.close(dlg)
-                self.phase_without_students()
-            elif verify_promote_student(data) is True:
+            else:
                 dlg.actions[1].bgcolor = '#70f83a'
                 dlg.actions[1].color = '#2d2d2d'
                 dlg.actions[1].text = 'Estudiantes Graduados'
