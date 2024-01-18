@@ -5,8 +5,6 @@ import sqlite3
 import datetime
 import locale
 
-# # Database
-# from DB.Functions.subjects_db import filter_subjects
 
 locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
@@ -47,9 +45,6 @@ def grade_add(student_ci, subject_id, grade1 = None, grade2= None, grade3= None,
     else:
         period = datetime.datetime.now().strftime('%d %B %Y')
         period = str(period + ' - ' + phase_name)
-
-
-
 
     if new_period:
         cursor.execute(
@@ -167,96 +162,187 @@ def verify_promote_student(actual_phase, new_phase = None, graduate = False):
                 # 3nd condition
                 if cursor.execute(
                     """SELECT estado FROM calificaciones WHERE estudiante_id = ? AND etapa_id = ?;""", (i['ID'], actual_phase['ID'])).fetchone()[0] == 'Reprobado':
-                    pass # TODO - Disapprove student
+                    unpromote_student(conexion, i['ID'])
                 # 4rd condition
                 elif cursor.execute(
                     """SELECT estado FROM calificaciones WHERE estudiante_id = ? AND etapa_id = ?;""", (i['ID'], actual_phase['ID'])).fetchone()[0] == 'Aprobado':
-                    pass # TODO - Promote student
+                    promote_student(conexion,i['ID'], 'Graduado')
 
         else:
             for i in students_list:
                 # 3nd condition
                 if cursor.execute(
                     """SELECT estado FROM calificaciones WHERE estudiante_id = ? AND etapa_id = ?;""", (i['ID'], actual_phase['ID'])).fetchone()[0] == 'Reprobado':
-                    pass # TODO - Disapprove student
+                    unpromote_student(conexion, i['ID'])
 
                 # 4rd condition
                 elif cursor.execute(
                     """SELECT estado FROM calificaciones WHERE estudiante_id = ? AND etapa_id = ?;""", (i['ID'], actual_phase['ID'])).fetchone()[0] == 'Aprobado':
-                    pass # TODO - Promote student
+                    promote_student(conexion,i['ID'], 'Aprobado', new_phase)
 
         conexion.commit()
         conexion.close()
         return True
 
+#* ------------------ PROMOTE STUDENT ------------------ *#
 
-# def promote_student(student_id,new_status, new_phase=None):
-#     '''Approve a student'''
-#     # Connect to the database
-#     conexion = sqlite3.connect('DB/Nibble.db')
-#     cursor = conexion.cursor()
+def promote_student(conexion, student_id,new_status, new_phase=None): # TODO - TEST
+    '''Approve a student'''
+    # Connect to the database
+    cursor = conexion.cursor()
 
-#     student_info = cursor.execute(
-#         """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()
+    student_info = cursor.execute(
+        """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()
 
-#     phase_type = cursor.execute(
-#         """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
+    phase_type = cursor.execute(
+        """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
 
-#     if phase_type.split(' ')[1] == 'Año':
-#         phase_type = 'Liceo'
-#     elif phase_type.split(' ')[1] == 'Grado':
-#         phase_type = 'Colegio'
+    if phase_type.split(' ')[1] == 'Año':
+        phase_type = 'Liceo'
+    elif phase_type.split(' ')[1] == 'Grado':
+        phase_type = 'Colegio'
 
-#     if new_status != 'Graduado':
-#         cursor.execute(
-#             """UPDATE estudiante SET etapa_id = ?, status = ? WHERE id_s = ?;""", (new_phase, new_status, student_id))
-#         conexion.commit()
+    if new_status != 'Graduado':
+        cursor.execute(
+            """UPDATE estudiante SET etapa_id = ? WHERE id_s = ?;""", (new_phase['ID'], student_id))
+        conexion.commit()
 
-#         phase_data = cursor.execute(
-#             """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (new_phase,)).fetchone()[0]
+        phase_data = cursor.execute(
+            """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_id,)).fetchone()[0]
 
-#         subjects_list = filter_subjects(phase_data, phase_type)
-#         for i in subjects_list:
-#             grade_add(student_id, i['ID'], new_period=True)
+        cursor.execute(
+        """SELECT id_m,nombre, etapa FROM materia WHERE etapa = ?;""", (phase_data,))
+        search = cursor.fetchall()
 
-#     else:
-#         cursor.execute(
-#             """UPDATE estudiante SET status = ? WHERE id_s = ?;""", (new_status, student_id))
-#         conexion.commit()
-#         conexion.close()
+        subject = {
+            'ID': None,
+            'Nombre': None,
+            'Etapa': None
+        }
 
-# #* ------------------ UNPROMOTE STUDENT ------------------ *#
-# def disapprove_student(student_id, new_status):
-#     '''Disapprove a student'''
-#     # Connect to the database
-#     conexion = sqlite3.connect('DB/Nibble.db')
-#     cursor = conexion.cursor()
+        subjects_list = []
+
+        for i in search:
+            subject['ID'] = i[0]
+            subject['Nombre'] = i[1]
+            subject['Etapa'] = i[2]
+            subjects_list.append(subject.copy())
+
+        # filtrar etapas por el nombre type (liceo, colegio)
+        cursor.execute(
+            """SELECT id_m,nombre, etapa FROM materia WHERE etapa = ?;""", (phase_type,))
+        search = cursor.fetchall()
+
+        for i in search:
+            subject['ID'] = i[0]
+            subject['Nombre'] = i[1]
+            subject['Etapa'] = i[2]
+            subjects_list.append(subject.copy())
+
+        # Ordenar la lista de materias en orden ascendente
+        subjects_list.sort(key=lambda x: x['ID'])
+
+        for i in subjects_list:
+
+            student_phase_id = cursor.execute(
+            """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()[0]
+
+            phase_name = cursor.execute(
+            """SELECT grado_anio, seccion FROM etapa WHERE id_e = ?;""", (student_phase_id,)).fetchone()
+            phase_name = str(phase_name[0] + ' ' + phase_name[1])
+
+            period = datetime.datetime.now().strftime('%d %B %Y')
+            period = str(period + ' - ' + phase_name)
+
+            cursor.execute(
+            """INSERT INTO calificaciones (
+                estudiante_id,
+                materia_id,
+                etapa_id,
+                periodo,
+                estado
+            ) VALUES (?, ?, ?, ?, ?);""", (student_id, i['ID'], student_phase_id, period, 'En curso'))
+            conexion.commit()
+
+    else:
+        cursor.execute(
+            """UPDATE estudiante SET status = ? WHERE id_s = ?;""", (new_status, student_id))
+        conexion.commit()
+
+#* ------------------ UNPROMOTE STUDENT ------------------ *#
+def unpromote_student(conexion, student_id):
+    '''Disapprove a student'''
+    # Connect to the database
+    cursor = conexion.cursor()
 
 
-#     student_info = cursor.execute(
-#         """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()
+    student_info = cursor.execute(
+        """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()
 
-#     phase_type = cursor.execute(
-#         """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
+    phase_type = cursor.execute(
+        """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
 
-#     if phase_type.split(' ')[1] == 'Año':
-#         phase_type = 'Liceo'
-#     elif phase_type.split(' ')[1] == 'Grado':
-#         phase_type = 'Colegio'
+    if phase_type.split(' ')[1] == 'Año':
+        phase_type = 'Liceo'
+    elif phase_type.split(' ')[1] == 'Grado':
+        phase_type = 'Colegio'
 
-#     cursor.execute(
-#         """UPDATE estudiante SET status = ? WHERE id_s = ?;""", (new_status, student_id))
-#     conexion.commit()
+    phase_data = cursor.execute(
+        """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
 
-#     phase_data = cursor.execute(
-#         """SELECT grado_anio FROM etapa WHERE id_e = ?;""", (student_info[0],)).fetchone()[0]
+    cursor.execute(
+        """SELECT id_m,nombre, etapa FROM materia WHERE etapa = ?;""", (phase_data,))
+    search = cursor.fetchall()
 
-#     subjects_list = filter_subjects(phase_data, phase_type)
-#     for i in subjects_list:
-#         grade_add(student_id, i['ID'], new_period=True, disapprove=True)
+    subject = {
+        'ID': None,
+        'Nombre': None,
+        'Etapa': None
+    }
 
-#     conexion.close()
+    subjects_list = []
 
+    for i in search:
+        subject['ID'] = i[0]
+        subject['Nombre'] = i[1]
+        subject['Etapa'] = i[2]
+        subjects_list.append(subject.copy())
+
+    # filtrar etapas por el nombre type (liceo, colegio)
+    cursor.execute(
+        """SELECT id_m,nombre, etapa FROM materia WHERE etapa = ?;""", (phase_type,))
+    search = cursor.fetchall()
+
+    for i in search:
+        subject['ID'] = i[0]
+        subject['Nombre'] = i[1]
+        subject['Etapa'] = i[2]
+        subjects_list.append(subject.copy())
+
+    # Ordenar la lista de materias en orden ascendente
+    subjects_list.sort(key=lambda x: x['ID'])
+
+    for i in subjects_list:
+        student_phase_id = cursor.execute(
+        """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()[0]
+
+        phase_name = cursor.execute(
+        """SELECT grado_anio, seccion FROM etapa WHERE id_e = ?;""", (student_phase_id,)).fetchone()
+        phase_name = str(phase_name[0] + ' ' + phase_name[1])
+
+        period = datetime.datetime.now() + datetime.timedelta(days=1)
+        period = period.strftime('%d %B %Y')
+        period = str(period + ' - ' + phase_name)
+
+        cursor.execute(
+        """INSERT INTO calificaciones (
+            estudiante_id,
+            materia_id,
+            etapa_id,
+            periodo,
+            estado
+        ) VALUES (?, ?, ?, ?, ?);""", (student_id, i['ID'], student_phase_id, period, 'En curso'))
+        conexion.commit()
 
 
 #* ------------------ FILTER GRADES BY PERIOD ------------------ *#
