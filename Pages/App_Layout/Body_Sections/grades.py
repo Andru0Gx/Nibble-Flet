@@ -105,7 +105,7 @@ class Grades(ft.UserControl):
                 width=30,
                 height=30,
                 bgcolor='#6D62A1',
-                on_click=lambda e: self.show_subjects_by_periods(self.student_period.content.controls[0].value),
+                on_click=lambda e: self.show_subjects_by_periods(eval(self.student_period.content.controls[0].value)['Periodo']),
                 tooltip='Filtrar',
                 border_radius=15,
             )
@@ -291,7 +291,6 @@ class Grades(ft.UserControl):
     def show_subjects_by_periods(self, period):
         '''Show the subjects in the table'''
         del self.table.rows[:]
-
         periods = get_periods(self.actual_student)
         if self.student_period.content.controls[0].value != periods[-1]:
             self.table.disabled = True
@@ -625,6 +624,7 @@ class Grades(ft.UserControl):
                 subject_grades['Momento 2'],
                 subject_grades['Momento 3'],
                 subject_grades['Nota Final'],
+                actual_period=self.student_period.content.controls[0].value['Periodo']
             )
 
         self.close(dlg)
