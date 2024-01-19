@@ -477,6 +477,30 @@ def sync_students(student_id):
 
     if student_info['phase_id'] != student_phase_grade[0]:
 
+        student_phase_info = cursor.execute(
+            """SELECT grado_anio, seccion FROM etapa WHERE id_e = ?;""", (student_info['phase_id'],)).fetchone()
+
+        # filtrar student_phase_info[0] y el id del estudiante en la tabla calificaciones
+        search_grade = cursor.execute(
+            """SELECT id_e FROM etapa WHERE grado_anio LIKE ?;""", (student_phase_info[0],)).fetchall()
+
+        for i in search_grade:
+            grades_phase = cursor.execute(
+                """SELECT etapa_id FROM calificaciones WHERE etapa_id = ? AND estudiante_id = ?;""", (i[0], student_info['ID'])).fetchone()
+            if grades_phase:
+                break
+
+        if grades_phase:
+            grades_phase_info = cursor.execute(
+                """SELECT grado_anio, seccion FROM etapa WHERE id_e = ?;""", (grades_phase[0],)).fetchone()
+
+            if grades_phase_info[0] == student_phase_info[0] and grades_phase_info[1] != student_phase_info[1]:
+                # Delete the grades of the student with the old phase
+                cursor.execute(
+                    """DELETE FROM calificaciones WHERE estudiante_id = ? AND etapa_id = ?;""", (student_info['ID'], grades_phase[0]))
+                conexion.commit()
+
+
         student_info = cursor.execute(
         """SELECT etapa_id FROM estudiante WHERE id_s = ?;""", (student_id,)).fetchone()
 
