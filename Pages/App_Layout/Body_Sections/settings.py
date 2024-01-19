@@ -4,11 +4,15 @@
 import time
 import flet as ft
 
+# Modules
+from modules.import_export_db import path_selector_export, path_selector_import
+
 # Database
 from DB.Functions.user_db import get_user,update_user
 from DB.Functions.phases_db import phase_add, get_phases, delete_phase
 from DB.Functions.subjects_db import subject_add, get_subjects, delete_subject, update_subject
 from DB.Functions.db_info import get_amount
+
 
 class Settings(ft.UserControl):
     '''
@@ -386,7 +390,7 @@ class Settings(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                # on_click= lambda e: self.import_db(), #TODO - Create the function to import the database
+                on_click= lambda e: self.import_db(),
                 border_radius=15,
             ),
 
@@ -397,7 +401,7 @@ class Settings(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                # on_click= lambda e: self.export_db(), #TODO - Create the function to export the database
+                on_click= lambda e: self.export_db(),
                 border_radius=15,
             ),
         ], alignment=ft.MainAxisAlignment.SPACE_EVENLY, spacing=20)
@@ -1349,8 +1353,49 @@ class Settings(ft.UserControl):
 
 
     #* ------------------ Database Functions ------------------ *#
-    #TODO - Create a function to get the storage of the database and set it to the graph
+    def database_info(self):
+        """
+        Update the storage graph with information about the number of elements in different database tables.
 
+        This method retrieves the amount of elements in various tables such as 'calendario', 'estudiante', 'etapa', 'horario',
+        'calificaciones', 'profesor', 'representante', and 'usuario' using the 'get_amount' function. It then updates the
+        corresponding sections in the 'storage_graph' with these values and triggers an update of the graphical interface.
+
+        Parameters:
+        - self: The instance of the class containing the 'database_info' method.
+
+        Returns:
+        None
+        """
+        calendar = get_amount('calendario')
+        students = get_amount('estudiante')
+        phases = get_amount('etapa')
+        schedules = get_amount('horario')
+        grades = get_amount('calificaciones')
+        teachers = get_amount('profesor')
+        parents = get_amount('representante')
+        user = get_amount('usuario')
+
+        self.storage_graph.sections[0].value = calendar
+        self.storage_graph.sections[1].value = students
+        self.storage_graph.sections[2].value = phases
+        self.storage_graph.sections[3].value = schedules
+        self.storage_graph.sections[4].value = grades
+        self.storage_graph.sections[5].value = teachers
+        self.storage_graph.sections[6].value = parents
+        self.storage_graph.sections[7].value = user
+
+        self.update()
+
+    def import_db(self):
+        '''Function to import the database'''
+        path_selector_import()
+        self.database_info()
+
+    def export_db(self):
+        '''Function to export the database'''
+        path_selector_export()
+        self.database_info()
 
 
 
