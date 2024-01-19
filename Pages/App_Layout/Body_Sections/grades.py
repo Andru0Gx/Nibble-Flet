@@ -8,7 +8,7 @@ import flet as ft
 from DB.Functions.student_parent_db import student_search
 from DB.Functions.subjects_db import filter_subjects, search_subject_by_id
 from DB.Functions.phases_db import search_phase, get_phases
-from DB.Functions.grades_db import grade_add, filter_grades_by_period, filter_grades_by_student, get_periods, approve_student, disapprove_student
+from DB.Functions.grades_db import grade_add, filter_grades_by_period, filter_grades_by_student, get_periods, approve_student, disapprove_student, sync_students
 
 
 class Grades(ft.UserControl):
@@ -256,6 +256,18 @@ class Grades(ft.UserControl):
                 border_radius=15,
                 tooltip='Imprimir Notas',
             ),
+
+            ft.Container(
+                ft.Icon(ft.icons.SYNC, color='#f3f4fa', size=20),
+                width=50,
+                height=35,
+                bgcolor='#6D62A1',
+                alignment=ft.alignment.center,
+                on_click= lambda e: self.sync_grades(),
+                border_radius=15,
+                tooltip='Actualizar Notas',
+                disabled=True,
+            ),
         ], spacing=20, alignment=ft.MainAxisAlignment.CENTER)
 
         footer = ft.Container(
@@ -494,6 +506,7 @@ class Grades(ft.UserControl):
         if self.search_bar.controls[0].value == '':
             self.student_name.content.value = 'Nombre del Estudiante'
             del self.table.rows[:]
+            self.grades_buttons.controls[6].disabled = True
             self.update()
         else:
             # formatear el value poniendo una 'v' al inicio
@@ -522,6 +535,7 @@ class Grades(ft.UserControl):
                 self.grades_buttons.controls[4].disabled = False
                 self.grades_buttons.controls[4].bgcolor = '#6D62A1'
                 self.activate_approve_buttons()
+                self.grades_buttons.controls[6].disabled = False
                 self.update()
             else:
                 dlg = ft.AlertDialog(
@@ -548,6 +562,18 @@ class Grades(ft.UserControl):
 
 
     #* ------------------ Edit Functions ------------------ *#
+    def sync_grades(self):
+        '''Sync the grades with the database'''
+        if sync_students(self.actual_student):
+            self.search_bar.controls[0].value = self.actual_ci
+            self.search_student()
+            self.update()
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('El estudiante se encuentra sincronizado'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
 
     def activate_fields(self):
         '''Activate the fields to edit the student'''
@@ -562,6 +588,7 @@ class Grades(ft.UserControl):
             self.grades_buttons.controls[3].visible = False
             self.grades_buttons.controls[4].visible = False
             self.grades_buttons.controls[5].visible = False
+            self.grades_buttons.controls[6].visible = False
 
             self.update()
         else:
@@ -581,6 +608,7 @@ class Grades(ft.UserControl):
         self.grades_buttons.controls[3].visible = True
         self.grades_buttons.controls[4].visible = True
         self.grades_buttons.controls[5].visible = True
+        self.grades_buttons.controls[6].visible = True
 
         self.search_bar.controls[0].value = self.actual_ci
         self.search_student()
@@ -617,15 +645,36 @@ class Grades(ft.UserControl):
             subject_grades['Momento 3'] = row.cells[3].content.content.value
             subject_grades['Nota Final'] = row.cells[4].content.content.value
 
-            grade_add(
-                subject_grades['Student ID'],
-                subject_grades['Subject ID'],
-                subject_grades['Momento 1'],
-                subject_grades['Momento 2'],
-                subject_grades['Momento 3'],
-                subject_grades['Nota Final'],
-                actual_period=self.student_period.content.controls[0].value['Periodo']
-            )
+            if self.student_period.content.controls[0].value is None:
+                grade_add(
+                    subject_grades['Student ID'],
+                    subject_grades['Subject ID'],
+                    subject_grades['Momento 1'],
+                    subject_grades['Momento 2'],
+                    subject_grades['Momento 3'],
+                    subject_grades['Nota Final'],
+                )
+            else:
+                if isinstance(self.student_period.content.controls[0].value, str):
+                    grade_add(
+                        subject_grades['Student ID'],
+                        subject_grades['Subject ID'],
+                        subject_grades['Momento 1'],
+                        subject_grades['Momento 2'],
+                        subject_grades['Momento 3'],
+                        subject_grades['Nota Final'],
+                        actual_period=eval(self.student_period.content.controls[0].value)['Periodo']
+                    )
+                else:
+                    grade_add(
+                        subject_grades['Student ID'],
+                        subject_grades['Subject ID'],
+                        subject_grades['Momento 1'],
+                        subject_grades['Momento 2'],
+                        subject_grades['Momento 3'],
+                        subject_grades['Nota Final'],
+                        actual_period=self.student_period.content.controls[0].value['Periodo']
+                    )
 
         self.close(dlg)
         self.cancel()
