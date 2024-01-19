@@ -1,37 +1,38 @@
 # Nibble
 
-> Nibble es un sistema de gestion de datos para el grupo escolar San Simon, el cual permite gestionar los datos de los estudiantes, profesores, materias, notas, horarios, etc. El sistema esta desarrollado en Python y se conecta a una base de datos en SQLite3.
+> Nibble is a data management system for the San Simon school group, which allows managing data for students, teachers, subjects, grades, schedules, etc. The system is developed in Python and connects to an SQLite3 database.
 
-## Librerias
+## Libraries
 ```md
 
-1. Flet
-2. time
-3. datetime
-4. calendar
-5. locales
-6. python-dateutil
-7. sqlite3
+1. Flet (0.17.0)
+2. Tkinter
+3. time
+4. datetime
+5. calendar
+6. locales (0.0.2)
+7. python-dateutil (2.8.2)
+8. sqlite3
 
 ```
 
-## Ventanas
+## Windows
 ```md
-1. Ventana de inicio de sesion
-2. Ventana de registro
-3. Ventana de Seleccion de usuario/contraseña
-4. Ventana de recuperar usuario
-5. Ventana de recuperar contraseña
-6. Ventana de seleccion de modo
-7. Ventana de inicio
-8. Ventana de profesores
-9. Ventana de estudiantes y representantes
-10. Ventana de notas
-11. Ventana de horarios
-12. Ventana de Configuraciones
+1. Login Window
+2. Registration Window
+3. User/Password Selection Window
+4. Recover User Window
+5. Recover Password Window
+6. Mode Selection Window
+7. Home Window
+8. Teachers Window
+9. Students and Representatives Window
+10. Grades Window
+11. Schedules Window
+12. Settings Window
 ```
 
-<h2>Desarrolladores</h2>
+<h2>Developers</h2>
 
 <a href="https://github.com/Andru0Gx">
   <img src="https://avatars.githubusercontent.com/u/95187524?v=4" width=50>
