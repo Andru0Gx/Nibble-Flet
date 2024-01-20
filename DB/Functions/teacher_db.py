@@ -286,3 +286,24 @@ def filter_teachers_db(filter):
 
     conexion.close()
     return teachers_list
+
+
+#^ ------------------ SCHEDULE TEACHERS ------------------ ^#
+#* 1 - Filter teachers by subject
+def filter_teachers_by_subject(subject_id):
+    '''Filter teachers by subject'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    # Get the teachers
+    cursor.execute(f"""SELECT profesor_id FROM profesor_materias WHERE materia_id = {subject_id};""")
+    teachers = cursor.fetchall()
+
+    teachers_list = []
+
+    for teacher in teachers:
+        teachers_list.append(teacher[0])
+
+    conexion.close()
+    return teachers_list
