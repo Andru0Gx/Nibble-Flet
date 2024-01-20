@@ -471,11 +471,17 @@ def sync_students(student_id):
     student_info['ID'],student_info['ci'], student_info['name'], student_info['lastname'], student_info['birth_date'], student_info['address'], student_info['phase_id'], student_info['admission_date'], student_info['status'] = student
 
 
-
+    #Ultima fase en la que el estudiante estuvo
     student_phase_grade = cursor.execute(
-        """SELECT etapa_id FROM calificaciones WHERE estudiante_id = ?;""", (student_info['ID'],)).fetchone()
+        """SELECT etapa_id FROM calificaciones WHERE estudiante_id = ? ORDER BY id_nota DESC LIMIT 1;""", (student_info['ID'],)).fetchone()
+
+    student_phase_status = cursor.execute(
+        """SELECT estado FROM calificaciones WHERE estudiante_id = ? ORDER BY id_nota DESC LIMIT 1;""", (student_info['ID'],)).fetchone()
+    
 
     if student_info['phase_id'] != student_phase_grade[0]:
+        if student_phase_status[0] == 'En curso':
+            return student_phase_grade[0]
 
         student_phase_info = cursor.execute(
             """SELECT grado_anio, seccion FROM etapa WHERE id_e = ?;""", (student_info['phase_id'],)).fetchone()
@@ -570,3 +576,27 @@ def sync_students(student_id):
     else:
         conexion.close()
         return False
+
+
+#* ------------------ DELETE ALL THE GRADES OF A STUDENT ------------------ *#
+def delete_grades_student(student_id):
+    '''Delete all the grades of a student'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        """DELETE FROM calificaciones WHERE estudiante_id = ?;""", (student_id,))
+    conexion.commit()
+    conexion.close()
+
+def delete_grades_student_phase(student_id, phase_id):
+    '''Delete all the grades of a student in a phase'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        """DELETE FROM calificaciones WHERE estudiante_id = ? AND etapa_id = ?;""", (student_id, phase_id))
+    conexion.commit()
+    conexion.close()

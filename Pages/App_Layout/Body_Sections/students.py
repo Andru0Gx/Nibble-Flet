@@ -15,6 +15,8 @@ from DB.Functions.student_parent_db import student_update, parent_update, parent
 from DB.Functions.student_parent_db import get_students, check_amount as check
 from DB.Functions.temp_data_db import save_tempdata_db, get_tempdata_db, delete_tempdata_db, check_tempdata_db
 from DB.Functions.phases_db import get_phases, search_phase
+from DB.Functions.grades_db import grade_add, sync_students, delete_grades_student
+from DB.Functions.subjects_db import filter_subjects
 
 
 class State:
@@ -325,6 +327,7 @@ class Students(ft.UserControl):
             border_color='#6D62A1',
             content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
             input_filter=ft.InputFilter(regex_string='[0-9]'),
+            on_change= lambda e: self.refresh_children(),
         ),
             ft.Container(
                 width=35,
@@ -648,6 +651,20 @@ class Students(ft.UserControl):
         self.student_date_inscription.controls[0].read_only = True
         self.update()
 
+    def refresh_children(self):
+        """
+        Refreshes the list of children associated with the parent.
+
+        This method clears the existing rows in the parent_children container and updates the view to reflect the changes. It is called when the parent's CI field is changed.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+        del self.parent_children.rows[:]
+        self.update()
 
     def drop_options(self):
         """
@@ -927,6 +944,19 @@ class Students(ft.UserControl):
 
                     parent_id = parent_add(ci, self.parent_name.value, self.parent_lastname.value, self.parent_contact.controls[0].value, self.parent_contact.controls[1].value)
                     parent_student_add(parent_id, student_id)
+
+                    phase = self.student_grade.value
+                    phase_type = phase.split(' ')[1].split(' ')[0]
+
+                    if phase_type == 'Año':
+                        phase_type = 'Liceo'
+                    elif phase_type == 'Grado':
+                        phase_type = 'Colegio'
+
+                    subjects_list = filter_subjects(phase, phase_type)
+
+                    for subject in subjects_list:
+                        grade_add(student_id, subject['ID'])
                     self.cancel()
                 else:
                     dlg = ft.AlertDialog(
@@ -1009,6 +1039,7 @@ class Students(ft.UserControl):
 
         student_delete(ci_e)
         parent_student_delete(id_s, id_p)
+        delete_grades_student(id_s)
 
         if validate_ci(id_p, False):
             parent_delete(ci_r)
