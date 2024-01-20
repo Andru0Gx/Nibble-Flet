@@ -12,7 +12,7 @@ import flet as ft
 from DB.Functions.phases_db import get_phases
 from DB.Functions.subjects_db import filter_subjects, search_subject_by_id
 from DB.Functions.teacher_db import filter_teachers_by_subject, teacher_search
-from DB.Functions.schedule_db import verify_search, schedule_add, schedule_id_search, verify_search_edit, schedule_edit as schedule_edit_db
+from DB.Functions.schedule_db import verify_search, schedule_add, schedule_id_search, verify_search_edit, schedule_edit as schedule_edit_db, schedule_delete as schedule_delete_db
 
 
 
@@ -255,7 +255,7 @@ class Schedule(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                # on_click= lambda e: self.delete_schedule(), #TODO - Add the function to delete a schedule
+                on_click= lambda e: self.confirm_delete_schedule(),
                 border_radius=15,
             ),
 
@@ -461,6 +461,7 @@ class Schedule(ft.UserControl):
                 size=10,
                 data= {'ID': random.randint(1, 10000000)}
             )
+            e.control.content.tooltip = string
 
             e.control.data['ID'] = e.control.content.content.data['ID']
             self.schedule_info_dict['ID'] = e.control.content.content.data['ID']
@@ -796,7 +797,7 @@ class Schedule(ft.UserControl):
             for row in self.schedule.rows:
                 for cell in row.cells:
                     if isinstance(cell.content, ft.DragTarget):
-                        cell.on_tap = self.delete
+                        cell.on_tap = self.delete_on_edit
 
             phase = self.schedule_grade.value
             self.show_drags(phase)
@@ -861,6 +862,7 @@ class Schedule(ft.UserControl):
         for data in self.schedule_info_list:
             schedule_add(data['Teacher ID'], data['Subject ID'], data['Block_time'], data['Phase'], data['Block_day'], guide_teacher, codigo_horario)
 
+        self.show_schedule_code(codigo_horario)
         # Show all the footer buttons
         self.search_bar.visible = True
         self.schedule_buttons.controls[0].visible = True
@@ -900,7 +902,7 @@ class Schedule(ft.UserControl):
         else:
             search = self.search_bar.controls[0].value
             schedule = schedule_id_search(search)
-            if schedule is None:
+            if schedule is False:
                 dlg = ft.AlertDialog(
                     content=ft.Text("No se encontro el horario", color='#4B4669', font_family='Arial', text_align='center', size=15),
                     actions=[
@@ -1166,6 +1168,167 @@ class Schedule(ft.UserControl):
         for data in self.schedule_info_list:
             schedule_edit_db(schedule_id, data['Block_time'], data['Teacher ID'], data['Subject ID'], guide_teacher, data['ID'])
 
+        self.close(dlg)
+
+
+        # Show all the footer buttons
+        self.search_bar.visible = True
+        self.schedule_buttons.controls[0].visible = True
+        self.schedule_buttons.controls[1].visible = True
+        self.schedule_buttons.controls[2].visible = False
+        self.schedule_buttons.controls[3].visible = False
+        self.schedule_buttons.controls[4].visible = False
+        self.schedule_buttons.controls[5].visible = True
+        self.schedule_buttons.controls[6].visible = True
+        self.schedule_buttons.controls[7].visible = True
+
+        # Clear the inputs
+        self.guide_teacher.value = ''
+
+        self.schedule_id.value = 'ID: '
+        self.schedule_grade.value = ''
+
+        self.schedule_info_list.clear()
+
+        # Disable the sidebar and the body
+        self.layout.controls[0].disabled = True
+
+        # Delete the draggables from the sidebar
+        del self.scroll.controls[2:]
+
+        # Change the schedule type
+        self.change_type()
+
+        self.layout.update()
+
+    def show_schedule_code(self, code):
+        '''
+        Displays the code of a schedule in an alert dialog.
+
+        Parameters:
+        - code (str): The code of the schedule to be displayed.
+
+        Returns:
+        None
+        '''
+        dlg = ft.AlertDialog(
+                content=ft.Text(f'Codigo del Horario: {code}', color='#4B4669', font_family='Arial', size=15, selectable=True),
+                actions=[
+                    ft.TextButton(
+                        text='Aceptar',
+                        on_click=lambda e: self.close(dlg)
+                    )
+                ]
+            )
+        self.open_dlg(dlg)
+
+    def delete_on_edit(self, e):
+        """
+        Deletes the content of a draggable control in the schedule.
+
+        Args:
+            e (event): The event object that contains information about the control being deleted.
+
+        Returns:
+            None
+
+        """
+
+        erased_id = e.control.content.data['ID']
+
+        e.control.content.content.bgcolor = '#bec0e3'
+        e.control.content.content.border = None
+        if e.control.content.content.content is None:
+            pass
+        else:
+            e.control.content.content.content.value = ''
+
+            for row in self.schedule.rows:
+                for cell in row.cells:
+                    if isinstance(cell.content, ft.DragTarget):
+                        if cell.content.data['ID'] == erased_id:
+                            self.schedule_info_dict['ID'] = cell.content.data['ID']
+                            self.schedule_info_dict['Subject ID'] = None
+                            self.schedule_info_dict['Teacher ID'] = None
+                            self.schedule_info_dict['Block_time'] = cell.content.data['Block']
+                            self.schedule_info_dict['Block_day'] = cell.content.data['Day']
+                            self.schedule_info_dict['Date'] = None
+                            self.schedule_info_dict['Phase'] = None
+
+                            self.schedule_info_list.append(self.schedule_info_dict.copy())
+                            break
+
+
+
+        e.control.update()
+
+    #* ------------------ Delete Functions ------------------ *#
+    def confirm_delete_schedule(self):
+        """
+        Displays a confirmation dialog for deleting a schedule.
+
+        Returns:
+        None
+        """
+        if self.schedule_id.value == 'ID: ':
+            dlg = ft.AlertDialog(
+                content=ft.Text('Primero debe buscar un horario', color='#4B4669', font_family='Arial', size=15),
+                actions=[
+                    ft.TextButton(
+                        text='Aceptar',
+                        on_click=lambda e: self.close(dlg)
+                    )
+                ]
+            )
+            self.open_dlg(dlg)
+        else:
+            dlg = ft.AlertDialog(
+                    content=ft.Text('¿Esta seguro que desea eliminar el horario?', color='#4B4669', font_family='Arial', size=15),
+                    actions=[
+                        ft.ElevatedButton(
+                            text='Cancelar',
+                            on_click=lambda e: self.close(dlg)
+                        ),
+                        ft.ElevatedButton(
+                            text='Aceptar',
+                            on_click=lambda e: self.delete_second_confirm(dlg)
+                        )
+                    ]
+                )
+            self.open_dlg(dlg)
+
+    def delete_second_confirm(self, dlg):
+        """
+        Displays a confirmation dialog box with a countdown timer. After the countdown, the dialog box is updated to allow the user to confirm the deletion.
+
+        :param dlg: The dialog box object that is displayed to the user.
+        :type dlg: dialog box
+        :return: None
+        """
+        try:
+            dlg.actions[1].on_click = None
+            for i in range(5, -1, -1):
+                dlg.actions[1].text = f'Espere {i} segundos...'
+                dlg.update()
+                time.sleep(1)
+
+            dlg.actions[1].text = 'Confirmar Eliminacion'
+            dlg.actions[1].bgcolor = '#f83c86'
+            dlg.actions[1].on_click = lambda e: self.delete_schedule(dlg)
+            dlg.update()
+        except:
+            pass
+
+    def delete_schedule(self, dlg):
+        """
+        Deletes a schedule from the database.
+
+        :param dlg: The dialog box object that is displayed to the user.
+        :type dlg: dialog box
+        :return: None
+        """
+        schedule_id = self.schedule_id.value.split(' ')[1]
+        schedule_delete_db(schedule_id)
         self.close(dlg)
 
         # Show all the footer buttons

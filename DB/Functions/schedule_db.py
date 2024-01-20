@@ -153,3 +153,16 @@ def schedule_edit(schedule_id, bloque_hora, profesor_id, materia_id, guide_teach
     conexion.commit()
 
     conexion.close()
+
+#* ------------------ Delete ------------------ *#
+def schedule_delete(schedule_id):
+    '''Delete a schedule from the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        """DELETE FROM horario WHERE id_horario = ?;""", (schedule_id,))
+    conexion.commit()
+
+    conexion.close()
