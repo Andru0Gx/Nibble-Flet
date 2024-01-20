@@ -8,7 +8,7 @@ import flet as ft
 from DB.Functions.student_parent_db import student_search
 from DB.Functions.subjects_db import filter_subjects, search_subject_by_id
 from DB.Functions.phases_db import search_phase, get_phases
-from DB.Functions.grades_db import grade_add, filter_grades_by_period, filter_grades_by_student, get_periods, approve_student, disapprove_student, sync_students
+from DB.Functions.grades_db import grade_add, filter_grades_by_period, filter_grades_by_student, get_periods, approve_student, disapprove_student, sync_students, delete_grades_student_phase
 
 
 class Grades(ft.UserControl):
@@ -263,7 +263,7 @@ class Grades(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                on_click= lambda e: self.sync_grades(),
+                on_click= lambda e: self.confirm_sync(),
                 border_radius=15,
                 tooltip='Actualizar Notas',
                 disabled=True,
@@ -562,18 +562,86 @@ class Grades(ft.UserControl):
 
 
     #* ------------------ Edit Functions ------------------ *#
+    def confirm_sync(self):
+        dlg = ft.AlertDialog(
+            content=ft.Text('Sincronizar Notas'),
+            actions=[
+                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.sync_grades()),
+                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg))
+            ]
+        )
+        self.open_dlg(dlg)
+
     def sync_grades(self):
         '''Sync the grades with the database'''
-        if sync_students(self.actual_student):
-            self.search_bar.controls[0].value = self.actual_ci
-            self.search_student()
-            self.update()
-        else:
+        try:
+            if isinstance(sync_students(self.actual_student), int):
+                dlg = ft.AlertDialog(
+                    content=ft.Text('La etapa anterior aun esta en curso, desea borrar la etapa anterior?'),
+                    actions=[
+                        ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg)),
+                        ft.ElevatedButton(text='Borrar', on_click= lambda e: self.confirm_delete(dlg))
+                    ]
+                )
+                self.open_dlg(dlg)
+            if sync_students(self.actual_student):
+                self.search_bar.controls[0].value = self.actual_ci
+                self.search_student()
+                self.update()
+            else:
+                dlg = ft.AlertDialog(
+                    content=ft.Text('El estudiante se encuentra sincronizado'),
+                    actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+                )
+                self.search_bar.controls[0].value = self.actual_ci
+                self.search_student()
+                self.update()
+                self.open_dlg(dlg)
+        except:
             dlg = ft.AlertDialog(
-                content=ft.Text('El estudiante se encuentra sincronizado'),
+                content=ft.Text('El estudiante no tiene notas registradas'),
                 actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
             )
             self.open_dlg(dlg)
+
+    def confirm_delete(self, dlg):
+        try:
+            dlg.actions[1].on_click = None
+            for i in range(5, -1, -1):
+                dlg.actions[1].text = f'Espere {i} segundos...'
+                dlg.update()
+                time.sleep(1)
+
+            dlg.actions[1].text = 'Confirmar Eliminación'
+            dlg.actions[1].bgcolor = '#f83c86'
+            dlg.actions[1].on_click = lambda e: self.delete_phase(dlg)
+            dlg.update()
+        except:
+            pass
+    
+    def delete_phase(self, dlg):
+        print(self.actual_student)
+        phase = sync_students(self.actual_student)
+        delete_grades_student_phase(self.actual_student, phase)
+
+        phase = search_phase(id = phase)
+        phase_type = phase['Grado/Año'].split(' ')[1]
+        phase = phase['Grado/Año'] + ' ' + phase['Seccion']
+
+        if phase_type == 'Año':
+            phase_type = 'Liceo'
+        elif phase_type == 'Grado':
+            phase_type = 'Colegio'
+
+        subjects_list = filter_subjects(phase, phase_type)
+
+        for subject in subjects_list:
+            grade_add(self.actual_student, subject['ID'])
+        self.close(dlg)
+
+        self.search_bar.controls[0].value = self.actual_ci
+        self.update()
+        self.search_student()
 
     def activate_fields(self):
         '''Activate the fields to edit the student'''
@@ -757,24 +825,25 @@ class Grades(ft.UserControl):
         Example:
             approve_student_second_confirm(self, dlg, 'Activo')
         '''
-        dlg.actions[1].on_click = None
-        for i in range(5, -1, -1):
-            dlg.actions[1].text = f'Espere {i} segundos...'
-            dlg.update()
-            time.sleep(1)
+        try:
+            dlg.actions[1].on_click = None
+            for i in range(5, -1, -1):
+                dlg.actions[1].text = f'Espere {i} segundos...'
+                dlg.update()
+                time.sleep(1)
 
-        dlg.actions[1].text = 'Confirmar Aprobado'
-        dlg.actions[1].bgcolor = '#70f83a'
-        dlg.actions[1].on_click = lambda e: self.approve_student(dlg)
-        dlg.update()
+            dlg.actions[1].text = 'Confirmar Aprobado'
+            dlg.actions[1].bgcolor = '#70f83a'
+            dlg.actions[1].on_click = lambda e: self.approve_student(dlg)
+            dlg.update()
+        except:
+            pass
 
     def approve_student(self, dlg):
         '''Approve the student'''
 
         actual_phase = self.student_period.content.controls[0].value['Periodo']
         approve_student(self.actual_student, actual_phase)
-
-
 
         self.close(dlg)
         self.cancel()
@@ -805,16 +874,19 @@ class Grades(ft.UserControl):
         Example:
             disapprove_student_second_confirm(self, dlg)
         '''
-        dlg.actions[1].on_click = None
-        for i in range(5, -1, -1):
-            dlg.actions[1].text = f'Espere {i} segundos...'
-            dlg.update()
-            time.sleep(1)
+        try:
+            dlg.actions[1].on_click = None
+            for i in range(5, -1, -1):
+                dlg.actions[1].text = f'Espere {i} segundos...'
+                dlg.update()
+                time.sleep(1)
 
-        dlg.actions[1].text = 'Confirmar Desaprobado'
-        dlg.actions[1].bgcolor = '#f83c86'
-        dlg.actions[1].on_click = lambda e: self.disapprove_student(dlg)
-        dlg.update()
+            dlg.actions[1].text = 'Confirmar Desaprobado'
+            dlg.actions[1].bgcolor = '#f83c86'
+            dlg.actions[1].on_click = lambda e: self.disapprove_student(dlg)
+            dlg.update()
+        except:
+            pass
 
     def disapprove_student(self, dlg):
         '''Disapprove the student'''
