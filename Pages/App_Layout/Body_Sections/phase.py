@@ -380,17 +380,20 @@ class Phases(ft.UserControl):
         Usage Example:
             instance.promote_all_second_confirm(dialog_instance, some_operation, some_data)
         """
-        dlg.actions[1].on_click = None
-        for i in range(5, -1, -1):
-            dlg.actions[1].text = f'Espere {i} segundos...'
-            dlg.update()
-            time.sleep(1)
+        try:
+            dlg.actions[1].on_click = None
+            for i in range(5, -1, -1):
+                dlg.actions[1].text = f'Espere {i} segundos...'
+                dlg.update()
+                time.sleep(1)
 
-        dlg.actions[1].text = 'Confirmar Promover'
-        dlg.actions[1].bgcolor = '#70f83a'
-        dlg.actions[1].color = '#2d2d2d'
-        dlg.actions[1].on_click = lambda e: self.promote_all(dlg, op, data)
-        dlg.update()
+            dlg.actions[1].text = 'Confirmar Promover'
+            dlg.actions[1].bgcolor = '#70f83a'
+            dlg.actions[1].color = '#2d2d2d'
+            dlg.actions[1].on_click = lambda e: self.promote_all(dlg, op, data)
+            dlg.update()
+        except:
+            pass
 
 
     def promote_all(self, dlg, op, data):

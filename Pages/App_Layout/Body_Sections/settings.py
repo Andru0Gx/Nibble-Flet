@@ -1118,16 +1118,19 @@ class Settings(ft.UserControl):
         Example:
             subject_secundary_confirm_delete(dlg, 1)
         """
-        dlg.actions[1].on_click = None
-        for i in range(5, -1, -1):
-            dlg.actions[1].text = f'Espere {i} segundos...'
-            dlg.update()
-            time.sleep(1)
+        try:
+            dlg.actions[1].on_click = None
+            for i in range(5, -1, -1):
+                dlg.actions[1].text = f'Espere {i} segundos...'
+                dlg.update()
+                time.sleep(1)
 
-        dlg.actions[1].text = 'Confirmar Eliminacion'
-        dlg.actions[1].bgcolor = '#f83c86'
-        dlg.actions[1].on_click = lambda e: self.delete_subject(dlg, id)
-        dlg.update()
+            dlg.actions[1].text = 'Confirmar Eliminacion'
+            dlg.actions[1].bgcolor = '#f83c86'
+            dlg.actions[1].on_click = lambda e: self.delete_subject(dlg, id)
+            dlg.update()
+        except:
+            pass
 
     def delete_subject(self, dlg, id):
         """
@@ -1322,16 +1325,19 @@ class Settings(ft.UserControl):
         :type dlg: dialog box
         :return: None
         """
-        dlg.actions[1].on_click = None
-        for i in range(5, -1, -1):
-            dlg.actions[1].text = f'Espere {i} segundos...'
-            dlg.update()
-            time.sleep(1)
+        try:
+            dlg.actions[1].on_click = None
+            for i in range(5, -1, -1):
+                dlg.actions[1].text = f'Espere {i} segundos...'
+                dlg.update()
+                time.sleep(1)
 
-        dlg.actions[1].text = 'Confirmar Eliminacion'
-        dlg.actions[1].bgcolor = '#f83c86'
-        dlg.actions[1].on_click = lambda e: self.delete_phase(dlg)
-        dlg.update()
+            dlg.actions[1].text = 'Confirmar Eliminacion'
+            dlg.actions[1].bgcolor = '#f83c86'
+            dlg.actions[1].on_click = lambda e: self.delete_phase(dlg)
+            dlg.update()
+        except:
+            pass
 
     def delete_phase(self, dlg):
         """
