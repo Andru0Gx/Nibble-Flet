@@ -153,13 +153,17 @@ def schedule_table(conexion):
     cursor = conexion.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS horario(
-            id_horario INTEGER PRIMARY KEY AUTOINCREMENT,
-            anio_en_curso TEXT NOT NULL,
-            dia TEXT NOT NULL,
-            profesor_ci TEXT NOT NULL,
-            materia_id INTEGER NOT NULL,
-            bloque_hora,
-            CONSTRAINT fk_prof_ci_schedule FOREIGN KEY(profesor_ci) REFERENCES profesor(cedula_p) ON DELETE CASCADE ON UPDATE CASCADE,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_horario INTEGER,
+            profesor_id TEXT,
+            materia_id INTEGER,
+            bloque_hora TEXT,
+            bloque_dia TEXT,
+            fecha TEXT,
+            etapa  TEXT,
+            formato TEXT,
+            guide_teacher TEXT,
+            CONSTRAINT fk_prof__id_schedule FOREIGN KEY(profesor_id) REFERENCES profesor(id_p) ON DELETE CASCADE ON UPDATE CASCADE,
             CONSTRAINT fk_mat__id_schedule FOREIGN KEY(materia_id) REFERENCES materia(id_m) ON DELETE CASCADE ON UPDATE CASCADE
         );""")
     conexion.commit()
