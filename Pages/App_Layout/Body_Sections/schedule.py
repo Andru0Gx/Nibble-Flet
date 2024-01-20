@@ -4,7 +4,18 @@
 
 import datetime
 import time
+import random
+import string
 import flet as ft
+
+# Database
+from DB.Functions.phases_db import get_phases
+from DB.Functions.subjects_db import filter_subjects, search_subject_by_id
+from DB.Functions.teacher_db import filter_teachers_by_subject, teacher_search
+from DB.Functions.schedule_db import verify_search, schedule_add, schedule_id_search, verify_search_edit, schedule_edit as schedule_edit_db
+
+
+
 
 class Schedule(ft.UserControl):
     '''Schedule with drag and drop functionality'''
@@ -14,11 +25,18 @@ class Schedule(ft.UserControl):
         self.section = section
 
         #* ------------------ Variables ------------------ *#
-        #TODO - Add the Database functionality
-        self.seccion = None
-        self.grado = None
-        self.tipo = None
-        self.date = None
+        self.schedule_info_dict = {
+            'ID': None,
+            'Subject ID': None,
+            'Teacher ID': None,
+            'Block_time': None,
+            'Block_day': None,
+            'Date': None,
+            'Phase': None
+        }
+
+        self.schedule_info_list = []
+
 
 
 
@@ -64,22 +82,11 @@ class Schedule(ft.UserControl):
 
         # Create the label for the schedule ID
         self.schedule_id = ft.Text(
-            'ID: 123456789',
+            'ID: ',
             color='#4B4669',
             font_family='Arial',
-            width = 100,
+            width = 110,
             text_align='left',
-            weight='bold',
-            size=13,
-        )
-
-        # Create the label for the schedule Type (School or Grade)
-        self.schedule_type = ft.Text(
-            'Colegio',
-            color='#4B4669',
-            font_family='Arial',
-            width = 50,
-            text_align='right',
             weight='bold',
             size=13,
         )
@@ -98,7 +105,6 @@ class Schedule(ft.UserControl):
         self.schedule_info = ft.Container(
             ft.Row([
                 self.schedule_id,
-                self.schedule_type,
                 self.schedule_grade,
             ], alignment=ft.MainAxisAlignment.CENTER, spacing=10),
             width=300,
@@ -164,22 +170,22 @@ class Schedule(ft.UserControl):
 
             rows=[
                 #* ------------------ 7:00 - 7:45 ------------------ *#
-                self.rows('7:00', '7:45'),
+                self.rows('7:00', '7:45', '1'),
 
                 #* ------------------ 7:45 - 8:30 ------------------ *#
-                self.rows('7:45', '8:30'),
+                self.rows('7:45', '8:30', '2'),
 
                 #* ------------------ 8:30 - 9:00 ------------------ *#
-                self.rows('8:30', '9:00'),
+                self.rows('8:30', '9:00', '3'),
 
                 #* ------------------ 9:00 - 9:30 ------------------ *#
-                self.rows('9:00', '9:30'),
+                self.rows('9:00', '9:30', '4'),
 
                 #* ------------------ 9:30 - 10:15 ------------------ *#
-                self.rows('9:30', '10:15'),
+                self.rows('9:30', '10:15', '5'),
 
                 #* ------------------ 10:15 - 11:00 ------------------ *#
-                self.rows('10:15', '11:00'),
+                self.rows('10:15', '11:00', '6'),
             ]
         )
 
@@ -249,7 +255,7 @@ class Schedule(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                on_click= lambda e: self.delete_schedule(),
+                # on_click= lambda e: self.delete_schedule(), #TODO - Add the function to delete a schedule
                 border_radius=15,
             ),
 
@@ -260,6 +266,17 @@ class Schedule(ft.UserControl):
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
                 on_click= lambda e: self.save_schedule(),
+                border_radius=15,
+                visible=False,
+            ),
+
+            ft.Container(
+                ft.Text('Guardar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
+                width=80,
+                height=35,
+                bgcolor='#6D62A1',
+                alignment=ft.alignment.center,
+                on_click= lambda e: self.confirm_edit_schedule(),
                 border_radius=15,
                 visible=False,
             ),
@@ -286,13 +303,14 @@ class Schedule(ft.UserControl):
             ),
 
             ft.Container(
-                ft.Text('Imprimir',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
-                width=80,
+                ft.Icon(ft.icons.PRINT, color='#f3f4fa', size=20),
+                width=50,
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                on_click= lambda e: self.print_schedule(),
+                # on_click= lambda e: self.print_teacher(), #TODO - Add the function to print a teacher
                 border_radius=15,
+                tooltip='Imprimir Profesor',
             ),
 
             ft.Container(
@@ -333,12 +351,22 @@ class Schedule(ft.UserControl):
         return self.content
 
     #* ------------------ Functions ------------------ *#
-    def create_drag(self, subject, grade, teacher:str):
+
+    #* ------------------ DRAG Functions ------------------ *#
+    def create_drag(self, subject, grade, teacher:str, subject_id = None, teacher_id = None):
         '''Creates a subject in the schedule'''
 
         subject = subject.upper()
         grade = grade.upper()
         teacher = teacher.upper()
+
+        data = {
+            'Subject ID': subject_id,
+            'Teacher ID': teacher_id,
+            'Subject': subject,
+            'Teacher': teacher,
+            'Grade': grade,
+        }
 
         string = f'{subject}\n{grade}\n{teacher}'
 
@@ -347,11 +375,11 @@ class Schedule(ft.UserControl):
             content=ft.Container(
                 width=180,
                 height=50,
-                bgcolor=ft.colors.CYAN,
+                bgcolor=ft.colors.BLUE_300,
                 border_radius=5,
                 content=ft.Text(
                     string,
-                    color='#4B4669',
+                    color= '#4B4669',
                     font_family='Arial',
                     text_align='center',
                     size=12,
@@ -360,15 +388,15 @@ class Schedule(ft.UserControl):
             content_feedback=ft.Container(
                 width=50,
                 height=25,
-                bgcolor=ft.colors.CYAN,
+                bgcolor=ft.colors.BLUE_300,
                 border_radius=3,
             ),
-            data=(subject, grade, teacher),
+            data=data,
         )
         self.scroll.controls.append(subject)
         self.scroll.update()
 
-    def create_target(self):
+    def create_target(self,data):
         """
         Creates a drag target for subjects in the schedule.
 
@@ -390,6 +418,7 @@ class Schedule(ft.UserControl):
             on_will_accept=self.drag_will_accept,
             on_accept=self.drag_accept,
             on_leave=self.drag_leave,
+            data=data,
         )
         return target
 
@@ -420,10 +449,8 @@ class Schedule(ft.UserControl):
         """
         src = self.page.get_control(e.src_id)
 
-        src_data = src.data[0]
-
-        if src_data == 'MATEMATICA':  #TODO - Add the Database functionality
-            string = f'{src.data[0]}\n{src.data[1]}\n{src.data[2]}'
+        if verify_search(src.data['Teacher ID'],e.control.data['Block'], self.schedule_grade.value, e.control.data['Day']):
+            string = f"{src.data['Subject']}\n{src.data['Grade']}\n{src.data['Teacher']}"
             e.control.content.bgcolor = src.content.bgcolor
             e.control.content.border = None
             e.control.content.content = ft.Text(
@@ -432,7 +459,19 @@ class Schedule(ft.UserControl):
                 font_family='Arial',
                 text_align='center',
                 size=10,
+                data= {'ID': random.randint(1, 10000000)}
             )
+
+            e.control.data['ID'] = e.control.content.content.data['ID']
+            self.schedule_info_dict['ID'] = e.control.content.content.data['ID']
+            self.schedule_info_dict['Subject ID'] = src.data['Subject ID']
+            self.schedule_info_dict['Teacher ID'] = src.data['Teacher ID']
+            self.schedule_info_dict['Block_time'] = e.control.data['Block']
+            self.schedule_info_dict['Block_day'] = e.control.data['Day']
+            self.schedule_info_dict['Date'] = datetime.datetime.now().strftime('%B %Y')
+            self.schedule_info_dict['Phase'] = self.schedule_grade.value
+
+            self.schedule_info_list.append(self.schedule_info_dict.copy())
             e.control.update()
         else:
             dlg = ft.AlertDialog(
@@ -472,14 +511,709 @@ class Schedule(ft.UserControl):
             None
 
         """
+
         e.control.content.content.bgcolor = '#bec0e3'
         e.control.content.content.border = None
         if e.control.content.content.content is None:
             pass
         else:
             e.control.content.content.content.value = ''
+
+            for info in self.schedule_info_list:
+                if info['ID'] == e.control.content.data['ID']:
+                    self.schedule_info_list.remove(info)
+                    break
+
         e.control.update()
 
+    def rows(self, start, end, block):
+        """
+        Create a row of data for the schedule table.
+
+        Args:
+            start (str): The start time of the schedule row.
+            end (str): The end time of the schedule row.
+
+        Returns:
+            ft.DataRow: A DataRow object representing a row of data for the schedule table.
+        """
+        return ft.DataRow([
+                    ft.DataCell(
+                        ft.Container(
+                            ft.Text(f'{start} - {end}', color='#4B4669', size=15), width=50, alignment=ft.alignment.center
+                        )
+                    ),
+                    ft.DataCell(
+                        self.create_target({'Block': block, 'Day': '1', 'ID': None}),
+                        on_tap=self.delete,
+                        data={
+                            'Block': block,
+                            'Day': '1',
+                            'ID': None,
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_target({'Block': block, 'Day': '2', 'ID': None}),
+                        on_tap=self.delete,
+                        data={
+                            'Block': block,
+                            'Day': '2',
+                            'ID': None,
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_target({'Block': block, 'Day': '3', 'ID': None}),
+                        on_tap=self.delete,
+                        data={
+                            'Block': block,
+                            'Day': '3',
+                            'ID': None,
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_target({'Block': block, 'Day': '4', 'ID': None}),
+                        on_tap=self.delete,
+                        data={
+                            'Block': block,
+                            'Day': '4',
+                            'ID': None,
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_target({'Block': block, 'Day': '5', 'ID': None}),
+                        on_tap=self.delete,
+                        data={
+                            'Block': block,
+                            'Day': '5',
+                            'ID': None,
+                        }
+                    ),
+                ])
+
+    def show_drags(self, phase_info = None):
+        '''Shows the drags in the sidebar'''
+
+        phase = phase_info.split(' ')[0] + ' ' + phase_info.split(' ')[1].split(' ')[0]
+
+        phase_type = phase.split(' ')[1]
+
+        if phase_type == 'Grado':
+            phase_type = 'Colegio'
+        else:
+            phase_type = 'Liceo'
+
+
+        subject_list = filter_subjects(phase, phase_type)
+
+        for subject in subject_list:
+            teachers = filter_teachers_by_subject(subject['ID'])
+            for teacher in teachers:
+                teacher_info = teacher_search(teacher)
+                self.create_drag(subject['Nombre'], subject['Etapa'], f"{teacher_info['Name']} {teacher_info['Last_Name']}", subject['ID'], teacher_info['ID'])
+
+
+
+
+    #* ------------------ Schedule Buttons ------------------ *#
+    #* DLG CREATE SCHEDULE *#
+    def create_schedule(self):
+        """
+        Creates a new schedule by opening a dialog box to get the section and grade inputs from the user and validating the inputs.
+
+        Inputs:
+        - self: The instance of the Schedule class.
+
+        Outputs:
+        - None
+        """
+        self.layout.controls[0].disabled = False
+
+        # Create a dlg to get the section and the grade
+        dlg = ft.AlertDialog(
+                content=ft.Column([
+                    ft.Text('Configuracion del Horario', color='#4B4669', font_family='Arial', size=20),
+                    ft.Dropdown(
+                        width=300,
+                        height=35,
+                        label='Etapa (Grado/Año)',
+                        hint_text='Selecciona la Etapa',
+                        filled=True,
+                        bgcolor='#f3f4fa',
+                        hint_style=ft.TextStyle(color='#C0C1E3'),
+                        label_style=ft.TextStyle(color='#4B4669'),
+                        text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                        border_color='#6D62A1',
+                        content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                        on_change= lambda e: self.change_type(e.control.value),
+                    ),
+                ], width=300, height=60, alignment=ft.MainAxisAlignment.CENTER,horizontal_alignment='center', spacing=10),
+                actions=[
+                    ft.Container(
+                        ft.Container(
+                            ft.Text('Continuar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
+                            width=80,
+                            height=35,
+                            bgcolor='#6D62A1',
+                            alignment=ft.alignment.center,
+                            on_click= lambda e: self.validate_dlg(dlg),
+                            border_radius=15,
+                        ), expand=True, height=35, alignment=ft.alignment.center
+                    )
+                ]
+            )
+        self.open_dlg(dlg)
+        self.drop_dlg_options(dlg)
+
+    def drop_dlg_options(self, dlg):
+        """
+        Populates dropdown options in a dialog with phases data.
+
+        Parameters:
+        - self: The instance of the class.
+        - dlg: The dialog to be updated with dropdown options.
+
+        Returns:
+        None
+        """
+        phases_list = get_phases()
+        for phase in phases_list:
+            dlg.content.controls[1].options.append(ft.dropdown.Option(f"{phase['Grado/Año']} {phase['Seccion']}"))
+        dlg.update()
+
+    def change_type(self, mode = 'Colegio'):
+        '''Changes the schedule type'''
+        if mode != 'Colegio':
+            mode = mode.split(' ')[1]
+            if mode == 'Grado':
+                mode = 'Colegio'
+            else:
+                mode = 'Liceo'
+
+        # Delete the rows
+        del self.schedule.rows[:]
+
+        # Add the rows
+        self.schedule.rows.append(self.rows('7:00', '7:45', '1'))
+        self.schedule.rows.append(self.rows('7:45', '8:30', '2'))
+        self.schedule.rows.append(self.rows('8:30', '9:00', '3'))
+        self.schedule.rows.append(self.rows('9:00', '9:30', '4'))
+        self.schedule.rows.append(self.rows('9:30', '10:15', '5'))
+        self.schedule.rows.append(self.rows('10:15', '11:00', '6'))
+
+        if mode == 'Liceo':
+            # Delete the rows
+            del self.schedule.rows[:]
+
+            # Add the rows
+            self.schedule.rows.append(self.rows('12:30', '1:50', '1'))
+            self.schedule.rows.append(self.rows('1:50', '3:05', '2'))
+            self.schedule.rows.append(self.rows('3:05', '4:20', '3'))
+            self.schedule.rows.append(self.rows('4:20', '5:45', '4'))
+        else:
+
+            # Delete the rows
+            del self.schedule.rows[:]
+
+            # Add the rows
+            self.schedule.rows.append(self.rows('7:00', '7:45', '1'))
+            self.schedule.rows.append(self.rows('7:45', '8:30', '2'))
+            self.schedule.rows.append(self.rows('8:30', '9:00', '3'))
+            self.schedule.rows.append(self.rows('9:00', '9:30', '4'))
+            self.schedule.rows.append(self.rows('9:30', '10:15', '5'))
+            self.schedule.rows.append(self.rows('10:15', '11:00', '6'))
+
+        self.body.update()
+
+    def validate_dlg(self, dlg):
+        '''Validate the dlg to create the schedule'''
+
+        if dlg.content.controls[1].value is None:
+            # Show the error in the button for a few seconds
+            dlg.actions[0].content.bgcolor = '#FF0000'
+            dlg.actions[0].content.content.value = 'Rellene todos los campos'
+            dlg.actions[0].content.width = 200
+            dlg.actions[0].content.update()
+            time.sleep(1.5)
+            dlg.actions[0].content.bgcolor = '#6D62A1'
+            dlg.actions[0].content.content.value = 'Continuar'
+            dlg.actions[0].content.width = 80
+            dlg.actions[0].content.update()
+        else:
+            phase = dlg.content.controls[1].value
+            self.show_drags(phase)
+
+            # Hide all the footer but the cancel and save buttons
+            self.search_bar.visible = False
+            self.schedule_buttons.controls[0].visible = False
+            self.schedule_buttons.controls[1].visible = False
+            self.schedule_buttons.controls[2].visible = True
+            self.schedule_buttons.controls[3].visible = False
+            self.schedule_buttons.controls[4].visible = True
+            self.schedule_buttons.controls[5].visible = False
+            self.schedule_buttons.controls[6].visible = False
+            self.schedule_buttons.controls[7].visible = False
+
+
+            self.schedule_grade.value = f'{dlg.content.controls[1].value}'
+
+            self.layout.update()
+
+            self.close(dlg)
+
+
+
+
+    #* EDIT SCHEDULE *#
+    def edit_schedule(self):
+        '''Edit the schedule'''
+        if self.schedule_id.value == 'ID: ':
+            dlg = ft.AlertDialog(
+                content=ft.Text('Primero debe buscar un horario', color='#4B4669', font_family='Arial', size=15),
+                actions=[
+                    ft.TextButton(
+                        text='Aceptar',
+                        on_click=lambda e: self.close(dlg)
+                    )
+                ]
+            )
+            self.open_dlg(dlg)
+        else:
+            # hide all the footer but the cancel and save buttons
+            self.search_bar.visible = False
+            self.schedule_buttons.controls[0].visible = False
+            self.schedule_buttons.controls[1].visible = False
+            self.schedule_buttons.controls[2].visible = False
+            self.schedule_buttons.controls[3].visible = True
+            self.schedule_buttons.controls[4].visible = True
+            self.schedule_buttons.controls[5].visible = False
+            self.schedule_buttons.controls[6].visible = False
+            self.schedule_buttons.controls[7].visible = False
+
+            # Enable the sidebar and the body
+            self.layout.controls[0].disabled = False
+
+            # Add the DELETE action to the cells
+            for row in self.schedule.rows:
+                for cell in row.cells:
+                    if isinstance(cell.content, ft.DragTarget):
+                        cell.on_tap = self.delete
+
+            phase = self.schedule_grade.value
+            self.show_drags(phase)
+
+            self.layout.update()
+
+
+
+    def cancel_schedule(self):
+        '''Cancel the schedule creation'''
+        # Show all the footer buttons
+        self.search_bar.visible = True
+        self.schedule_buttons.controls[0].visible = True
+        self.schedule_buttons.controls[1].visible = True
+        self.schedule_buttons.controls[2].visible = False
+        self.schedule_buttons.controls[3].visible = False
+        self.schedule_buttons.controls[4].visible = False
+        self.schedule_buttons.controls[5].visible = True
+        self.schedule_buttons.controls[6].visible = True
+        self.schedule_buttons.controls[7].visible = True
+
+        # Clear the inputs
+        self.guide_teacher.value = ''
+
+        self.schedule_id.value = 'ID: '
+        self.schedule_grade.value = ''
+
+        self.schedule_info_list.clear()
+
+        # Disable the sidebar and the body
+        self.layout.controls[0].disabled = True
+
+        # Delete the draggables from the sidebar
+        del self.scroll.controls[2:]
+
+        # Change the schedule type
+        self.change_type()
+
+        self.layout.update()
+
+    def save_schedule(self):
+        '''Save the schedule in the database'''
+
+        if self.guide_teacher.value == '':
+            guide_teacher = 'Por Asignar'
+        else:
+            guide_teacher = self.guide_teacher.value
+
+        # Generate the schedule code
+        caracteres = string.ascii_letters + string.digits
+        codigo_horario = ''.join(random.choice(caracteres) for _ in range(10))
+
+        for row in self.schedule.rows:
+            for cell in row.cells:
+                if cell.content.content is not None:
+                    if cell.content.data is None:
+                        pass
+                    elif cell.content.data['ID'] is None:
+                        schedule_add(None, None, cell.content.data['Block'], self.schedule_grade.value, cell.content.data['Day'], guide_teacher, codigo_horario)
+
+        # save the schedule in the database
+        for data in self.schedule_info_list:
+            schedule_add(data['Teacher ID'], data['Subject ID'], data['Block_time'], data['Phase'], data['Block_day'], guide_teacher, codigo_horario)
+
+        # Show all the footer buttons
+        self.search_bar.visible = True
+        self.schedule_buttons.controls[0].visible = True
+        self.schedule_buttons.controls[1].visible = True
+        self.schedule_buttons.controls[2].visible = False
+        self.schedule_buttons.controls[3].visible = False
+        self.schedule_buttons.controls[4].visible = False
+        self.schedule_buttons.controls[5].visible = True
+        self.schedule_buttons.controls[6].visible = True
+        self.schedule_buttons.controls[7].visible = True
+
+        # Clear the inputs
+        self.guide_teacher.value = ''
+
+        self.schedule_id.value = 'ID: '
+        self.schedule_grade.value = ''
+
+        self.schedule_info_list.clear()
+
+        # Disable the sidebar and the body
+        self.layout.controls[0].disabled = True
+
+        # Delete the draggables from the sidebar
+        del self.scroll.controls[2:]
+
+        # Change the schedule type
+        self.change_type()
+
+        self.layout.update()
+
+    #* ------------------ Search Functions ------------------ *#
+    def search_schedule(self):
+        '''Search the schedule'''
+        if self.search_bar.controls[0].value == '':
+            self.change_type()
+            self.layout.update()
+        else:
+            search = self.search_bar.controls[0].value
+            schedule = schedule_id_search(search)
+            if schedule is None:
+                dlg = ft.AlertDialog(
+                    content=ft.Text("No se encontro el horario", color='#4B4669', font_family='Arial', text_align='center', size=15),
+                    actions=[
+                        ft.TextButton(
+                            text='Aceptar',
+                            on_click=lambda e: self.close(dlg)
+                        )
+                    ]
+                )
+                self.open_dlg(dlg)
+            else:
+                del self.schedule.rows[:]
+                if schedule[0]['Formato'] == 'Colegio':
+                    loop = 6
+                    time_list = [
+                        {'start': '7:00', 'end': '7:45', 'block': '1'},
+                        {'start': '7:45', 'end': '8:30', 'block': '2'},
+                        {'start': '8:30', 'end': '9:00', 'block': '3'},
+                        {'start': '9:00', 'end': '9:30', 'block': '4'},
+                        {'start': '9:30', 'end': '10:15', 'block': '5'},
+                        {'start': '10:15', 'end': '11:00', 'block': '6'}
+                    ]
+                else:
+                    loop = 4
+                    time_list = [
+                        {'start': '12:30', 'end': '1:50', 'block': '1'},
+                        {'start': '1:50', 'end': '3:05', 'block': '2'},
+                        {'start': '3:05', 'end': '4:20', 'block': '3'},
+                        {'start': '4:20', 'end': '5:45', 'block': '4'},
+                    ]
+
+                list_row = {
+                    'start': None,
+                    'end': None,
+                    'string_1': None,
+                    'string_2': None,
+                    'string_3': None,
+                    'string_4': None,
+                    'string_5': None,
+                    'data_id_1': None,
+                    'data_id_2': None,
+                    'data_id_3': None,
+                    'data_id_4': None,
+                    'data_id_5': None,
+                    'bloque_hora_1': None,
+                    'bloque_hora_2': None,
+                    'bloque_hora_3': None,
+                    'bloque_hora_4': None,
+                    'bloque_hora_5': None,
+                    'ID_1': None,
+                    'ID_2': None,
+                    'ID_3': None,
+                    'ID_4': None,
+                    'ID_5': None,
+                }
+
+                string_list = []
+
+                for i in range(loop):
+                    schedule = schedule_id_search(search, time_list[i]['block'])
+                    for info in schedule:
+                        string_txt = None
+                        if info['Materia ID'] is not None and info['Profesor ID'] is not None:
+                            subject = search_subject_by_id(info['Materia ID'])
+                            teacher = teacher_search(info['Profesor ID'])
+
+                            string_txt = f"{subject['Nombre']}\n{info['Etapa']}\n{teacher['Name']} {teacher['Last_Name']}"
+
+                        list_row[f"string_{info['Bloque Dia']}"] = string_txt
+                        list_row[f"data_id_{info['Bloque Dia']}"] = info['Materia ID']
+                        list_row[f"bloque_hora_{info['Bloque Dia']}"] = info['Bloque Hora']
+                        list_row['start'] = time_list[i]['start']
+                        list_row['end'] = time_list[i]['end']
+                        list_row[f"ID_{info['Bloque Dia']}"] = info['ID']
+
+                        self.schedule_info_dict['ID'] = info['ID']
+                        self.schedule_info_dict['Subject ID'] = info['Materia ID']
+                        self.schedule_info_dict['Teacher ID'] = info['Profesor ID']
+                        self.schedule_info_dict['Block_time'] = info['Bloque Hora']
+                        self.schedule_info_dict['Block_day'] = info['Bloque Dia']
+                        self.schedule_info_dict['Date'] = info['Fecha']
+                        self.schedule_info_dict['Phase'] = info['Etapa']
+
+                        self.schedule_info_list.append(self.schedule_info_dict.copy())
+
+                    string_list.append(list_row.copy())
+
+                for i in string_list:
+                    self.schedule.rows.append(self.show_rows_schedule(i['start'], i['end'], i['string_1'], i['string_2'], i['string_3'], i['string_4'], i['string_5'], i['data_id_1'], i['data_id_2'], i['data_id_3'], i['data_id_4'], i['data_id_5'], i['bloque_hora_1'], i['bloque_hora_2'], i['bloque_hora_3'], i['bloque_hora_4'], i['bloque_hora_5'], i['ID_1'], i['ID_2'], i['ID_3'], i['ID_4'], i['ID_5']))
+
+
+                self.schedule_grade.value = f"{schedule[0]['Etapa']}"
+                self.schedule_id.value = f"ID: {schedule[0]['ID Horario']}"
+
+                self.layout.update()
+
+
+    def show_rows_schedule(self,start, end, string_a, string_b, string_c, string_d, string_e, data_id_a, data_id_b, data_id_c, data_id_d, data_id_e, bloque_hora_a, bloque_hora_b, bloque_hora_c, bloque_hora_d, bloque_hora_e, id_a, id_b, id_c, id_d, id_e):
+        '''Show the rows of the schedule'''
+        return ft.DataRow([
+                    ft.DataCell(
+                        ft.Container(
+                            ft.Text(f"{start} - {end}", color='#4B4669', size=15), width=50, alignment=ft.alignment.center
+                        )
+                    ),
+                    ft.DataCell(
+                        self.create_search_target(string_a, data_id_a, {'Block': bloque_hora_e, 'Day': 1, 'ID': id_a}),
+                        data={
+                            'Block': bloque_hora_a,
+                            'Day': 'Lunes',
+                            'ID': id_a
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_search_target(string_b, data_id_b, {'Block': bloque_hora_e, 'Day': 2, 'ID': id_b}),
+                        data={
+                            'Block': bloque_hora_b,
+                            'Day': 'Martes',
+                            'ID': id_b
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_search_target(string_c, data_id_c, {'Block': bloque_hora_e, 'Day': 3, 'ID': id_c}),
+                        data={
+                            'Block': bloque_hora_c,
+                            'Day': 'Miercoles',
+                            'ID': id_c
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_search_target(string_d, data_id_d, {'Block': bloque_hora_e, 'Day': 4, 'ID': id_d}),
+                        data={
+                            'Block': bloque_hora_d,
+                            'Day': 'Jueves',
+                            'ID': id_d
+                        }
+                    ),
+                    ft.DataCell(
+                        self.create_search_target(string_e, data_id_e, {'Block': bloque_hora_e, 'Day': 5, 'ID': id_e}),
+                        data={
+                            'Block': bloque_hora_e,
+                            'Day': 'Viernes',
+                            'ID': id_e
+                        }
+                    )
+                ])
+
+    def create_search_target(self,string, data_id, data_dict):
+        '''Creates a search target for subjects in the schedule'''
+        if data_id is None:
+            color = '#bec0e3'
+        else:
+            color = ft.colors.BLUE_300
+        target = ft.DragTarget(
+            group='subjects',
+            content=ft.Container(
+                ft.Text(string, color='#4B4669',font_family='Arial',text_align='center',size=10),
+                width=100,
+                height=40,
+                bgcolor=color,
+                border_radius=5,
+                tooltip=string,
+            ),
+            on_will_accept=self.drag_will_accept,
+            on_accept=self.drag_edit_accept,
+            on_leave=self.drag_leave,
+            data=data_dict,
+        )
+        return target
+
+    def drag_edit_accept(self, e: ft.DragTargetAcceptEvent):
+        """
+        Handles the acceptance of a dragged item onto a drop target.
+
+        Args:
+            e (ft.DragTargetAcceptEvent): The event object containing information about the drag and drop operation.
+
+        Returns:
+            None
+        """
+        src = self.page.get_control(e.src_id)
+
+        if verify_search_edit(src.data['Teacher ID'],e.control.data['Block'], self.schedule_grade.value, e.control.data['Day'], self.schedule_id.value.split(' ')[1]):
+            string = f"{src.data['Subject']}\n{src.data['Grade']}\n{src.data['Teacher']}"
+            e.control.content.bgcolor = src.content.bgcolor
+            e.control.content.border = None
+            e.control.content.content = ft.Text(
+                string,
+                color='#4B4669',
+                font_family='Arial',
+                text_align='center',
+                size=10,
+                data= {'ID': e.control.data['ID']}
+            )
+
+            e.control.data['ID'] = e.control.content.content.data['ID']
+            self.schedule_info_dict['ID'] = e.control.content.content.data['ID']
+            self.schedule_info_dict['Subject ID'] = src.data['Subject ID']
+            self.schedule_info_dict['Teacher ID'] = src.data['Teacher ID']
+            self.schedule_info_dict['Block_time'] = e.control.data['Block']
+            self.schedule_info_dict['Block_day'] = e.control.data['Day']
+            self.schedule_info_dict['Date'] = datetime.datetime.now().strftime('%B %Y')
+            self.schedule_info_dict['Phase'] = self.schedule_grade.value
+
+            self.schedule_info_list.append(self.schedule_info_dict.copy())
+            e.control.update()
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text("No se puede agregar esta materia", color='#4B4669', font_family='Arial', text_align='center', size=15),
+                actions=[
+                    ft.TextButton(
+                        text='Aceptar',
+                        on_click=lambda e: self.close(dlg)
+                    )
+                ]
+            )
+            self.open_dlg(dlg)
+            e.control.content.border = None
+            e.control.update()
+
+
+    def confirm_edit_schedule(self):
+        """
+        Displays a confirmation dialog for editing a schedule.
+
+        Returns:
+        None
+        """
+        dlg = ft.AlertDialog(
+                content=ft.Text('¿Esta seguro que desea guardar los cambios?', color='#4B4669', font_family='Arial', size=15),
+                actions=[
+                    ft.ElevatedButton(
+                        text='Aceptar',
+                        on_click=lambda e: self.edit_confirmed(dlg)
+                    ),
+                    ft.ElevatedButton(
+                        text='Cancelar',
+                        on_click=lambda e: self.close(dlg)
+                    )
+                ]
+            )
+        self.open_dlg(dlg)
+
+    def edit_confirmed(self, dlg):
+        """
+        Handles the confirmation of editing a schedule.
+
+        Parameters:
+        - self: The instance of the class.
+        - dlg: The confirmation dialog to be closed after editing.
+
+        Returns:
+        None
+        """
+        if self.guide_teacher.value == '':
+            guide_teacher = 'Por Asignar'
+        else:
+            guide_teacher = self.guide_teacher.value
+
+        schedule_id = self.schedule_id.value.split(' ')[1]
+
+        # save the schedule in the database
+        for data in self.schedule_info_list:
+            schedule_edit_db(schedule_id, data['Block_time'], data['Teacher ID'], data['Subject ID'], guide_teacher, data['ID'])
+
+        self.close(dlg)
+
+        # Show all the footer buttons
+        self.search_bar.visible = True
+        self.schedule_buttons.controls[0].visible = True
+        self.schedule_buttons.controls[1].visible = True
+        self.schedule_buttons.controls[2].visible = False
+        self.schedule_buttons.controls[3].visible = False
+        self.schedule_buttons.controls[4].visible = False
+        self.schedule_buttons.controls[5].visible = True
+        self.schedule_buttons.controls[6].visible = True
+        self.schedule_buttons.controls[7].visible = True
+
+        # Clear the inputs
+        self.guide_teacher.value = ''
+
+        self.schedule_id.value = 'ID: '
+        self.schedule_grade.value = ''
+
+        self.schedule_info_list.clear()
+
+        # Disable the sidebar and the body
+        self.layout.controls[0].disabled = True
+
+        # Delete the draggables from the sidebar
+        del self.scroll.controls[2:]
+
+        # Change the schedule type
+        self.change_type()
+
+        self.layout.update()
+
+
+    #* ------------------ View Functions ------------------ *#
+    def view(self):
+        """
+        Updates the content of the section attribute with a new instance of the ScheduleList class and reflects the changes in the user interface.
+
+        Inputs:
+        - None
+
+        Outputs:
+        - None
+        """
+        self.section.content = ScheduleList(self.page, self.section)
+        self.section.update()
+
+    #* ------------------ DLG Functions ------------------ *#
     def open_dlg(self, dlg):
         """
         Open a dialog box in the user interface.
@@ -503,338 +1237,6 @@ class Schedule(ft.UserControl):
         """
         dlg.open = False
         self.page.update()
-
-    def rows(self, start, end):
-        """
-        Create a row of data for the schedule table.
-
-        Args:
-            start (str): The start time of the schedule row.
-            end (str): The end time of the schedule row.
-
-        Returns:
-            ft.DataRow: A DataRow object representing a row of data for the schedule table.
-        """
-        return ft.DataRow([
-                    ft.DataCell(
-                        ft.Container(
-                            ft.Text(f'{start} - {end}', color='#4B4669', size=15), width=50, alignment=ft.alignment.center
-                        )
-                    ),
-                    ft.DataCell(
-                        self.create_target(),
-                        on_tap=self.delete,
-                    ),
-                    ft.DataCell(
-                        self.create_target(),
-                        on_tap=self.delete,
-                    ),
-                    ft.DataCell(
-                        self.create_target(),
-                        on_tap=self.delete,
-                    ),
-                    ft.DataCell(
-                        self.create_target(),
-                        on_tap=self.delete,
-                    ),
-                    ft.DataCell(
-                        self.create_target(),
-                        on_tap=self.delete,
-                    ),
-                ])
-
-
-    def show_drags(self): #TODO - Add the Database functionality
-        '''Shows the drags in the sidebar'''
-        for _ in range(5):
-            self.create_drag('matematica', '1er Grado', 'andres ortiz')
-
-    #* ------------------ Buttons Functions ------------------ *#
-    def change_type(self, mode = 'Colegio'):
-        '''Changes the schedule type'''
-
-        self.schedule_type.value = 'Colegio'
-
-        # Delete the rows
-        del self.schedule.rows[:]
-
-        # Add the rows
-        self.schedule.rows.append(self.rows('7:00', '7:45'))
-        self.schedule.rows.append(self.rows('7:45', '8:30'))
-        self.schedule.rows.append(self.rows('8:30', '9:00'))
-        self.schedule.rows.append(self.rows('9:00', '9:30'))
-        self.schedule.rows.append(self.rows('9:30', '10:15'))
-        self.schedule.rows.append(self.rows('10:15', '11:00'))
-
-
-
-        if mode == 'Liceo':
-            self.schedule_type.value = 'Liceo'
-
-            # Delete the rows
-            del self.schedule.rows[:]
-
-            # Add the rows
-            self.schedule.rows.append(self.rows('12:30', '1:50'))
-            self.schedule.rows.append(self.rows('1:50', '3:05'))
-            self.schedule.rows.append(self.rows('3:05', '4:20'))
-            self.schedule.rows.append(self.rows('4:20', '5:45'))
-        else:
-            self.schedule_type.value = 'Colegio'
-
-            # Delete the rows
-            del self.schedule.rows[:]
-
-            # Add the rows
-            self.schedule.rows.append(self.rows('7:00', '7:45'))
-            self.schedule.rows.append(self.rows('7:45', '8:30'))
-            self.schedule.rows.append(self.rows('8:30', '9:00'))
-            self.schedule.rows.append(self.rows('9:00', '9:30'))
-            self.schedule.rows.append(self.rows('9:30', '10:15'))
-            self.schedule.rows.append(self.rows('10:15', '11:00'))
-
-        self.body.update()
-
-
-    def search_schedule(self): #TODO - Add the Database functionality
-        '''TO WRITE'''
-
-    def create_schedule(self):
-        """
-        Creates a new schedule by opening a dialog box to get the section and grade inputs from the user and validating the inputs.
-
-        Inputs:
-        - self: The instance of the Schedule class.
-
-        Outputs:
-        - None
-        """
-        self.layout.controls[0].disabled = False
-
-        # Create a dlg to get the section and the grade
-        self.dlg = ft.AlertDialog(
-                content=ft.Column([
-                    ft.Dropdown(
-                        width=200,
-                        height=35,
-                        label='Grado / Año',
-                        hint_text='Ingrese el grado o año',
-                        filled=True,
-                        bgcolor='#f3f4fa',
-                        options=[
-                            ft.dropdown.Option('1ero'),
-                            ft.dropdown.Option('2do'),
-                            ft.dropdown.Option('3ero'),
-                            ft.dropdown.Option('4to'),
-                            ft.dropdown.Option('5to'),
-                            ft.dropdown.Option('6to'),
-                        ],
-                        hint_style=ft.TextStyle(color='#C0C1E3'),
-                        label_style=ft.TextStyle(color='#4B4669'),
-                        text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
-                        border_color='#6D62A1',
-                        content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0)
-                    ),
-
-                    ft.Dropdown(
-                        width=200,
-                        height=35,
-                        label='Seccion',
-                        hint_text='Ingrese la seccion',
-                        filled=True,
-                        bgcolor='#f3f4fa',
-                        options=[
-                            ft.dropdown.Option('A'),
-                            ft.dropdown.Option('B'),
-                            ft.dropdown.Option('C'),
-                            ft.dropdown.Option('D'),
-                            ft.dropdown.Option('E'),
-                            ft.dropdown.Option('F'),
-                        ],
-                        hint_style=ft.TextStyle(color='#C0C1E3'),
-                        label_style=ft.TextStyle(color='#4B4669'),
-                        text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
-                        border_color='#6D62A1',
-                        content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
-                    ),
-
-                    ft.RadioGroup(content=ft.Container(
-                        ft.Column([
-                            ft.Radio(value='Liceo', label='Liceo'),
-                            ft.Radio(value='Colegio', label='Colegio'),
-                        ]), padding=ft.padding.only(left=10,top=0,right=10,bottom=0)),
-                        on_change= lambda e: self.change_type(e.control.value),
-                    ),
-
-                ], width=200, height=150, alignment=ft.MainAxisAlignment.CENTER,horizontal_alignment='center', spacing=10),
-                actions=[
-                    ft.Container(
-                        ft.Container(
-                            ft.Text('Continuar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
-                            width=80,
-                            height=35,
-                            bgcolor='#6D62A1',
-                            alignment=ft.alignment.center,
-                            on_click= lambda e: self.validate_dlg(),
-                            border_radius=15,
-                        ), expand=True, height=35, alignment=ft.alignment.center
-                    )
-                ]
-            )
-        self.open_dlg(self.dlg)
-
-    def validate_dlg(self):
-        '''Validate the dlg to create the schedule'''
-
-        if self.dlg.content.controls[0].value is None or self.dlg.content.controls[1].value is None or self.dlg.content.controls[2].value is None:
-            # Show the error in the button for a few seconds
-            self.dlg.actions[0].content.bgcolor = '#FF0000'
-            self.dlg.actions[0].content.content.value = 'Rellene todos los campos'
-            self.dlg.actions[0].content.width = 200
-            self.dlg.actions[0].content.update()
-            time.sleep(1.5)
-            self.dlg.actions[0].content.bgcolor = '#6D62A1'
-            self.dlg.actions[0].content.content.value = 'Continuar'
-            self.dlg.actions[0].content.width = 80
-            self.dlg.actions[0].content.update()
-        else:
-            #TODO - Add the Database functionality to get the subjects
-            self.show_drags()
-
-            # Hide all the footer but the cancel and save buttons
-            self.search_bar.visible = False
-            self.schedule_buttons.controls[0].visible = False
-            self.schedule_buttons.controls[1].visible = False
-            self.schedule_buttons.controls[2].visible = True
-            self.schedule_buttons.controls[3].visible = True
-            self.schedule_buttons.controls[4].visible = False
-            self.schedule_buttons.controls[5].visible = False
-            self.schedule_buttons.controls[6].visible = False
-
-
-            # Variables
-            self.seccion = self.dlg.content.controls[1].value
-            self.grado = self.dlg.content.controls[0].value
-            self.tipo = self.dlg.content.controls[2].value
-            self.date = datetime.datetime.now().date()
-
-            self.schedule_grade.value = f'{self.grado} | Seccion {self.seccion}'
-
-            self.layout.update()
-
-            self.close(self.dlg)
-
-
-    def edit_schedule(self):
-        '''Edit the schedule'''
-        # hide all the footer but the cancel and save buttons
-        self.search_bar.visible = False
-        self.schedule_buttons.controls[0].visible = False
-        self.schedule_buttons.controls[1].visible = False
-        self.schedule_buttons.controls[2].visible = True
-        self.schedule_buttons.controls[3].visible = True
-        self.schedule_buttons.controls[4].visible = False
-        self.schedule_buttons.controls[5].visible = False
-        self.schedule_buttons.controls[6].visible = False
-
-        # Enable the sidebar and the body
-        self.layout.controls[0].disabled = False
-
-        #TODO - Add the Database functionality to get the subjects
-        self.show_drags()
-
-        # Change the schedule type
-        self.change_type()
-
-        self.layout.update()
-
-
-
-    def cancel_schedule(self):
-        '''Cancel the schedule creation'''
-        # Show all the footer buttons
-        self.search_bar.visible = True
-        self.schedule_buttons.controls[0].visible = True
-        self.schedule_buttons.controls[1].visible = True
-        self.schedule_buttons.controls[2].visible = False
-        self.schedule_buttons.controls[3].visible = False
-        self.schedule_buttons.controls[4].visible = True
-        self.schedule_buttons.controls[5].visible = True
-        self.schedule_buttons.controls[6].visible = True
-
-        # Clear the inputs
-        self.guide_teacher.value = ''
-
-        # Disable the sidebar and the body
-        self.layout.controls[0].disabled = True
-
-        # Delete the draggables from the sidebar
-        del self.scroll.controls[2:]
-
-        # Change the schedule type
-        self.change_type()
-
-        self.layout.update()
-
-
-    def delete_schedule(self): #TODO - Add the Database functionality
-        '''TO WRITE'''
-
-    def save_schedule(self): #TODO - Add the Database functionality
-        '''Save the schedule in the database'''
-        dlg = ft.AlertDialog(
-            content=ft.Text("Horario Guardado", color='#4B4669', font_family='Arial', text_align='center', size=15),
-            actions=[
-                ft.TextButton(
-                    text='Aceptar',
-                    on_click=lambda e: self.close(dlg)
-                )
-            ]
-        )
-        self.open_dlg(dlg)
-
-        # Show all the footer buttons
-        self.search_bar.visible = True
-        self.schedule_buttons.controls[0].visible = True
-        self.schedule_buttons.controls[1].visible = True
-        self.schedule_buttons.controls[2].visible = False
-        self.schedule_buttons.controls[3].visible = False
-        self.schedule_buttons.controls[4].visible = True
-        self.schedule_buttons.controls[5].visible = True
-        self.schedule_buttons.controls[6].visible = True
-
-        # Clear the inputs
-        self.guide_teacher.value = ''
-
-        # Disable the sidebar and the body
-        self.layout.controls[0].disabled = True
-
-        # Delete the draggables from the sidebar
-        del self.scroll.controls[2:]
-
-        # Change the schedule type
-        self.change_type()
-
-        self.layout.update()
-
-        print(f'Seccion: {self.seccion}\nGrado: {self.grado}\nTipo: {self.tipo}\nFecha: {self.date}')
-
-
-    def print_schedule(self): #TODO - Add the functionality to print the schedule
-        '''TO WRITE'''
-
-    def view(self):
-        """
-        Updates the content of the section attribute with a new instance of the ScheduleList class and reflects the changes in the user interface.
-
-        Inputs:
-        - None
-
-        Outputs:
-        - None
-        """
-        self.section.content = ScheduleList(self.page, self.section)
-        self.section.update()
 
 
 
