@@ -16,3 +16,15 @@ def get_amount(table):
 
     conexion.close()
     return amount
+
+def get_amount_schedule(table):
+    '''Get amount of records in the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute(f"""SELECT COUNT(DISTINCT id_horario) FROM {table};""")
+    amount = cursor.fetchone()[0]
+
+    conexion.close()
+    return amount

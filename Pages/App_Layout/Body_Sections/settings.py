@@ -11,7 +11,7 @@ from modules.import_export_db import path_selector_export, path_selector_import
 from DB.Functions.user_db import get_user,update_user
 from DB.Functions.phases_db import phase_add, get_phases, delete_phase
 from DB.Functions.subjects_db import subject_add, get_subjects, delete_subject, update_subject
-from DB.Functions.db_info import get_amount
+from DB.Functions.db_info import get_amount, get_amount_schedule
 
 
 class Settings(ft.UserControl):
@@ -452,7 +452,7 @@ class Settings(ft.UserControl):
         calendar = get_amount('calendario')
         students = get_amount('estudiante')
         phases = get_amount('etapa')
-        schedules = get_amount('horario')
+        schedules = get_amount_schedule('horario')
         grades = get_amount('calificaciones')
         teachers = get_amount('profesor')
         parents = get_amount('representante')
