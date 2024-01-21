@@ -239,7 +239,6 @@ class Forget(ft.UserControl):
 
         if self.wifi_verification():
             try:
-                print('execute')
                 message = MIMEMultipart('plain')
                 message['From'] = 'SC.Nibble@outlook.com'
                 message['To'] = correo
