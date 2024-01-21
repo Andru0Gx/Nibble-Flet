@@ -6,6 +6,9 @@ import datetime
 import threading
 import flet as ft
 
+# Modules
+from modules.pdf_printer import path_selector
+
 # Database
 from DB.Functions.teacher_db import validate_ci
 from DB.Functions.teacher_db import teacher_add, subject_add_to_teacher
@@ -798,10 +801,79 @@ class Teachers(ft.UserControl):
         self.close(dlg)
         self.cancel()
 
-
-    def print_teacher(self): #TODO - Print Teacher
+    def print_teacher(self):
         '''Print a teacher'''
-        print('Print Teacher')
+        if self.validate():
+            teacher_name = self.teacher_name.value
+            teacher_last_name = self.teacher_last_name.value
+            teacher_ci = self.teacher_ci.value
+            teacher_contact = self.teacher_contact.controls[0].value
+            teacher_email = self.teacher_email.value
+
+            subjects = teacher_subjects_search(self.actual_teacher)
+
+            data = [
+                ["Profesor", "Cedula", "Contacto", "Correo", "Materias"],
+                [f"{teacher_name} {teacher_last_name}", teacher_ci, teacher_contact, teacher_email, ""]
+            ]
+
+            if subjects:
+                for subject in subjects:
+                    data[1][4] += f"{subject['Name']} - {subject['Grade']}\n"
+
+            dlg = ft.AlertDialog(
+                content=ft.TextField(
+                    width=200,
+                    height=35,
+                    label='Nombre del archivo',
+                    hint_text='Ingresa el nombre del archivo',
+                    bgcolor='#f3f4fa',
+                    hint_style=ft.TextStyle(color='#C0C1E3'),
+                    label_style=ft.TextStyle(color='#4B4669'),
+                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                    border_color='#6D62A1',
+                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                ),
+                actions=[
+                    ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
+                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data), bgcolor='#6D62A1', color='#f3f4fa')
+                ]
+            )
+            self.open_dlg(dlg)
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('Debe buscar un profesor primero'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
+
+    def print_confirmed(self, dlg, data):
+        """
+        Print the confirmed action, updating the dialog and performing the necessary steps.
+
+        Parameters:
+        - self: The instance of the class containing this method.
+        - dlg: The dialog instance.
+        - data (list): The data to be used in the process.
+
+        Returns:
+        - bool: True if the operation is successful, False otherwise.
+        """
+        if dlg.content.value == '':
+            dlg.actions[1].text = 'Rellene todos los campos'
+            dlg.actions[1].bgcolor = '#ff0000'
+            dlg.update()
+
+            time.sleep(1)
+
+            dlg.actions[1].text = 'Agregar'
+            dlg.actions[1].bgcolor = '#6D62A1'
+            dlg.update()
+            return False
+
+        file_name = dlg.content.value
+        self.close(dlg)
+        path_selector(file_name, data)
 
 
     #* ------------------ Subject Functions ------------------ *#
@@ -826,7 +898,7 @@ class Teachers(ft.UserControl):
             ft.IconButton(icon=ft.icons.DELETE, icon_color='#ff0000', width=35, height=35, icon_size=20, on_click= lambda e: self.subject_confirm_delete(e), data=[id, name, grade]),
         ], vertical_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, spacing=10)
 
-    def subjects_row(self, data):#TODO - REVISAR FUNCION PARA AGREGAR LA ETAPA AL LADO DEL NOMBRE
+    def subjects_row(self, data):
         """
         Add rows to the subject list in the Teachers page.
 
@@ -1304,5 +1376,73 @@ class Teacherslist(ft.UserControl):
         else:
             pass
 
-    def print_teacher_list(self): #TODO - Print Teacher List
+    def print_teacher_list(self):
         '''Print the list of teachers'''
+        list_teachers = get_teachers(0, check())
+        data = [
+            ["Nombres", "Apellidos", "Cedula", "Contacto 1"],
+        ]
+
+        for teacher in list_teachers:
+            data.append([teacher['Name'], teacher['Last_Name'], teacher['CI'], teacher['Phone1']])
+
+        dlg = ft.AlertDialog(
+            content=ft.TextField(
+                width=200,
+                height=35,
+                label='Nombre del archivo',
+                hint_text='Ingresa el nombre del archivo',
+                bgcolor='#f3f4fa',
+                hint_style=ft.TextStyle(color='#C0C1E3'),
+                label_style=ft.TextStyle(color='#4B4669'),
+                text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                border_color='#6D62A1',
+                content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+            ),
+            actions=[
+                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
+                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data), bgcolor='#6D62A1', color='#f3f4fa')
+            ]
+        )
+        self.open_dlg(dlg)
+
+    def print_confirmed(self, dlg, data):
+        if dlg.content.value == '':
+            dlg.actions[1].text = 'Rellene todos los campos'
+            dlg.actions[1].bgcolor = '#ff0000'
+            dlg.update()
+
+            time.sleep(1)
+
+            dlg.actions[1].text = 'Agregar'
+            dlg.actions[1].bgcolor = '#6D62A1'
+            dlg.update()
+            return False
+
+        file_name = dlg.content.value
+        self.close(dlg)
+        path_selector(file_name, data)
+
+    def open_dlg(self, dlg):
+        """
+        Open a dialog box in the user interface.
+
+        :param dlg: The dialog box object that needs to be opened.
+        :type dlg: object
+        """
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
+
+    def close(self, dlg):
+        """
+        Closes the dialog box by setting its 'open' attribute to False and updating the page.
+
+        Args:
+            dlg (Dialog): The dialog box to be closed.
+
+        Returns:
+            None
+        """
+        dlg.open = False
+        self.page.update()
