@@ -18,8 +18,7 @@ Date: 26/10/2023
 import flet as ft
 
 # Pages
-# from modules.page_manager import def_login as Login
-import modules.page_manager as pm
+from modules.page_manager import def_login as Login
 
 # Database
 from DB.Functions.tables import create_tables as db
@@ -28,12 +27,9 @@ from DB.Functions.temp_data_db import delete_tempdata_db
 
 #^ ------------------ RUN APP ------------------ ^#
 
-#TODO - Add Maximized window True
-#TODO - Add try and except to all the functions and methods in the app (Log the errors)
 def main(page: ft.Page):
     '''Main function to run the app'''
     page.title = 'Nibble'
-    # page.window_maximized = True
     page.padding = 0
     page.theme_mode = 'Light'
     page.window_resizable = False
@@ -53,14 +49,15 @@ def main(page: ft.Page):
             ),
         )
 
-    # page.window_min_height = 768
-    # page.window_min_width = 1366
-
     def onclose(e):
         '''Function to run on close window'''
         if e.data == 'close':
-            delete_tempdata_db()
-            page.window_destroy()
+            try:
+                delete_tempdata_db()
+            except:
+                pass
+            finally:
+                page.window_destroy()
 
     # on close window
     page.window_prevent_close = True
@@ -68,8 +65,7 @@ def main(page: ft.Page):
 
     db()
     page.update()
-    # pm.def_app_layout(page)
-    pm.def_login(page)
+    Login(page)
 
 
 ft.app(target=main)
