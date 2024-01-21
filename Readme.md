@@ -13,6 +13,7 @@
 6. locales (0.0.2)
 7. python-dateutil (2.8.2)
 8. sqlite3
+9. reportlab (4.0.9)
 
 ```
 
