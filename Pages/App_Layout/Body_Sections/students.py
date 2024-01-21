@@ -6,6 +6,9 @@ import datetime
 import threading
 import flet as ft
 
+# Modules
+from modules.pdf_printer import path_selector
+
 # Database
 from DB.Functions.student_parent_db import student_add, parent_add, parent_student_add
 from DB.Functions.student_parent_db import student_search, parent_search, parent_student_search, filter_students_db
@@ -1099,8 +1102,81 @@ class Students(ft.UserControl):
             )
             self.open_dlg(dlg)
 
-    def print_student(self): #TODO - Falta agregar la funcion de imprimir (Utilizar los formatos en WORD | PDF)
+    def print_student(self):
         '''Print a student from the database'''
+        if self.validate():
+            student_name = self.student_name.value
+            student_lastname = self.student_lastname.value
+            student_ci = self.student_ci.value
+            student_phase = self.student_grade.value
+            student_status = self.student_status.value
+
+            parent_name = self.parent_name.value
+            parent_lastname = self.parent_lastname.value
+            parent_ci = self.parent_ci.controls[0].value
+            parent_contact1 = self.parent_contact.controls[0].value
+
+            data = [
+                ["Estudiante", "Cedula", "Grado", "Status", "Representante", "Cedula", "Contacto"],
+                [f"{student_name} {student_lastname}", student_ci, student_phase, student_status, f"{parent_name} {parent_lastname}", parent_ci, parent_contact1]
+            ]
+
+            dlg = ft.AlertDialog(
+                content=ft.TextField(
+                    width=200,
+                    height=35,
+                    label='Nombre del archivo',
+                    hint_text='Ingresa el nombre del archivo',
+                    bgcolor='#f3f4fa',
+                    hint_style=ft.TextStyle(color='#C0C1E3'),
+                    label_style=ft.TextStyle(color='#4B4669'),
+                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                    border_color='#6D62A1',
+                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                ),
+                actions=[
+                    ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
+                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data), bgcolor='#6D62A1', color='#f3f4fa')
+                ]
+            )
+            self.open_dlg(dlg)
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('Debe buscar un estudiante primero'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
+
+    def print_confirmed(self, dlg, data):
+        """
+        Prints the student information.
+
+        This method is called when the user confirms the printing of the student information. It retrieves the name of the file from the dialog box and calls the 'print_student' function from the 'print' module to print the student information.
+
+        Args:
+            dlg (Dialog): The dialog box that needs to be closed.
+            data (list): A list of lists containing the student information to be printed.
+
+        Returns:
+            None
+        """
+
+        if dlg.content.value == '':
+            dlg.actions[1].text = 'Rellene todos los campos'
+            dlg.actions[1].bgcolor = '#ff0000'
+            dlg.update()
+
+            time.sleep(1)
+
+            dlg.actions[1].text = 'Agregar'
+            dlg.actions[1].bgcolor = '#6D62A1'
+            dlg.update()
+            return False
+
+        file_name = dlg.content.value
+        self.close(dlg)
+        path_selector(file_name, data)
+
 
     def view(self):
         '''
@@ -1413,5 +1489,87 @@ class Studentslist(ft.UserControl):
         else:
             pass
 
-    def print_list(self): #TODO - Falta agregar la funcion de imprimir (Utilizar los formatos en WORD | PDF)
+    def print_list(self):
         '''Print the list of students'''
+        list_students = get_students(0, check())
+        data = [
+            ["Nombre", "Apellido", "Cedula", "Grado", "Fecha de Inscripcion", "Status"],
+        ]
+
+        for student in list_students:
+            phase = search_phase(id=student['phase_id'])
+            phase = f"{phase['Grado/Año']} {phase['Seccion']}"
+            data.append([student['name'], student['lastname'], student['ci'], phase, student['admission_date'], student['status']])
+
+        dlg = ft.AlertDialog(
+            content=ft.TextField(
+                width=200,
+                height=35,
+                label='Nombre del archivo',
+                hint_text='Ingresa el nombre del archivo',
+                bgcolor='#f3f4fa',
+                hint_style=ft.TextStyle(color='#C0C1E3'),
+                label_style=ft.TextStyle(color='#4B4669'),
+                text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                border_color='#6D62A1',
+                content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+            ),
+            actions=[
+                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
+                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data), bgcolor='#6D62A1', color='#f3f4fa')
+            ]
+        )
+        self.open_dlg(dlg)
+
+    def print_confirmed(self, dlg, data):
+        """
+        Prints the list of students.
+
+        This method is called when the user confirms the printing of the list of students. It retrieves the name of the file from the dialog box and calls the 'print_list' function from the 'print' module to print the list of students.
+
+        Args:
+            dlg (Dialog): The dialog box that needs to be closed.
+            data (list): A list of lists containing the student information to be printed.
+
+        Returns:
+            None
+        """
+        if dlg.content.value == '':
+            dlg.actions[1].text = 'Rellene todos los campos'
+            dlg.actions[1].bgcolor = '#ff0000'
+            dlg.update()
+
+            time.sleep(1)
+
+            dlg.actions[1].text = 'Agregar'
+            dlg.actions[1].bgcolor = '#6D62A1'
+            dlg.update()
+            return False
+        file_name = dlg.content.value
+        self.close(dlg)
+        path_selector(file_name, data)
+
+
+    def open_dlg(self, dlg):
+        """
+        Open a dialog box in the user interface.
+
+        :param dlg: The dialog box object that needs to be opened.
+        :type dlg: object
+        """
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
+
+    def close(self, dlg):
+        """
+        Closes the dialog box by setting its 'open' attribute to False and updating the page.
+
+        Args:
+            dlg (Dialog): The dialog box to be closed.
+
+        Returns:
+            None
+        """
+        dlg.open = False
+        self.page.update()
