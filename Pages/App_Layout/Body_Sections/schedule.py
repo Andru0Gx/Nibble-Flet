@@ -6,15 +6,27 @@ import datetime
 import time
 import random
 import string
+import threading
 import flet as ft
 
 # Database
 from DB.Functions.phases_db import get_phases
 from DB.Functions.subjects_db import filter_subjects, search_subject_by_id
 from DB.Functions.teacher_db import filter_teachers_by_subject, teacher_search
-from DB.Functions.schedule_db import verify_search, schedule_add, schedule_id_search, verify_search_edit, schedule_edit as schedule_edit_db, schedule_delete as schedule_delete_db
+from DB.Functions.schedule_db import verify_search, schedule_add, schedule_id_search, verify_search_edit, schedule_edit as schedule_edit_db, schedule_delete as schedule_delete_db, check_amount as check, get_schedules, filter_schedules
+from DB.Functions.temp_data_db import delete_tempdata_db, get_tempdata_db, save_tempdata_db, check_tempdata_db
 
+class State:
+    """
+    A class that represents the state of an object.
+    
+    Attributes:
+        i (int): The value of the state.
+    """
+    i = 0
 
+s = State()
+sem = threading.Semaphore()
 
 
 class Schedule(ft.UserControl):
@@ -347,10 +359,31 @@ class Schedule(ft.UserControl):
         ], alignment=ft.MainAxisAlignment.START,horizontal_alignment='center' , spacing=20)
         self.content = self.layout
 
+        self.check_temp()
+
     def build(self):
         return self.content
 
     #* ------------------ Functions ------------------ *#
+
+    def check_temp(self):
+        """
+        Check the temporary data in the database and populate the fields with the retrieved data.
+
+        This method checks if there is temporary data stored in the database. If there is, it retrieves the data and populates the corresponding fields in the Teachers page with the retrieved values. The temporary data includes information such as the teacher's name, last name, CI (Cedula), contact information, email, address, and birth date.
+
+        Returns:
+            None
+        """
+        if check_tempdata_db():
+            data = get_tempdata_db()
+
+            self.search_bar.controls[0].value = data
+            self.update()
+            self.search_schedule()
+
+            delete_tempdata_db()
+
 
     #* ------------------ DRAG Functions ------------------ *#
     def create_drag(self, subject, grade, teacher:str, subject_id = None, teacher_id = None):
@@ -754,10 +787,10 @@ class Schedule(ft.UserControl):
             self.schedule_buttons.controls[6].visible = False
             self.schedule_buttons.controls[7].visible = False
 
-
+            self.guide_teacher.value = ''
             self.schedule_grade.value = f'{dlg.content.controls[1].value}'
 
-            self.layout.update()
+            self.update()
 
             self.close(dlg)
 
@@ -802,7 +835,7 @@ class Schedule(ft.UserControl):
             phase = self.schedule_grade.value
             self.show_drags(phase)
 
-            self.layout.update()
+            self.update()
 
 
 
@@ -836,7 +869,7 @@ class Schedule(ft.UserControl):
         # Change the schedule type
         self.change_type()
 
-        self.layout.update()
+        self.update()
 
     def save_schedule(self):
         '''Save the schedule in the database'''
@@ -891,14 +924,15 @@ class Schedule(ft.UserControl):
         # Change the schedule type
         self.change_type()
 
-        self.layout.update()
+        self.update()
 
     #* ------------------ Search Functions ------------------ *#
     def search_schedule(self):
         '''Search the schedule'''
         if self.search_bar.controls[0].value == '':
+            self.guide_teacher.value = ''
             self.change_type()
-            self.layout.update()
+            self.update()
         else:
             search = self.search_bar.controls[0].value
             schedule = schedule_id_search(search)
@@ -960,7 +994,7 @@ class Schedule(ft.UserControl):
                 }
 
                 string_list = []
-
+                self.guide_teacher.value = schedule[0]['Guide Teacher']
                 for i in range(loop):
                     schedule = schedule_id_search(search, time_list[i]['block'])
                     for info in schedule:
@@ -997,7 +1031,7 @@ class Schedule(ft.UserControl):
                 self.schedule_grade.value = f"{schedule[0]['Etapa']}"
                 self.schedule_id.value = f"ID: {schedule[0]['ID Horario']}"
 
-                self.layout.update()
+                self.update()
 
 
     def show_rows_schedule(self,start, end, string_a, string_b, string_c, string_d, string_e, data_id_a, data_id_b, data_id_c, data_id_d, data_id_e, bloque_hora_a, bloque_hora_b, bloque_hora_c, bloque_hora_d, bloque_hora_e, id_a, id_b, id_c, id_d, id_e):
@@ -1199,7 +1233,7 @@ class Schedule(ft.UserControl):
         # Change the schedule type
         self.change_type()
 
-        self.layout.update()
+        self.update()
 
     def show_schedule_code(self, code):
         '''
@@ -1359,7 +1393,7 @@ class Schedule(ft.UserControl):
         # Change the schedule type
         self.change_type()
 
-        self.layout.update()
+        self.update()
 
 
     #* ------------------ View Functions ------------------ *#
@@ -1426,6 +1460,8 @@ class ScheduleList(ft.UserControl):
         self.page = page
         self.body = section
 
+        self.scrol_pos = 10
+
         #* ------------------ Layout ------------------ *#
         # Create the Title
         self.title = ft.Text(
@@ -1476,22 +1512,20 @@ class ScheduleList(ft.UserControl):
 
 
             columns=[
-                ft.DataColumn(ft.Container(ft.Text('ID', size=15, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Modalidad', size=15, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Etapa', size=15, color='#4B4669', text_align='center'), width=50, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Seccion', size=15, color='#4B4669', text_align='center'), width=60, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Profesor Guia', size=15, color='#4B4669', text_align='center'), width=250, alignment=ft.alignment.center)),
-                ft.DataColumn(ft.Container(ft.Text('Fecha', size=15, color='#4B4669', text_align='center'), width=100, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('ID', size=15, color='#4B4669', text_align='center'), width=165, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Etapa', size=15, color='#4B4669', text_align='center'), width=165, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Profesor Guia', size=15, color='#4B4669', text_align='center'), width=165, alignment=ft.alignment.center)),
+                ft.DataColumn(ft.Container(ft.Text('Fecha', size=15, color='#4B4669', text_align='center'), width=165, alignment=ft.alignment.center)),
             ],
         )
 
-        scrol = ft.Column([
+        self.scrol = ft.Column([
             self.data_table,
-        ], alignment=ft.MainAxisAlignment.START, spacing=20, scroll=ft.ScrollMode.ALWAYS, width=1100, height=490)
+        ], alignment=ft.MainAxisAlignment.START, spacing=20, scroll=ft.ScrollMode.ALWAYS, width=1100, height=490, on_scroll= lambda e: self.on_scroll(e))
 
-        self.data_container = ft.Container(scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#6D62A1'), border_radius=10, width=1100, height=500)
+        self.data_container = ft.Container(self.scrol, alignment=ft.alignment.top_center, margin=0, border=ft.border.all(2, '#6D62A1'), border_radius=10, width=1100, height=500)
 
-        up_button = ft.FloatingActionButton(content=ft.Icon(ft.icons.ARROW_UPWARD, color='#f3f4fa', size=20), bgcolor='#6D62A1', on_click= lambda e: scrol.scroll_to(offset=0,duration=100), width=50, height=35)
+        up_button = ft.FloatingActionButton(content=ft.Icon(ft.icons.ARROW_UPWARD, color='#f3f4fa', size=20), bgcolor='#6D62A1', on_click= lambda e: self.scrol.scroll_to(offset=0,duration=100), width=50, height=35)
 
 
         # Create the Button Change View
@@ -1505,11 +1539,24 @@ class ScheduleList(ft.UserControl):
             border_radius=15,
         )
 
+        self.clear_filter_button = ft.Container(
+            ft.Icon(ft.icons.FILTER_ALT_OFF, color='#f3f4fa', size=20),
+            width=50,
+            height=35,
+            bgcolor='#6D62A1',
+            alignment=ft.alignment.center,
+            on_click= lambda e: self.clear_filter(),
+            border_radius=15,
+            tooltip='Limpiar Filtro',
+            visible=False,
+        )
+
         # Create the Layout
         layout = ft.Column([
             self.title,
             ft.Row([
                     self.search_bar,
+                    self.clear_filter_button,
                     self.change_view,
                     up_button
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
@@ -1518,15 +1565,116 @@ class ScheduleList(ft.UserControl):
 
         # add the layout to the page
         self.content = layout
+        self.show_schedules()
 
     def build(self):
         return self.content
 
     #^ ------------------ Functions ------------------ *#
+    def show_schedules(self):
+        '''Show the schedules in the data table'''
+        if check() < 10:
+            list_schedules = get_schedules(0, check())
+            last = check()
+        else:
+            list_schedules = get_schedules(0, 9)
+            last = 9
+        for i in range(0, last):
+            row = ft.DataRow([
+                ft.DataCell(ft.Container(ft.Text(list_schedules[i]['ID Horario'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_schedules[i]['Etapa'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_schedules[i]['Guide Teacher'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                ft.DataCell(ft.Container(ft.Text(list_schedules[i]['Fecha'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+            ], data=list_schedules[i]['ID Horario'], on_select_changed= lambda e: self.schedule_selected(e))
+            self.data_table.rows.append(row)
+        self.update()
+
+    def on_scroll(self, e):
+        """
+        Called when the user scrolls to the bottom of the data table.
+    
+        Args:
+            self (object): The instance of the teacherslist class.
+            e (object): The event object that contains information about the scroll event.
+        
+        Returns:
+            None
+    
+        """
+        if e.pixels >= e.max_scroll_extent - 100:
+            if sem.acquire(blocking=False):
+                try:
+                    # Obten horarios desde la posición actual hasta la posición + 9
+                    list_schedule = get_schedules(self.scrol_pos, self.scrol_pos + 9)
+                    #Verificar si la lista esta vacia
+                    if list_schedule:
+                        for schedule in list_schedule:
+                            row = ft.DataRow([
+                                ft.DataCell(ft.Container(ft.Text(schedule['ID Horario'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(schedule['Etapa'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(schedule['Guide Teacher'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                                ft.DataCell(ft.Container(ft.Text(schedule['Fecha'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                            ], data=schedule['ID Horario'], on_select_changed= lambda e: self.schedule_selected(e))
+                            self.data_table.rows.append(row)
+                        self.update()
+                        self.scrol_pos += 10
+                finally:
+                    sem.release()
+
     def search_schedule(self):
         '''Search a schedule in the database'''
+        search = self.search_bar.controls[0].value
 
-    def view(self):
+        if search == '':
+            self.search_bar.controls[1].bgcolor = '#ff0000'
+            self.search_bar.controls[1].content = ft.Text('Campo Vacio',size=15, color='#f3f4fa', font_family='Arial', text_align='center')
+            self.search_bar.controls[1].width = 100
+            self.update()
+            time.sleep(1)
+            self.search_bar.controls[1].bgcolor = '#6D62A1'
+            self.search_bar.controls[1].content = ft.Icon(ft.icons.SEARCH, color='#f3f4fa', size=20)
+            self.search_bar.controls[1].width = 35
+            self.update()
+        else:
+            self.data_table.rows.clear()
+            list_schedule = filter_schedules(search)
+
+            for schedule in list_schedule:
+                row = ft.DataRow([
+                    ft.DataCell(ft.Container(ft.Text(schedule['ID Horario'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(schedule['Etapa'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(schedule['Guide Teacher'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                    ft.DataCell(ft.Container(ft.Text(schedule['Fecha'], size=12, color='#4B4669', text_align='center'), width=160, alignment=ft.alignment.center)),
+                ], data=schedule['ID Horario'], on_select_changed= lambda e: self.schedule_selected(e))
+                self.data_table.rows.append(row)
+            self.clear_filter_button.visible = True
+            self.update()
+            self.scrol.scroll_to(offset=0,duration=100)
+            self.scrol_pos = check() + 1 # To avoid the scroll event
+
+    def clear_filter(self):
+        '''Clear the filter of the data table'''
+        self.scrol.scroll_to(offset=0,duration=100)
+        self.scrol_pos = 10
+        self.search_bar.controls[0].value = ''
+        del self.data_table.rows[:]
+        self.clear_filter_button.visible = False
+        self.update()
+        self.show_schedules()
+
+    def schedule_selected(self, e):
+        '''Select a teacher from the data table'''
+        save_tempdata_db(str(e.control.data))
+        self.view(True)
+
+
+    def view(self, op=False):
         '''Change the view of the data table to the Schedule page'''
-        self.body.content = Schedule(self.page, self.body)
-        self.body.update()
+        if op:
+            self.body.content = Schedule(self.page, self.body)
+            self.body.update()
+        else:
+            delete_tempdata_db()
+            self.body.content = Schedule(self.page, self.body)
+            self.body.update()
+

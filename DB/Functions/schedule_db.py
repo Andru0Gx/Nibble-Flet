@@ -166,3 +166,78 @@ def schedule_delete(schedule_id):
     conexion.commit()
 
     conexion.close()
+
+
+#^ ------------------ GET ------------------ ^#
+#* 1 - Get the first X schedules (don't repeat the Schedule ID)
+def get_schedules(start_index, end_index):
+    '''Get the first X schedules from the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute(f"""SELECT DISTINCT id_horario FROM horario LIMIT {start_index - 1}, {end_index - start_index + 1};""")
+    schedules_id = cursor.fetchall()
+
+    schedule_info = {
+        'ID Horario': None,
+        'Fecha': None,
+        'Etapa': None,
+        'Guide Teacher': None
+    }
+
+    schedules_list = []
+
+    for info in schedules_id:
+        cursor.execute("""SELECT id_horario, fecha, etapa, guide_teacher FROM horario WHERE id_horario = ?;""", (info[0],))
+        schedule = cursor.fetchone()
+        schedule_info['ID Horario'], schedule_info['Fecha'], schedule_info['Etapa'], schedule_info['Guide Teacher'] = schedule
+        schedules_list.append(schedule_info.copy())
+
+    conexion.close()
+
+    return schedules_list
+
+#* 2 - Check Amount of Schedules
+def check_amount():
+    '''Check the amount of schedule in the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    cursor.execute("""SELECT COUNT(DISTINCT id_horario) FROM horario;""")
+    amount = cursor.fetchone()[0]
+
+    conexion.close()
+    return amount
+
+#^ ------------------ FILTER ------------------ ^#
+#* 1 - Filter Schedules (ID HORARIO, DATE, PHASE, GUIDE TEACHER)
+def filter_schedules(filter):
+    '''Filter schedules in the database'''
+    # Connect to the database
+    conexion = sqlite3.connect('DB/Nibble.db')
+    cursor = conexion.cursor()
+
+    # Get the schedules
+    cursor.execute(f"""SELECT DISTINCT id_horario FROM horario WHERE id_horario LIKE '%{filter}%' OR fecha LIKE '%{filter}%' OR etapa LIKE '%{filter}%' OR guide_teacher LIKE '%{filter}%';""")
+    schedules_id = cursor.fetchall()
+
+    schedule_info = {
+        'ID Horario': None,
+        'Fecha': None,
+        'Etapa': None,
+        'Guide Teacher': None
+    }
+
+    schedules_list = []
+
+    for info in schedules_id:
+        cursor.execute("""SELECT id_horario, fecha, etapa, guide_teacher FROM horario WHERE id_horario = ?;""", (info[0],))
+        schedule = cursor.fetchone()
+        schedule_info['ID Horario'], schedule_info['Fecha'], schedule_info['Etapa'], schedule_info['Guide Teacher'] = schedule
+        schedules_list.append(schedule_info.copy())
+
+    conexion.close()
+
+    return schedules_list
