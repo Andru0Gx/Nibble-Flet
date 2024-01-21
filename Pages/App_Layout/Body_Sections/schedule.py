@@ -8,6 +8,10 @@ import random
 import string
 import threading
 import flet as ft
+import pyperclip
+
+# Modules
+from modules.pdf_printer import path_selector
 
 # Database
 from DB.Functions.phases_db import get_phases
@@ -320,7 +324,7 @@ class Schedule(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                # on_click= lambda e: self.print_teacher(), #TODO - Add the function to print a teacher
+                on_click= lambda e: self.print_schedule(),
                 border_radius=15,
                 tooltip='Imprimir Profesor',
             ),
@@ -1254,15 +1258,18 @@ class Schedule(ft.UserControl):
         None
         '''
         dlg = ft.AlertDialog(
-                content=ft.Text(f'Codigo del Horario: {code}', color='#4B4669', font_family='Arial', size=15, selectable=True),
+                content=ft.Column([
+                    ft.Text(f'Codigo del Horario: {code}', color='#4B4669', font_family='Arial', size=16, selectable=True),
+                    ft.Text(f'El codigo del horario se ha copiado al portapapeles', color='#4B4669', font_family='Arial', size=14),
+                ], width=300, height=60, alignment=ft.MainAxisAlignment.CENTER,horizontal_alignment='center', spacing=10),
                 actions=[
-                    ft.TextButton(
-                        text='Aceptar',
-                        on_click=lambda e: self.close(dlg)
-                    )
+                    ft.ElevatedButton(text='Aceptar',on_click=lambda e: self.close(dlg)),
+                    ft.ElevatedButton(text='Guardar PDF',on_click=lambda e: self.print_schedule(code)),
                 ]
             )
         self.open_dlg(dlg)
+        # Save the code on the clipboard
+        pyperclip.copy(code)
 
     def delete_on_edit(self, e):
         """
@@ -1417,6 +1424,202 @@ class Schedule(ft.UserControl):
         """
         self.section.content = ScheduleList(self.page, self.section)
         self.section.update()
+
+    #* ------------------ Print Functions ------------------ *#
+    def print_schedule(self, code = None):
+        """
+        Prints the schedule in the user interface.
+
+        Inputs:
+        - None
+
+        Outputs:
+        - None
+        """
+        hora = []
+        lunes = []
+        martes = []
+        miercoles = []
+        jueves = []
+        viernes = []
+
+        if code is None:
+            if self.schedule_id.value == 'ID: ':
+                dlg = ft.AlertDialog(
+                    content=ft.Text('Primero debe buscar un horario', color='#4B4669', font_family='Arial', size=15),
+                    actions=[
+                        ft.TextButton(
+                            text='Aceptar',
+                            on_click=lambda e: self.close(dlg)
+                        )
+                    ]
+                )
+                self.open_dlg(dlg)
+                return
+            else:
+                schedule_list = schedule_id_search(self.schedule_id.value.split(' ')[1])
+
+                if schedule_list[0]['Formato'] == 'Colegio':
+                    loop = 6
+                    time_list = [
+                        {'time': '7:00 - 7:45', 'block': '1'},
+                        {'time': '7:45 - 8:30', 'block': '2'},
+                        {'time': '8:30 - 9:00', 'block': '3'},
+                        {'time': '9:00 - 9:30', 'block': '4'},
+                        {'time': '9:30 - 10:15', 'block': '5'},
+                        {'time': '10:15 - 11:00', 'block': '6'}
+                    ]
+                else:
+                    loop = 4
+                    time_list = [
+                        {'time': '12:30 - 1:50', 'block': '1'},
+                        {'time': '1:50 - 3:05', 'block': '2'},
+                        {'time': '3:05 - 4:20', 'block': '3'},
+                        {'time': '4:20 - 5:45', 'block': '4'},
+                    ]
+
+                for i in range(loop):
+                    schedule = schedule_id_search(self.schedule_id.value.split(' ')[1], time_list[i]['block'])
+                    for info in schedule:
+                        if info['Materia ID'] is not None and info['Profesor ID'] is not None:
+                            subject = search_subject_by_id(info['Materia ID'])
+                            teacher = teacher_search(info['Profesor ID'])
+
+                            string_txt = f"{subject['Nombre'].capitalize()}\n{info['Etapa'].capitalize()}"
+                        else:
+                            string_txt = '------------'
+
+                        if info['Bloque Dia'] == '1':
+                            lunes.append(string_txt)
+                        elif info['Bloque Dia'] == '2':
+                            martes.append(string_txt)
+                        elif info['Bloque Dia'] == '3':
+                            miercoles.append(string_txt)
+                        elif info['Bloque Dia'] == '4':
+                            jueves.append(string_txt)
+                        elif info['Bloque Dia'] == '5':
+                            viernes.append(string_txt)
+
+                    hora.append(time_list[i]['time'])
+
+                data = [
+                    ["Hora", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes"],
+                ]
+                for i in range(loop):
+                    data.append([hora[i], lunes[i], martes[i], miercoles[i], jueves[i], viernes[i]])
+                
+                schedule_data = [
+                    [f"ID: {schedule_list[0]['ID Horario']}", f"Etapa: {schedule_list[0]['Etapa']}", f"Profesor Guia: {schedule_list[0]['Guide Teacher']}", f"Fecha: {schedule_list[0]['Fecha']}"]
+                ]
+
+        else:
+            schedule_list = schedule_id_search(code)
+
+            if schedule_list[0]['Formato'] == 'Colegio':
+                loop = 6
+                time_list = [
+                    {'time': '7:00 - 7:45', 'block': '1'},
+                    {'time': '7:45 - 8:30', 'block': '2'},
+                    {'time': '8:30 - 9:00', 'block': '3'},
+                    {'time': '9:00 - 9:30', 'block': '4'},
+                    {'time': '9:30 - 10:15', 'block': '5'},
+                    {'time': '10:15 - 11:00', 'block': '6'}
+                ]
+            else:
+                loop = 4
+                time_list = [
+                    {'time': '12:30 - 1:50', 'block': '1'},
+                    {'time': '1:50 - 3:05', 'block': '2'},
+                    {'time': '3:05 - 4:20', 'block': '3'},
+                    {'time': '4:20 - 5:45', 'block': '4'},
+                ]
+
+            for i in range(loop):
+                schedule = schedule_id_search(code, time_list[i]['block'])
+                for info in schedule:
+                    if info['Materia ID'] is not None and info['Profesor ID'] is not None:
+                        subject = search_subject_by_id(info['Materia ID'])
+                        teacher = teacher_search(info['Profesor ID'])
+
+                        string_txt = f"{subject['Nombre'].capitalize()}\n{info['Etapa'].capitalize()}"
+                    else:
+                        string_txt = '------------'
+
+                    if info['Bloque Dia'] == '1':
+                        lunes.append(string_txt)
+                    elif info['Bloque Dia'] == '2':
+                        martes.append(string_txt)
+                    elif info['Bloque Dia'] == '3':
+                        miercoles.append(string_txt)
+                    elif info['Bloque Dia'] == '4':
+                        jueves.append(string_txt)
+                    elif info['Bloque Dia'] == '5':
+                        viernes.append(string_txt)
+
+                hora.append(time_list[i]['time'])
+
+            data = [
+                ["Hora", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes"],
+            ]
+
+            for i in range(loop):
+                data.append([hora[i], lunes[i], martes[i], miercoles[i], jueves[i], viernes[i]])
+
+            schedule_data = [
+                [f"ID: {schedule_list[0]['ID Horario']}", f"Etapa: {schedule_list[0]['Etapa']}", f"Profesor Guia: {schedule_list[0]['Guide Teacher']}", f"Fecha: {schedule_list[0]['Fecha']}"]
+            ]
+
+
+        dlg = ft.AlertDialog(
+            content=ft.TextField(
+                width=200,
+                height=35,
+                label='Nombre del archivo',
+                hint_text='Ingresa el nombre del archivo',
+                bgcolor='#f3f4fa',
+                hint_style=ft.TextStyle(color='#C0C1E3'),
+                label_style=ft.TextStyle(color='#4B4669'),
+                text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                border_color='#6D62A1',
+                content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+            ),
+            actions=[
+                ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
+                ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data, schedule_data), bgcolor='#6D62A1', color='#f3f4fa')
+            ]
+        )
+        self.open_dlg(dlg)
+
+
+    def print_confirmed(self, dlg, data, schedule_data):
+        """
+        Perform actions when the user confirms an action in the dialog.
+
+        Parameters:
+        - self: The instance of the class containing this method.
+        - dlg: The dialog instance.
+        - data (list): The data to be used in the process.
+
+        Returns:
+        - bool: True if the operation is successful, False otherwise.
+        """
+        if dlg.content.value == '':
+            dlg.actions[1].text = 'Rellene todos los campos'
+            dlg.actions[1].bgcolor = '#ff0000'
+            dlg.update()
+
+            time.sleep(1)
+
+            dlg.actions[1].text = 'Agregar'
+            dlg.actions[1].bgcolor = '#6D62A1'
+            dlg.update()
+            return False
+
+        file_name = dlg.content.value
+        self.close(dlg)
+        path_selector(file_name, data, schedule_data)
+
+
 
     #* ------------------ DLG Functions ------------------ *#
     def open_dlg(self, dlg):
