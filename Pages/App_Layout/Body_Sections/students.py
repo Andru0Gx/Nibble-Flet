@@ -1219,6 +1219,8 @@ class Studentslist(ft.UserControl):
 
         self.scrol_pos = 10
 
+        self.search_filter = None
+
         #* ------------------ Layout ------------------ *#
         # Create the Title
         self.title = ft.Text(
@@ -1359,6 +1361,7 @@ class Studentslist(ft.UserControl):
             self.search_bar.controls[1].width = 35
             self.update()
         else:
+            self.search_filter = search
             self.data_table.rows.clear()
 
             list_students = filter_students_db(search)
@@ -1387,6 +1390,7 @@ class Studentslist(ft.UserControl):
         self.search_bar.controls[0].value = ''
         del self.data_table.rows[:]
         self.clear_filter_button.visible = False
+        self.search_filter = None
         self.update()
         self.show_students()
 
@@ -1491,7 +1495,20 @@ class Studentslist(ft.UserControl):
 
     def print_list(self):
         '''Print the list of students'''
-        list_students = get_students(0, check())
+        if self.search_filter:
+            list_students = filter_students_db(self.search_filter)
+        else:
+            list_students = get_students(0, check())
+
+
+        if not list_students:
+            dlg = ft.AlertDialog(
+                content=ft.Text('No hay estudiantes para generar la lista'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
+            return False
+
         data = [
             ["Nombre", "Apellido", "Cedula", "Grado", "Fecha de Inscripcion", "Status"],
         ]

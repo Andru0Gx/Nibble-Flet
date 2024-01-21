@@ -957,8 +957,10 @@ class Grades(ft.UserControl):
                 final.append(row.cells[4].content.content.value)
 
             data = [
-                ["Materia", "Momento 1", "Momento 2", "Momento 3", "Promedio", f"Estudiante: {student_name}"],
+                ["Materia", "Momento 1", "Momento 2", "Momento 3", "Promedio"],
             ]
+
+            student_data = [["Estudiante ",f"{student_name}"]]
 
             for i in range(len(subject)):
                 data.append([subject[i], moment1[i], moment2[i], moment3[i], final[i]])
@@ -978,7 +980,7 @@ class Grades(ft.UserControl):
                 ),
                 actions=[
                     ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
-                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data), bgcolor='#6D62A1', color='#f3f4fa')
+                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data, student_data), bgcolor='#6D62A1', color='#f3f4fa')
                 ]
             )
             self.open_dlg(dlg)
@@ -989,7 +991,7 @@ class Grades(ft.UserControl):
             )
             self.open_dlg(dlg)
 
-    def print_confirmed(self, dlg, data):
+    def print_confirmed(self, dlg, data, student_data):
         """
         Perform actions when the user confirms an action in the dialog.
 
@@ -1015,7 +1017,7 @@ class Grades(ft.UserControl):
 
         file_name = dlg.content.value
         self.close(dlg)
-        path_selector(file_name, data)
+        path_selector(file_name, data, student_data)
 
 
     #* ------------------ DLG Functions ------------------ *#

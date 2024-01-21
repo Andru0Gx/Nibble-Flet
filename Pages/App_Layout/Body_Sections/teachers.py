@@ -1129,6 +1129,7 @@ class Teacherslist(ft.UserControl):
         self.body = section
 
         self.scrol_pos = 10
+        self.search_filter = None
 
         #* ------------------ Layout ------------------ *#
         # Create the Title
@@ -1329,6 +1330,7 @@ class Teacherslist(ft.UserControl):
             self.search_bar.controls[1].width = 35
             self.update()
         else:
+            self.search_filter = search
             self.data_table.rows.clear()
             list_teachers = filter_teachers_db(search)
 
@@ -1363,6 +1365,7 @@ class Teacherslist(ft.UserControl):
         self.search_bar.controls[0].value = ''
         del self.data_table.rows[:]
         self.clear_filter_button.visible = False
+        self.search_filter = None
         self.update()
         self.show_teachers()
 
@@ -1378,7 +1381,19 @@ class Teacherslist(ft.UserControl):
 
     def print_teacher_list(self):
         '''Print the list of teachers'''
-        list_teachers = get_teachers(0, check())
+        if self.search_filter:
+            list_teachers = filter_teachers_db(self.search_filter)
+        else:
+            list_teachers = get_teachers(0, check())
+        
+        if not list_teachers:
+            dlg = ft.AlertDialog(
+                content=ft.Text('No hay profesores para generar la lista'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
+            return False
+
         data = [
             ["Nombres", "Apellidos", "Cedula", "Contacto 1"],
         ]
