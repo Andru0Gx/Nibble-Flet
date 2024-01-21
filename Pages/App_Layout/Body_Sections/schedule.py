@@ -781,6 +781,7 @@ class Schedule(ft.UserControl):
             self.schedule_buttons.controls[0].visible = False
             self.schedule_buttons.controls[1].visible = False
             self.schedule_buttons.controls[2].visible = True
+            self.schedule_buttons.controls[2].disabled = False
             self.schedule_buttons.controls[3].visible = False
             self.schedule_buttons.controls[4].visible = True
             self.schedule_buttons.controls[5].visible = False
@@ -818,6 +819,7 @@ class Schedule(ft.UserControl):
             self.schedule_buttons.controls[1].visible = False
             self.schedule_buttons.controls[2].visible = False
             self.schedule_buttons.controls[3].visible = True
+            self.schedule_buttons.controls[3].disabled = False
             self.schedule_buttons.controls[4].visible = True
             self.schedule_buttons.controls[5].visible = False
             self.schedule_buttons.controls[6].visible = False
@@ -846,7 +848,9 @@ class Schedule(ft.UserControl):
         self.schedule_buttons.controls[0].visible = True
         self.schedule_buttons.controls[1].visible = True
         self.schedule_buttons.controls[2].visible = False
+        self.schedule_buttons.controls[2].disabled = True
         self.schedule_buttons.controls[3].visible = False
+        self.schedule_buttons.controls[3].disabled = True
         self.schedule_buttons.controls[4].visible = False
         self.schedule_buttons.controls[5].visible = True
         self.schedule_buttons.controls[6].visible = True
@@ -901,7 +905,9 @@ class Schedule(ft.UserControl):
         self.schedule_buttons.controls[0].visible = True
         self.schedule_buttons.controls[1].visible = True
         self.schedule_buttons.controls[2].visible = False
+        self.schedule_buttons.controls[2].disabled = True
         self.schedule_buttons.controls[3].visible = False
+        self.schedule_buttons.controls[3].disabled = True
         self.schedule_buttons.controls[4].visible = False
         self.schedule_buttons.controls[5].visible = True
         self.schedule_buttons.controls[6].visible = True
@@ -1210,7 +1216,9 @@ class Schedule(ft.UserControl):
         self.schedule_buttons.controls[0].visible = True
         self.schedule_buttons.controls[1].visible = True
         self.schedule_buttons.controls[2].visible = False
+        self.schedule_buttons.controls[2].disabled = True
         self.schedule_buttons.controls[3].visible = False
+        self.schedule_buttons.controls[3].disabled = True
         self.schedule_buttons.controls[4].visible = False
         self.schedule_buttons.controls[5].visible = True
         self.schedule_buttons.controls[6].visible = True
