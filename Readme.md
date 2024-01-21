@@ -14,6 +14,7 @@
 7. python-dateutil (2.8.2)
 8. sqlite3
 9. reportlab (4.0.9)
+10. pyperclip (1.8.2)
 
 ```
 
