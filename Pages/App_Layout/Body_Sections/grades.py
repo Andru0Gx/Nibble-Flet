@@ -4,6 +4,9 @@
 import time
 import flet as ft
 
+# Modules
+from modules.pdf_printer import path_selector
+
 # Database
 from DB.Functions.student_parent_db import student_search
 from DB.Functions.subjects_db import filter_subjects, search_subject_by_id
@@ -229,7 +232,7 @@ class Grades(ft.UserControl):
                 ft.Text('Aprobar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
                 width=80,
                 height=35,
-                bgcolor='#C0C1E3', # Color when the button is disabled
+                bgcolor='#C0C1E3',
                 alignment=ft.alignment.center,
                 on_click= lambda e: self.approve_student_confirm(),
                 border_radius=15,
@@ -239,7 +242,7 @@ class Grades(ft.UserControl):
                 ft.Text('Reprobar',size=15, color='#f3f4fa', font_family='Arial', text_align='center'),
                 width=100,
                 height=35,
-                bgcolor='#C0C1E3', # Color when the button is disabled
+                bgcolor='#C0C1E3',
                 alignment=ft.alignment.center,
                 on_click= lambda e: self.disapprove_student_confirm(),
                 border_radius=15,
@@ -252,7 +255,7 @@ class Grades(ft.UserControl):
                 height=35,
                 bgcolor='#6D62A1',
                 alignment=ft.alignment.center,
-                # on_click= lambda e: self.print_student(), #TODO - Add the function to print the student
+                on_click= lambda e: self.print_grades(),
                 border_radius=15,
                 tooltip='Imprimir Notas',
             ),
@@ -563,6 +566,16 @@ class Grades(ft.UserControl):
 
     #* ------------------ Edit Functions ------------------ *#
     def confirm_sync(self):
+        """
+        Display a confirmation dialog for synchronizing grades.
+
+        Creates an AlertDialog with the message 'Sincronizar Notas' and two buttons:
+        - 'Aceptar': Confirms the synchronization and triggers the 'sync_grades' method.
+        - 'Cancelar': Cancels the synchronization and closes the dialog.
+
+        This function is typically used to prompt the user for confirmation before initiating
+        a synchronization process for grades.
+        """
         dlg = ft.AlertDialog(
             content=ft.Text('Sincronizar Notas'),
             actions=[
@@ -605,6 +618,17 @@ class Grades(ft.UserControl):
             self.open_dlg(dlg)
 
     def confirm_delete(self, dlg):
+        """
+        Display a countdown message in the dialog before confirming deletion.
+
+        Parameters:
+        - self: The instance of the class containing this method.
+        - dlg: The dialog instance.
+
+        Note:
+        The countdown message is displayed in the dialog, and the 'Confirmar Eliminación'
+        button is activated after the countdown. Clicking the button triggers the 'delete_phase' method.
+        """
         try:
             dlg.actions[1].on_click = None
             for i in range(5, -1, -1):
@@ -618,9 +642,29 @@ class Grades(ft.UserControl):
             dlg.update()
         except:
             pass
-    
+
     def delete_phase(self, dlg):
-        print(self.actual_student)
+        """
+        Delete grades for the current student for a specific academic phase and re-add default grades.
+
+        This function performs the following steps:
+        1. Synchronizes the student to retrieve the current academic phase using 'sync_students'.
+        2. Deletes the grades of the current student for the retrieved phase using 'delete_grades_student_phase'.
+        3. Searches for the details of the academic phase using 'search_phase'.
+        4. Determines the type of academic phase ('Liceo' or 'Colegio') based on the phase type.
+        5. Filters the list of subjects for the phase using 'filter_subjects'.
+        6. Adds default grades for the current student and subjects in the filtered subjects list using 'grade_add'.
+        7. Closes the confirmation dialog ('dlg').
+        8. Updates the search bar to show the current student's information.
+        9. Triggers the interface update by calling 'update' and 'search_student' methods.
+
+        Parameters:
+        - self: The instance of the class containing this method.
+        - dlg: The confirmation dialog instance.
+
+        Note:
+        This function is designed to be used when confirming the deletion of grades for a specific academic phase.
+        """
         phase = sync_students(self.actual_student)
         delete_grades_student_phase(self.actual_student, phase)
 
@@ -895,6 +939,83 @@ class Grades(ft.UserControl):
         self.close(dlg)
         self.cancel()
 
+    #* ------------------ Print Functions ------------------ *#
+    def print_grades(self):
+        '''Print the grades of the student'''
+        if self.student_name.content.value != 'Nombre del Estudiante':
+            student_name = self.student_name.content.value
+            subject = []
+            moment1 = []
+            moment2 = []
+            moment3 = []
+            final = []
+            for row in self.table.rows:
+                subject.append(row.cells[0].content.content.value)
+                moment1.append(row.cells[1].content.content.value)
+                moment2.append(row.cells[2].content.content.value)
+                moment3.append(row.cells[3].content.content.value)
+                final.append(row.cells[4].content.content.value)
+
+            data = [
+                ["Materia", "Momento 1", "Momento 2", "Momento 3", "Promedio", f"Estudiante: {student_name}"],
+            ]
+
+            for i in range(len(subject)):
+                data.append([subject[i], moment1[i], moment2[i], moment3[i], final[i]])
+
+            dlg = ft.AlertDialog(
+                content=ft.TextField(
+                    width=200,
+                    height=35,
+                    label='Nombre del archivo',
+                    hint_text='Ingresa el nombre del archivo',
+                    bgcolor='#f3f4fa',
+                    hint_style=ft.TextStyle(color='#C0C1E3'),
+                    label_style=ft.TextStyle(color='#4B4669'),
+                    text_style=ft.TextStyle(color='#2c293d', font_family='Arial', size=14),
+                    border_color='#6D62A1',
+                    content_padding=ft.padding.only(left=10,top=0,right=10,bottom=0),
+                ),
+                actions=[
+                    ft.ElevatedButton(text='Cancelar', on_click= lambda e: self.close(dlg), bgcolor='#6D62A1', color='#f3f4fa'),
+                    ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.print_confirmed(dlg, data), bgcolor='#6D62A1', color='#f3f4fa')
+                ]
+            )
+            self.open_dlg(dlg)
+        else:
+            dlg = ft.AlertDialog(
+                content=ft.Text('Debe buscar un estudiante primero'),
+                actions=[ft.ElevatedButton(text='Aceptar', on_click= lambda e: self.close(dlg))]
+            )
+            self.open_dlg(dlg)
+
+    def print_confirmed(self, dlg, data):
+        """
+        Perform actions when the user confirms an action in the dialog.
+
+        Parameters:
+        - self: The instance of the class containing this method.
+        - dlg: The dialog instance.
+        - data (list): The data to be used in the process.
+
+        Returns:
+        - bool: True if the operation is successful, False otherwise.
+        """
+        if dlg.content.value == '':
+            dlg.actions[1].text = 'Rellene todos los campos'
+            dlg.actions[1].bgcolor = '#ff0000'
+            dlg.update()
+
+            time.sleep(1)
+
+            dlg.actions[1].text = 'Agregar'
+            dlg.actions[1].bgcolor = '#6D62A1'
+            dlg.update()
+            return False
+
+        file_name = dlg.content.value
+        self.close(dlg)
+        path_selector(file_name, data)
 
 
     #* ------------------ DLG Functions ------------------ *#

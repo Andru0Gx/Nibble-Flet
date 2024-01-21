@@ -81,7 +81,7 @@ def path_selector(file_name, data):
         if ruta_carpeta == '':
             path_window.destroy()
             return
-
+        path_window.destroy()
         if not os.path.exists(ruta_carpeta):
             os.makedirs(ruta_carpeta)
 
