@@ -3,34 +3,6 @@
 # Libraries
 import sqlite3
 
-# Student - Table - Structure
-
-# cedula TEXT PRIMARY KEY,
-# nombres TEXT NOT NULL,
-# apellidos TEXT NOT NULL,
-# f_nacimiento TEXT NOT NULL,
-# direccion TEXT NOT NULL,
-# etapa_id INTEGER NOT NULL,
-# f_ingreso TEXT NOT NULL,
-# CONSTRAINT fk_etapa FOREIGN KEY(etapa_id) REFERENCES etapa(id_e)
-
-
-# Parent - Table - Structure
-
-# cedula TEXT PRIMARY KEY,
-# nombres TEXT NOT NULL,
-# apellidos TEXT NOT NULL,
-# telefono1 TEXT NOT NULL,
-# telefono2 TEXT
-
-# Parent_Student - Table - Structure
-
-# representante_ci TEXT,
-# estudiante_ci TEXT,
-# PRIMARY KEY(representante_ci, estudiante_ci)
-# CONSTRAINT fk_repre_ci FOREIGN KEY(representante_ci) REFERENCES representante(cedula),
-# CONSTRAINT fk_estudiante_ci FOREIGN KEY(estudiante_ci) REFERENCES estudiante(cedula)
-
 #^ ------------------ Validate CI ------------------ *#
 def validate_ci(ci, representante = True):
     '''Validate the CI'''
@@ -395,9 +367,16 @@ def filter_students_db(filter):
     conexion = sqlite3.connect('DB/nibble.db')
     cursor = conexion.cursor()
 
-    cursor.execute(
-        f"""SELECT * FROM estudiante WHERE nombres LIKE '%{filter}%' OR apellidos LIKE '%{filter}%' OR cedula LIKE '%{filter}%' OR etapa_id LIKE '%{filter}%' OR f_ingreso LIKE '%{filter}%' OR status LIKE '%{filter}%';"""
-    )
+    phase_id = cursor.execute(f"""SELECT id_e FROM etapa WHERE grado_anio LIKE '%{filter}%'""").fetchone()
+
+    if phase_id:
+        cursor.execute(
+            f"""SELECT * FROM estudiante WHERE etapa_id LIKE '%{phase_id[0]}%';"""
+        )
+    else:
+        cursor.execute(
+            f"""SELECT * FROM estudiante WHERE nombres LIKE '%{filter}%' OR apellidos LIKE '%{filter}%' OR cedula LIKE '%{filter}%' OR etapa_id LIKE '%{filter}%' OR f_ingreso LIKE '%{filter}%' OR status LIKE '%{filter}%';"""
+        )
     students = cursor.fetchall()
     list_students = []
     student_info = { # student info
