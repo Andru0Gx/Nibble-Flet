@@ -1079,7 +1079,7 @@ class Students(ft.UserControl):
                         ci = self.parent_ci.controls[0].value
 
                     parent_update(ci, self.parent_name.value, self.parent_lastname.value, self.parent_contact.controls[0].value, self.parent_contact.controls[1].value, self.actual_parent)
-                    parent_student_update(self.parent_ci.controls[0].value, self.student_ci.value)
+                    parent_student_update(self.student_ci.value,self.parent_ci.controls[0].value)
                     self.cancel()
                 else:
                     dlg = ft.AlertDialog(
