@@ -955,6 +955,7 @@ class Students(ft.UserControl):
                         phase_type = 'Liceo'
                     elif phase_type == 'Grado':
                         phase_type = 'Colegio'
+                    phase = phase.split(' ')[0] + ' ' + phase.split(' ')[1]
 
                     subjects_list = filter_subjects(phase, phase_type)
 
